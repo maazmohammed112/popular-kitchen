@@ -59,11 +59,12 @@ export const Footer = ({ toggleTheme }) => {
             </h4>
             <div className="flex flex-col gap-2.5">
               {[
+              { to: '/about', label: 'About Us' },
                 { to: '/my-orders', label: 'My Orders' },
                 { to: '/support', label: 'Support' },
                 { to: '/terms', label: 'Terms of Service' },
                 { to: '/privacy', label: 'Privacy Policy' },
-                { to: '/admin/login', label: 'Admin Staff' },
+                { to: '/sitemap.xml', label: 'Sitemap' },
               ].map(link => (
                 <Link key={link.to} to={link.to} className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors group">
                   <FiArrowUpRight size={13} className="opacity-0 group-hover:opacity-100 -translate-y-0.5 group-hover:translate-y-0 translate-x-0 group-hover:translate-x-0.5 transition-all" />
