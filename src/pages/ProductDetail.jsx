@@ -230,8 +230,8 @@ export default function ProductDetail() {
                    setQuantity(val >= 0 ? val : 0);
                  }}
                  onFocus={(e) => e.target.select()}
-                 placeholder="Quantity"
-                 className="flex-1 bg-transparent border-none text-lg font-bold text-pk-text-main focus:ring-0 px-4 h-full text-center appearance-none placeholder:text-pk-text-muted/30"
+                 placeholder="Qty"
+                 className="flex-1 bg-transparent border-none text-base md:text-lg font-bold text-pk-text-main focus:ring-0 px-2 md:px-4 h-full text-center appearance-none placeholder:text-pk-text-muted/30"
                />
             </div>
             
