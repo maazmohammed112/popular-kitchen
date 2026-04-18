@@ -4,6 +4,7 @@ import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChe
 import { getProduct } from '../firebase/products';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
+import { SEO } from '../components/SEO';
 import { getOptimizedUrl } from '../cloudinary/upload';
 
 export default function ProductDetail() {
@@ -87,6 +88,35 @@ export default function ProductDetail() {
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
+      <SEO 
+        title={product.title}
+        description={`Buy ${product.title} at Popular Kitchen. ${product.description?.substring(0, 100) || 'Premium kitchenware'}`}
+        image={getOptimizedUrl(product.images?.[0])}
+        type="product"
+      />
+
+      {/* Structured Data (JSON-LD) for Google Rich Results */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org/",
+          "@type": "Product",
+          "name": product.title,
+          "image": product.images?.map(img => getOptimizedUrl(img)),
+          "description": product.description,
+          "brand": {
+            "@type": "Brand",
+            "name": "Popular Kitchen"
+          },
+          "offers": {
+            "@type": "Offer",
+            "url": window.location.href,
+            "priceCurrency": "INR",
+            "price": currentPrice,
+            "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+          }
+        })}
+      </script>
+
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-pk-text-muted hover:text-pk-text-main mb-6 transition-colors">
         <FiArrowLeft /> Back
       </button>

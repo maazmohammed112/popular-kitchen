@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
@@ -10,23 +10,23 @@ import { WelcomeModal } from './components/WelcomeModal';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
+import { ReloadPrompt } from './components/ReloadPrompt';
 import { FiMessageCircle } from 'react-icons/fi';
 
-// Pages
-import Home from './pages/Home';
-import ProductDetail from './pages/ProductDetail';
-import Checkout from './pages/Checkout';
-import OrderSuccess from './pages/OrderSuccess';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/admin/Dashboard';
-import ManageProducts from './pages/admin/ManageProducts';
-import ManageOrders from './pages/admin/ManageOrders';
-import { AdminLayout } from './components/admin/AdminLayout';
-import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Support from './pages/Support';
-import Search from './pages/Search';
-import MyOrders from './pages/MyOrders';
+// Lazy Loaded Pages for "Lightning" Performance
+const Home = lazy(() => import('./pages/Home'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
+const ManageProducts = lazy(() => import('./pages/admin/ManageProducts'));
+const ManageOrders = lazy(() => import('./pages/admin/ManageOrders'));
+const Terms = lazy(() => import('./pages/Terms'));
+const Privacy = lazy(() => import('./pages/Privacy'));
+const Support = lazy(() => import('./pages/Support'));
+const Search = lazy(() => import('./pages/Search'));
+const MyOrders = lazy(() => import('./pages/MyOrders'));
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -97,27 +97,31 @@ const DefaultViews = () => {
     <>
       <WelcomeModal />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <Routes>
-        <Route path="/" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Home /></AppLayout>} />
-        <Route path="/search" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Search /></AppLayout>} />
-        <Route path="/product/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><ProductDetail setIsCartOpen={setIsCartOpen} /></AppLayout>} />
-        <Route path="/checkout" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Checkout /></AppLayout>} />
-        <Route path="/order-success/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><OrderSuccess /></AppLayout>} />
-        <Route path="/terms" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Terms /></AppLayout>} />
-        <Route path="/privacy" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Privacy /></AppLayout>} />
-        <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
-        <Route path="/my-orders" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><MyOrders /></AppLayout>} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<ManageProducts />} />
-          <Route path="orders" element={<ManageOrders />} />
-        </Route>
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <ReloadPrompt />
+      
+      <Suspense fallback={<GlobalLoader />}>
+        <Routes>
+          <Route path="/" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Home /></AppLayout>} />
+          <Route path="/search" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Search /></AppLayout>} />
+          <Route path="/product/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><ProductDetail setIsCartOpen={setIsCartOpen} /></AppLayout>} />
+          <Route path="/checkout" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Checkout /></AppLayout>} />
+          <Route path="/order-success/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><OrderSuccess /></AppLayout>} />
+          <Route path="/terms" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Terms /></AppLayout>} />
+          <Route path="/privacy" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Privacy /></AppLayout>} />
+          <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
+          <Route path="/my-orders" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><MyOrders /></AppLayout>} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="products" element={<ManageProducts />} />
+            <Route path="orders" element={<ManageOrders />} />
+          </Route>
+          
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 };

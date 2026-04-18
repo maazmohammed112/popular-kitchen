@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getProducts } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
+import { SEO } from '../components/SEO';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -32,6 +33,13 @@ export default function Home() {
 
   return (
     <div className="flex flex-col animate-[slideUp_0.4s_ease-out]">
+      <SEO 
+        title="Premium Kitchenware & Designer Cookware"
+        description="Shop the finest collection of premium kitchenware and designer cookware in Bangalore. Popular Kitchen offers professional-grade tools for every home chef."
+      />
+      
+      <h1 className="sr-only">Popular Kitchen - Premium Kitchenware Bangalore</h1>
+      
       {/* Hero Banner Image */}
       <div
         className="w-full mb-8 rounded-3xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-shadow"
@@ -39,8 +47,10 @@ export default function Home() {
       >
         <img
           src="/hero-banner.png"
-          alt="Popular Kitchen - Premium Kitchenware Store Bangalore"
+          alt="Popular Kitchen Premium Kitchenware Hero Banner - High-quality cookware and kitchen accessories"
           className="w-full object-cover max-h-[420px] block"
+          loading="eager"
+          fetchpriority="high"
         />
       </div>
 
