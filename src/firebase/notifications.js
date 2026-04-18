@@ -6,6 +6,19 @@
 const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
 const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
+/**
+ * Escape HTML characters for Telegram's HTML parse_mode
+ */
+const escapeHTML = (str) => {
+  if (!str) return '';
+  return str.toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 export const sendTelegramMessage = async (message, buttons = null) => {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn("Telegram credentials missing in .env");
@@ -23,9 +36,9 @@ export const sendTelegramMessage = async (message, buttons = null) => {
     };
 
     if (buttons) {
-      body.reply_markup = JSON.stringify({
+      body.reply_markup = {
         inline_keyboard: buttons
-      });
+      };
     }
 
     const response = await fetch(url, {
@@ -34,10 +47,11 @@ export const sendTelegramMessage = async (message, buttons = null) => {
       body: JSON.stringify(body)
     });
 
+    const result = await response.json();
     if (!response.ok) {
-      const err = await response.json();
-      console.error("Telegram API Error:", err);
+      console.error("Telegram API Error:", result);
     }
+    return result;
   } catch (error) {
     console.error("Failed to send Telegram notification:", error);
   }
@@ -54,22 +68,20 @@ const getContactButtons = (orderId, orderData, statusLabel) => {
   const text = encodeURIComponent(`Hello ${name}, your order #${orderId} has been ${statusLabel}. Thank you for shopping with Popular Kitchen!`);
   const subject = encodeURIComponent(`Order Update - Popular Kitchen #${orderId}`);
 
-  const buttons = [
-    [
-      { 
-        text: "📱 Message WhatsApp", 
-        url: `https://wa.me/${phone.startsWith('91') ? phone : '91'+phone}?text=${text}` 
-      }
-    ]
-  ];
+  const buttons = [];
+  
+  if (phone) {
+    buttons.push([{ 
+      text: "📱 Message WhatsApp", 
+      url: `https://wa.me/${phone.startsWith('91') ? phone : '91'+phone}?text=${text}` 
+    }]);
+  }
 
   if (email) {
-    buttons.push([
-      { 
-        text: "✉️ Send Email", 
-        url: `mailto:${email}?subject=${subject}&body=${text}` 
-      }
-    ]);
+    buttons.push([{ 
+      text: "✉️ Send Email", 
+      url: `mailto:${email}?subject=${subject}&body=${text}` 
+    }]);
   }
 
   return buttons;
@@ -80,29 +92,29 @@ const getContactButtons = (orderId, orderData, statusLabel) => {
  */
 export const notifyNewOrder = async (orderId, orderData) => {
   const itemsList = orderData.items
-    .map(item => `• ${item.quantity}x ${item.title} (${item.size})`)
-    .join('\n');
+    ?.map(item => `• ${escapeHTML(item.quantity)}x ${escapeHTML(item.title)} (${escapeHTML(item.size)})`)
+    .join('\n') || 'No items listed';
 
   const message = `
 <b>🛍️ NEW ORDER RECEIVED!</b>
 
-<b>Order ID:</b> <code>#${orderId}</code>
-<b>Customer:</b> ${orderData.customerName}
-<b>Phone:</b> ${orderData.phone}
-<b>Email:</b> ${orderData.email || '<i>Not Provided</i>'}
-<b>Total:</b> ₹${orderData.totalAmount.toLocaleString('en-IN')}
+<b>Order ID:</b> <code>#${escapeHTML(orderId)}</code>
+<b>Customer:</b> ${escapeHTML(orderData.customerName)}
+<b>Phone:</b> ${escapeHTML(orderData.phone)}
+<b>Email:</b> ${escapeHTML(orderData.email || 'Not Provided')}
+<b>Total:</b> ₹${orderData.totalAmount?.toLocaleString('en-IN') || '0'}
 
 <b>Items:</b>
 ${itemsList}
 
 <b>Address:</b>
-<i>${orderData.address}</i>
+<i>${escapeHTML(orderData.address)}</i>
 
 <a href="${window.location.origin}/admin/orders">View in Admin Dashboard</a>
   `;
 
   const buttons = getContactButtons(orderId, orderData, 'received');
-  return sendTelegramMessage(message, buttons);
+  return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
 /**
@@ -112,19 +124,19 @@ export const notifyStatusUpdate = async (orderId, orderData, oldStatus, newStatu
   const message = `
 <b>🔄 ORDER UPDATE</b>
 
-<b>Order ID:</b> <code>#${orderId}</code>
-<b>Customer:</b> ${orderData.customerName}
-<b>Phone:</b> ${orderData.phone}
-<b>Email:</b> ${orderData.email || '<i>Not Provided</i>'}
+<b>Order ID:</b> <code>#${escapeHTML(orderId)}</code>
+<b>Customer:</b> ${escapeHTML(orderData.customerName)}
+<b>Phone:</b> ${escapeHTML(orderData.phone)}
+<b>Email:</b> ${escapeHTML(orderData.email || 'Not Provided')}
 
-<b>Status:</b> ${oldStatus} ➔ <b>${newStatus.toUpperCase()}</b>
-${adminNote ? `<b>Note:</b> ${adminNote}` : ''}
+<b>Status:</b> ${escapeHTML(oldStatus)} ➔ <b>${escapeHTML(newStatus.toUpperCase())}</b>
+${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
 
 <a href="${window.location.origin}/admin/orders">Go to Dashboard</a>
   `;
 
   const buttons = getContactButtons(orderId, orderData, newStatus);
-  return sendTelegramMessage(message, buttons);
+  return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
 /**
@@ -134,16 +146,16 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
   const message = `
 <b>❌ ORDER CANCELLED</b>
 
-<b>Order ID:</b> <code>#${orderId}</code>
-<b>Customer:</b> ${orderData.customerName}
-<b>Phone:</b> ${orderData.phone}
-<b>Email:</b> ${orderData.email || '<i>Not Provided</i>'}
+<b>Order ID:</b> <code>#${escapeHTML(orderId)}</code>
+<b>Customer:</b> ${escapeHTML(orderData.customerName)}
+<b>Phone:</b> ${escapeHTML(orderData.phone)}
+<b>Email:</b> ${escapeHTML(orderData.email || 'Not Provided')}
 
-<b>Cancelled By:</b> ${cancelledBy === 'admin' ? 'Admin' : 'Customer'}
+<b>Cancelled By:</b> ${escapeHTML(cancelledBy === 'admin' ? 'Admin' : 'Customer')}
 
 <a href="${window.location.origin}/admin/orders">Manage Orders</a>
   `;
 
   const buttons = getContactButtons(orderId, orderData, 'cancelled');
-  return sendTelegramMessage(message, buttons);
+  return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
