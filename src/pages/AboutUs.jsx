@@ -39,13 +39,13 @@ export default function AboutUs() {
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-4">
             <img src="/logo.png" alt="Popular Kitchenware Logo" className="h-10 w-10 object-contain bg-white rounded-xl p-1" />
-            <span className="text-white/60 text-sm font-medium uppercase tracking-widest">Est. 2018</span>
+            <span className="text-white text-sm font-semibold uppercase tracking-widest">Since 2002</span>
           </div>
-          <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight text-white">
             Bangalore's Trusted<br />
             <span style={{ color: 'var(--color-tertiary)' }}>Kitchenware</span> Store
           </h1>
-          <p className="text-base text-white/70 leading-relaxed max-w-xl">
+          <p className="text-base text-white leading-relaxed max-w-xl">
             Popular Kitchenware is a premier kitchen equipment supplier based in Shivajinagar, Bangalore — serving homes, restaurants, hotels, and catering businesses across the city with quality products at honest prices.
           </p>
           <div className="flex flex-wrap gap-3 mt-6">
@@ -62,7 +62,7 @@ export default function AboutUs() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <StatCard value="5+" label="Years in Business" icon={FiAward} />
+        <StatCard value="20+" label="Years in the Market" icon={FiAward} />
         <StatCard value="1000+" label="Happy Customers" icon={FiUsers} />
         <StatCard value="500+" label="Products Available" icon={FiStar} />
         <StatCard value="2-3" label="Days Delivery Bangalore" icon={FiTruck} />
@@ -159,10 +159,10 @@ export default function AboutUs() {
                   </a>
                 </div>
               </div>
-              <div className="rounded-xl p-3 border border-pk-bg-secondary bg-pk-bg-primary text-xs text-pk-text-muted">
-                <strong className="text-pk-text-main">Business Hours:</strong><br />
-                Mon – Sat: 9:00 AM – 7:00 PM<br />
-                Sunday: Closed
+              <div className="rounded-xl p-3.5 border border-pk-bg-secondary bg-pk-bg-primary text-xs text-pk-text-muted leading-relaxed">
+                <strong className="text-pk-text-main block mb-1">Business Hours:</strong>
+                Mon – Sun: 9:00 AM – 11:00 PM<br />
+                <span className="text-[10px] italic opacity-70">* Timing may differ on public holidays</span>
               </div>
             </div>
             {/* Embedded Google Map */}
@@ -181,8 +181,8 @@ export default function AboutUs() {
       {/* CTA */}
       <div className="text-center rounded-3xl p-10 text-white"
         style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)' }}>
-        <h2 className="text-2xl font-black mb-3">Ready to Upgrade Your Kitchen?</h2>
-        <p className="text-white/70 text-sm mb-6">Browse our full catalogue of professional kitchen equipment, available online with fast delivery across Bangalore.</p>
+        <h2 className="text-2xl font-black mb-3 text-white">Ready to Upgrade Your Kitchen?</h2>
+        <p className="text-white text-sm mb-6 opacity-80">Browse our full catalogue of professional kitchen equipment, available online with fast delivery across Bangalore.</p>
         <Link to="/" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-sm transition-all hover:brightness-95"
           style={{ background: 'var(--color-tertiary)', color: 'white' }}>
           Shop All Products <FiArrowRight size={16} />

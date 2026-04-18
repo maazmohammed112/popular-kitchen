@@ -12,7 +12,7 @@ export const Footer = ({ toggleTheme }) => {
           {/* Brand */}
           <div>
             <Link to="/" className="flex items-center gap-2.5 mb-4 group">
-              <div className="bg-white/15 p-1.5 rounded-xl border border-white/20">
+              <div className="bg-white p-1.5 rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
                 <img src="/logo.png" alt="Popular Kitchen Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
               </div>
               <span className="font-bold text-base text-white tracking-tight">Popular Kitchen</span>
