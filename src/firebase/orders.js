@@ -68,18 +68,26 @@ export const listenToUserOrders = (userId, callback) => {
 export const updateOrderStatus = async (id, status, adminNote = "") => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
   const snap = await getDoc(docRef);
-  const oldStatus = snap.exists() ? snap.data().status : 'unknown';
+  const orderData = snap.exists() ? snap.data() : null;
+  const oldStatus = orderData ? orderData.status : 'unknown';
   
   await updateDoc(docRef, { status, adminNote });
   
-  // Notify status change
-  notifyStatusUpdate(id, oldStatus, status, adminNote).catch(err => console.error("Notify error:", err));
+  // Notify status change with full data
+  if (orderData) {
+    notifyStatusUpdate(id, orderData, oldStatus, status, adminNote).catch(err => console.error("Notify error:", err));
+  }
 };
 
 export const cancelOrder = async (id, cancelledBy = 'user') => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
+  const snap = await getDoc(docRef);
+  const orderData = snap.exists() ? snap.data() : null;
+
   await updateDoc(docRef, { status: 'cancelled', cancelledBy });
   
-  // Notify cancellation
-  notifyOrderCancelled(id, cancelledBy).catch(err => console.error("Notify error:", err));
+  // Notify cancellation with full data
+  if (orderData) {
+    notifyOrderCancelled(id, orderData, cancelledBy).catch(err => console.error("Notify error:", err));
+  }
 };

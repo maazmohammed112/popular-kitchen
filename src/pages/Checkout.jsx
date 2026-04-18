@@ -20,6 +20,7 @@ export default function Checkout() {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
+    email: '',
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,6 +101,7 @@ export default function Checkout() {
       const orderData = {
         customerName: formData.name,
         phone: formData.phone,
+        email: formData.email || '',
         address: formData.address,
         items: cartItems.map(item => ({
           productId: item.productId,
@@ -173,9 +175,24 @@ export default function Checkout() {
                   value={formData.phone}
                   onChange={e => setFormData({...formData, phone: e.target.value})}
                   className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent focus:ring-1 focus:ring-pk-accent transition-colors"
-                  placeholder="+91 98765 43210"
+                  placeholder="+91 88928 36046"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-pk-text-muted mb-2 flex justify-between items-center">
+                  Email Address 
+                  <span className="text-[10px] uppercase tracking-wider text-pk-accent font-bold bg-pk-accent/10 px-2 py-0.5 rounded-md">Optional - Recommended</span>
+                </label>
+                <input 
+                  type="email" 
+                  value={formData.email}
+                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent focus:ring-1 focus:ring-pk-accent transition-colors"
+                  placeholder="name@example.com"
+                />
+                <p className="text-[10px] text-pk-text-muted mt-1 ml-1 italic">For order tracking and official receipts</p>
               </div>
 
               <div>
