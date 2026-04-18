@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle } from 'react-icons/fi';
+import { useState, useEffect, useCallback } from 'react';
+import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiLogIn } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserOrders, cancelOrder } from '../firebase/orders';
 import { useToast } from '../contexts/ToastContext';
@@ -7,10 +7,10 @@ import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 
 const STATUS_STYLES = {
-  pending:   'bg-yellow-100 text-yellow-700 dark:bg-pk-warning/20 dark:text-pk-warning',
-  confirmed: 'bg-blue-100 text-blue-700 dark:bg-pk-accent/20 dark:text-pk-accent',
-  delivered: 'bg-green-100 text-green-700 dark:bg-pk-success/20 dark:text-pk-success',
-  cancelled: 'bg-red-100 text-red-700 dark:bg-pk-error/20 dark:text-pk-error',
+  pending:   'bg-amber-100 text-amber-700',
+  confirmed: 'bg-blue-100 text-blue-700',
+  delivered: 'bg-green-100 text-green-700',
+  cancelled: 'bg-red-100 text-red-700',
 };
 
 export default function MyOrders() {
@@ -18,37 +18,50 @@ export default function MyOrders() {
   const { showSuccess, showError } = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [cancelTarget, setCancelTarget] = useState(null); // order id to confirm cancel
+  const [fetchError, setFetchError] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
 
-  useEffect(() => { fetchOrders(); }, [currentUser]);
+  const isGuest = !currentUser || currentUser.uid === 'mock-admin';
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      if (currentUser && currentUser.uid !== 'mock-admin') {
-        // Signed-in user — fetch from Firestore
+      if (!isGuest) {
+        // ── Signed-in user ──────────────────────────────
         const data = await getUserOrders(currentUser.uid);
         setOrders(data);
       } else {
-        // Guest — read from localStorage
+        // ── Guest user: read from localStorage ──────────
         const stored = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
-        // Refresh statuses from Firestore in case admin updated them
-        const refreshed = await Promise.all(stored.map(async (o) => {
-          try {
-            const snap = await getDoc(doc(db, 'orders', o.id));
-            return snap.exists() ? { ...o, ...snap.data(), id: o.id } : o;
-          } catch { return o; }
-        }));
-        setOrders(refreshed.reverse());
+        if (stored.length === 0) {
+          setOrders([]);
+          return;
+        }
+        // Try to refresh status from Firestore (best-effort, don't block on failure)
+        const refreshed = await Promise.all(
+          stored.map(async (o) => {
+            if (!o.id) return o;
+            try {
+              const snap = await getDoc(doc(db, 'orders', o.id));
+              if (snap.exists()) return { ...o, ...snap.data(), id: o.id };
+            } catch { /* network issue – return cached */ }
+            return o;
+          })
+        );
+        // Newest first
+        setOrders([...refreshed].reverse());
       }
     } catch (err) {
-      console.error(err);
-      showError('Failed to load orders.');
+      console.error('fetchOrders error:', err);
+      setFetchError(err.message || 'Unknown error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUser, isGuest]);
+
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
   const handleCancel = async () => {
     if (!cancelTarget) return;
@@ -56,16 +69,16 @@ export default function MyOrders() {
     try {
       await cancelOrder(cancelTarget);
       setOrders(prev => prev.map(o => o.id === cancelTarget ? { ...o, status: 'cancelled' } : o));
-      // Also update localStorage for guests
-      if (!currentUser || currentUser.uid === 'mock-admin') {
+      if (isGuest) {
         const stored = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
-        const updated = stored.map(o => o.id === cancelTarget ? { ...o, status: 'cancelled' } : o);
-        localStorage.setItem('pk_guest_orders', JSON.stringify(updated));
+        localStorage.setItem('pk_guest_orders', JSON.stringify(
+          stored.map(o => o.id === cancelTarget ? { ...o, status: 'cancelled' } : o)
+        ));
       }
       showSuccess('Order cancelled successfully.');
     } catch (err) {
       console.error(err);
-      showError('Failed to cancel order.');
+      showError('Failed to cancel order. Please try again.');
     } finally {
       setCancelling(false);
       setCancelTarget(null);
@@ -74,35 +87,46 @@ export default function MyOrders() {
 
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-2">My Orders</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">My Orders</h1>
+        <button
+          onClick={fetchOrders}
+          disabled={loading}
+          className="flex items-center gap-1.5 text-xs text-pk-text-muted hover:text-pk-text-main px-3 py-1.5 border border-pk-bg-secondary rounded-full transition-colors disabled:opacity-40"
+        >
+          <FiRefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          Refresh
+        </button>
+      </div>
       <p className="text-pk-text-muted text-sm mb-8">
-        {currentUser && currentUser.uid !== 'mock-admin'
-          ? `Signed in as ${currentUser.email}`
-          : 'You are browsing as Guest — orders saved locally.'}
+        {isGuest
+          ? 'Browsing as Guest — orders saved on this device.'
+          : `Signed in as ${currentUser.displayName || currentUser.email}`}
       </p>
 
-      {/* Confirm cancel dialog */}
+      {/* Cancel Confirmation Dialog */}
       {cancelTarget && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
           <div className="bg-pk-surface border border-pk-bg-secondary rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <div className="flex items-center gap-3 mb-4 text-pk-warning">
-              <FiAlertTriangle size={28} />
+            <div className="flex items-center gap-3 mb-4 text-pk-error">
+              <FiAlertTriangle size={26} />
               <h3 className="font-bold text-pk-text-main text-lg">Cancel Order?</h3>
             </div>
             <p className="text-sm text-pk-text-muted mb-6">
-              This action cannot be undone. The order will be marked as <strong>Cancelled</strong> and the admin will be notified.
+              This action cannot be undone. The admin will also be notified.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setCancelTarget(null)}
-                className="flex-1 py-2.5 rounded-xl border border-pk-bg-secondary text-pk-text-muted hover:text-pk-text-main font-medium text-sm transition-colors"
+                className="flex-1 py-2.5 rounded-xl border border-pk-bg-secondary text-pk-text-muted hover:text-pk-text-main font-medium text-sm"
               >
                 Keep Order
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelling}
-                className="flex-1 py-2.5 rounded-xl bg-pk-error text-white font-bold text-sm hover:bg-red-600 transition-colors disabled:opacity-60"
+                className="flex-1 py-2.5 rounded-xl bg-pk-error text-white font-bold text-sm hover:bg-red-600 disabled:opacity-60"
               >
                 {cancelling ? 'Cancelling...' : 'Yes, Cancel'}
               </button>
@@ -111,23 +135,54 @@ export default function MyOrders() {
         </div>
       )}
 
-      {loading ? (
+      {/* Loading state */}
+      {loading && (
         <div className="space-y-4">
-          {[1,2,3].map(i => <div key={i} className="bg-pk-surface border border-pk-bg-secondary rounded-2xl h-28 animate-pulse" />)}
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-pk-surface border border-pk-bg-secondary rounded-2xl h-28 animate-pulse" />
+          ))}
         </div>
-      ) : orders.length === 0 ? (
+      )}
+
+      {/* Error state */}
+      {!loading && fetchError && (
+        <div className="text-center py-16 bg-pk-surface border border-pk-error/30 rounded-3xl px-6">
+          <FiAlertTriangle size={40} className="mx-auto text-pk-error mb-4 opacity-70" />
+          <p className="font-semibold text-pk-text-main mb-1">Could not load orders</p>
+          <p className="text-xs text-pk-text-muted mb-5 max-w-xs mx-auto">{fetchError}</p>
+          <button
+            onClick={fetchOrders}
+            className="px-6 py-2 bg-pk-accent text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!loading && !fetchError && orders.length === 0 && (
         <div className="text-center py-20 bg-pk-surface border border-pk-bg-secondary rounded-3xl">
-          <FiPackage size={48} className="mx-auto text-pk-text-muted mb-4 opacity-50" />
-          <p className="text-pk-text-muted">No orders found yet.</p>
+          <FiPackage size={48} className="mx-auto text-pk-text-muted mb-4 opacity-40" />
+          <p className="font-semibold text-pk-text-main mb-1">No orders yet</p>
+          <p className="text-xs text-pk-text-muted">Place your first order and it will appear here.</p>
         </div>
-      ) : (
+      )}
+
+      {/* Orders list */}
+      {!loading && !fetchError && orders.length > 0 && (
         <div className="space-y-4">
           {orders.map(order => (
-            <div key={order.id} className="bg-pk-surface border border-pk-bg-secondary rounded-2xl p-5 shadow-sm hover:border-pk-accent/30 transition-colors">
+            <div
+              key={order.id}
+              className="bg-pk-surface border border-pk-bg-secondary rounded-2xl p-5 shadow-sm hover:border-pk-accent/30 transition-colors"
+            >
+              {/* Order header */}
               <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs text-pk-accent bg-pk-accent/10 px-2 py-0.5 rounded">{order.id.slice(0,8).toUpperCase()}</span>
+                    <span className="font-mono text-xs text-pk-accent bg-pk-accent/10 px-2 py-0.5 rounded">
+                      {order.id.slice(0, 8).toUpperCase()}
+                    </span>
                     <span className={`text-xs font-bold uppercase px-2.5 py-0.5 rounded-full ${STATUS_STYLES[order.status] || STATUS_STYLES.pending}`}>
                       {order.status || 'pending'}
                     </span>
@@ -135,18 +190,23 @@ export default function MyOrders() {
                   <p className="text-xs text-pk-text-muted">
                     {order.createdAt?.toMillis
                       ? new Date(order.createdAt.toMillis()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                      : 'Recent'}
+                      : 'Recent order'}
                   </p>
                 </div>
-                <span className="text-xl font-bold text-pk-text-main">₹{order.totalAmount}</span>
+                <span className="text-xl font-bold text-pk-text-main">
+                  ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
+                </span>
               </div>
 
               {/* Items */}
               <div className="space-y-1 mb-4">
-                {order.items?.map((item, i) => (
+                {(order.items || []).map((item, i) => (
                   <div key={i} className="flex justify-between text-sm text-pk-text-muted">
-                    <span>{item.title} {item.size && item.size !== 'N/A' ? `(${item.size})` : ''} × {item.quantity}</span>
-                    <span>₹{item.price * item.quantity}</span>
+                    <span>
+                      {item.title}
+                      {item.size && item.size !== 'N/A' ? ` (${item.size})` : ''} × {item.quantity}
+                    </span>
+                    <span>₹{Number(item.price || 0) * Number(item.quantity || 1)}</span>
                   </div>
                 ))}
               </div>
@@ -161,7 +221,7 @@ export default function MyOrders() {
                 </button>
 
                 <a
-                  href={`https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen! Checking on my order (ID: ${order.id}). Status: ${order.status || 'pending'}. Total: Rs. ${order.totalAmount}.`)}`}
+                  href={`https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I'm checking on my order (ID: ${order.id}). Status: ${order.status || 'pending'}. Total: Rs. ${order.totalAmount}.`)}`}
                   target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-1 text-xs px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
                 >
