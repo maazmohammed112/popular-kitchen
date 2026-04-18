@@ -26,6 +26,7 @@ const Terms = lazy(() => import('./pages/Terms'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Support = lazy(() => import('./pages/Support'));
 const Search = lazy(() => import('./pages/Search'));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
 
 const AdminRoute = ({ children }) => {
