@@ -136,10 +136,14 @@ export default function ProductDetail() {
             {hasOffer ? (
               <div className="flex flex-col">
                 <span className="text-pk-text-muted line-through text-lg">₹{product.price}</span>
-                <span className="text-3xl font-bold text-pk-text-main">₹{currentPrice}</span>
+                <span className="text-3xl font-bold text-pk-text-main">
+                  ₹{currentPrice} {selectedSizeObj && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
+                </span>
               </div>
             ) : (
-              <span className="text-3xl font-bold text-pk-text-main">₹{currentPrice}</span>
+              <span className="text-3xl font-bold text-pk-text-main">
+                ₹{currentPrice} {selectedSizeObj && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
+              </span>
             )}
             
             {isOutOfStock ? (

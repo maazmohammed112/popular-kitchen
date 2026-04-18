@@ -99,10 +99,14 @@ export const ProductCard = ({ product }) => {
               {hasOffer && !selectedSize ? (
                 <>
                   <span className="text-xs text-pk-text-muted line-through">₹{product.price}</span>
-                  <span className="text-lg font-bold text-pk-text-main leading-none">₹{currentPrice}</span>
+                  <span className="text-lg font-bold text-pk-text-main leading-none">
+                    ₹{currentPrice} {selectedSize && <span className="text-[10px] font-normal text-pk-text-muted">({selectedSize.name})</span>}
+                  </span>
                 </>
               ) : (
-                <span className="text-lg font-bold text-pk-text-main">₹{currentPrice}</span>
+                <span className="text-lg font-bold text-pk-text-main">
+                  ₹{currentPrice} {selectedSize && <span className="text-xs font-normal text-pk-text-muted">({selectedSize.name})</span>}
+                </span>
               )}
             </div>
           </div>
