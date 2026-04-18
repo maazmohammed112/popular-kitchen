@@ -6,6 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { SEO } from '../components/SEO';
 import { getOptimizedUrl } from '../cloudinary/upload';
+import { ShareButton } from '../components/ShareButton';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -163,7 +164,10 @@ export default function ProductDetail() {
 
         {/* Details */}
         <div className="flex flex-col">
-          <span className="text-pk-accent text-sm font-semibold tracking-wider uppercase mb-2">{product.category}</span>
+          <div className="flex justify-between items-start mb-2">
+            <span className="text-pk-accent text-sm font-semibold tracking-wider uppercase">{product.category}</span>
+            <ShareButton product={product} className="bg-pk-bg-primary border-pk-bg-secondary text-pk-text-main shadow-none" />
+          </div>
           <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-4 leading-tight">{product.title}</h1>
           
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-pk-bg-secondary">

@@ -4,6 +4,7 @@ import { FiShoppingCart, FiMinus, FiPlus } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { getOptimizedUrl } from '../cloudinary/upload';
+import { ShareButton } from './ShareButton';
 
 export const ProductCard = ({ product }) => {
   const { addToCart, cartItems, updateQuantity, removeFromCart } = useCart();
@@ -67,6 +68,11 @@ export const ProductCard = ({ product }) => {
             Few Left
           </span>
         )}
+      </div>
+
+      {/* Share Button */}
+      <div className="absolute top-3 right-3 z-20">
+        <ShareButton product={product} />
       </div>
 
       <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
