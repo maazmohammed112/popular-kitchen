@@ -7,6 +7,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { createOrder } from '../firebase/orders';
+import { SignUpPromptModal } from '../components/SignUpPromptModal';
+import { AuthModal } from '../components/AuthModal';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -20,6 +22,10 @@ export default function Checkout() {
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
+  const [guestConfirmed, setGuestConfirmed] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const isGuest = !currentUser || currentUser.uid === 'mock-admin';
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -52,6 +58,11 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Show sign up prompt for guests first time (only once)
+    if (isGuest && !guestConfirmed) {
+      setShowGuestPrompt(true);
+      return;
+    }
     if (!formData.name || !formData.phone || !formData.address) {
       showError("Please fill out all fields.");
       return;
@@ -104,6 +115,22 @@ export default function Checkout() {
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out] max-w-4xl mx-auto">
+      {/* Guest Sign Up Prompt */}
+      {showGuestPrompt && (
+        <SignUpPromptModal
+          onContinueAsGuest={() => {
+            setShowGuestPrompt(false);
+            setGuestConfirmed(true);
+            // Submit after state updates in next tick
+            setTimeout(() => document.getElementById('checkout-form')?.requestSubmit(), 50);
+          }}
+          onSignUp={() => {
+            setShowGuestPrompt(false);
+            setShowAuth(true);
+          }}
+        />
+      )}
+      {showAuth && <AuthModal defaultTab="signup" onClose={() => setShowAuth(false)} />}
       <h1 className="text-2xl md:text-3xl font-bold mb-8 flex items-center gap-3">
         <FiLock className="text-pk-accent" /> Checkout
       </h1>
@@ -112,7 +139,7 @@ export default function Checkout() {
         
         {/* Form */}
         <div className="lg:col-span-2">
-          <form onSubmit={handleSubmit} className="bg-pk-surface p-6 md:p-8 rounded-3xl border border-pk-bg-secondary space-y-6">
+          <form id="checkout-form" onSubmit={handleSubmit} className="bg-pk-surface p-6 md:p-8 rounded-3xl border border-pk-bg-secondary space-y-6">
             <h2 className="text-lg font-bold border-b border-pk-bg-secondary pb-4">Shipping Details</h2>
             
             <div className="space-y-4">

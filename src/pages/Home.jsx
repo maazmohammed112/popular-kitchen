@@ -38,9 +38,9 @@ export default function Home() {
         onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
       >
         <img
-          src="/hero-banner.jpg"
-          alt="Popular Kitchenware – Official Destination for Quality"
-          className="w-full object-cover max-h-[420px]"
+          src="/hero-banner.png"
+          alt="Popular Kitchen - Premium Kitchenware Store Bangalore"
+          className="w-full object-cover max-h-[420px] block"
         />
       </div>
 
