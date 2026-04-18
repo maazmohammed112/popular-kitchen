@@ -28,8 +28,8 @@ export const Navbar = ({ onOpenCart }) => {
   // Allow search bar everywhere
   const showSearchBar = true;
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isGuest = !currentUser;
-  const isMockAdmin = currentUser?.uid === 'mock-admin';
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -82,12 +82,7 @@ export const Navbar = ({ onOpenCart }) => {
               )}
 
               {/* Admin badge */}
-              {isAdmin && !isMockAdmin && (
-                <Link to="/admin/dashboard" className="hidden sm:flex text-xs bg-white text-pk-accent px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors font-bold shadow-sm">
-                  Admin
-                </Link>
-              )}
-              {isMockAdmin && (
+              {isAdmin && (
                 <Link to="/admin/dashboard" className="hidden sm:flex text-xs bg-white text-pk-accent px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors font-bold shadow-sm">
                   Admin
                 </Link>
@@ -172,7 +167,7 @@ export const Navbar = ({ onOpenCart }) => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="sm:hidden absolute top-full left-0 w-full bg-pk-surface border-b border-pk-bg-secondary flex flex-col shadow-xl z-40 max-h-[80vh] overflow-y-auto">
-            {(isAdmin || isMockAdmin) && (
+            {isAdmin && (
               <Link to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="py-4 px-6 text-sm font-bold text-pk-accent border-b border-pk-bg-secondary">
                 Admin Dashboard
               </Link>

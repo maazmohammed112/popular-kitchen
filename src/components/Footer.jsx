@@ -53,7 +53,7 @@ export const Footer = ({ toggleTheme }) => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-pk-bg-secondary">
-          <p className="text-xs text-pk-text-muted">© {new Date().getFullYear()} Popular Kitchen. All rights reserved.</p>
+          <p className="text-xs text-pk-text-muted">© {new Date().getFullYear()} Popular Kitchen. Built by &lt;mma/&gt;</p>
 
           {/* Dark Mode Toggle in footer */}
           <button

@@ -18,6 +18,18 @@ const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+// Enable offline persistence for lightning-fast loading
+if (typeof window !== "undefined") {
+  const { enableIndexedDbPersistence } = await import("firebase/firestore");
+  enableIndexedDbPersistence(db).catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+    } else if (err.code === 'unimplemented') {
+      console.warn("The current browser does not support all of the features required to enable persistence.");
+    }
+  });
+}
+
 const googleProvider = new GoogleAuthProvider();
 
 export { app, analytics, db, auth, googleProvider };

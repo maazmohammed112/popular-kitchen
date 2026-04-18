@@ -23,7 +23,7 @@ export default function MyOrders() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
 
-  const isGuest = !currentUser || currentUser.uid === 'mock-admin';
+  const isGuest = !currentUser;
 
   useEffect(() => {
     let unsubscribe;

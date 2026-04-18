@@ -32,7 +32,7 @@ export const ShareButton = ({ product, className = "" }) => {
   return (
     <button
       onClick={handleShare}
-      className={`p-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 transition-all shadow-lg ${className}`}
+      className={`p-2 rounded-full bg-black/30 backdrop-blur-md border border-white/20 text-white hover:bg-black/50 transition-all shadow-lg ring-1 ring-black/5 ${className}`}
       title="Share Product"
     >
       <FiShare2 size={16} />

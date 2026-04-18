@@ -47,15 +47,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    // Hardcoded Admin logic check
-    if (email === 'admin' && password === 'admin') {
-      localStorage.setItem('pk_hardcoded_admin', 'true');
-      const mockUser = { uid: 'mock-admin', email: 'admin@popularkitchen.com', displayName: 'Mock Admin' };
-      setCurrentUser(mockUser);
-      setUserRole('admin');
-      return { user: mockUser, role: 'admin' };
-    }
-    
     // Normal Firebase flow
     const result = await signInWithEmailAndPassword(auth, email, password);
     
@@ -71,13 +62,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    if (localStorage.getItem('pk_hardcoded_admin')) {
-      localStorage.removeItem('pk_hardcoded_admin');
-      setCurrentUser(null);
-      setUserRole('user');
-    } else {
-      await signOut(auth);
-    }
+    await signOut(auth);
   };
 
   const value = {

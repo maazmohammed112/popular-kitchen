@@ -22,22 +22,37 @@ export default function Checkout() {
     address: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showGuestPrompt, setShowGuestPrompt] = useState(false);
-  const [guestConfirmed, setGuestConfirmed] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
-  const isGuest = !currentUser || currentUser.uid === 'mock-admin';
+  const isAuthenticated = !!currentUser;
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (currentUser && currentUser.uid !== 'mock-admin') {
+      // Priority 1: Logged in user with saved details in Firestore
+      if (currentUser) {
         const userRef = doc(db, 'users', currentUser.uid);
         const docSnap = await getDoc(userRef);
+        
+        // Check for pending checkout details in localStorage first (highest priority if just logged in)
+        const pending = localStorage.getItem('pk_pending_checkout');
+        if (pending) {
+          try {
+            const parsed = JSON.parse(pending);
+            setFormData(parsed);
+            
+            // Auto-save these to Firestore for the user
+            await setDoc(userRef, { shippingDetails: parsed }, { merge: true });
+            localStorage.removeItem('pk_pending_checkout'); // Done
+            return;
+          } catch (e) {}
+        }
+
         if (docSnap.exists() && docSnap.data().shippingDetails) {
           setFormData(docSnap.data().shippingDetails);
         } else {
           setFormData(prev => ({ ...prev, name: currentUser.displayName || '' }));
         }
       } else {
+        // Guest view - check for temporary local storage (not pending login)
         const saved = localStorage.getItem('pk_guest_shipping');
         if (saved) {
           try { setFormData(JSON.parse(saved)); } catch (e) {}
@@ -58,11 +73,16 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Show sign up prompt for guests first time (only once)
-    if (isGuest && !guestConfirmed) {
-      setShowGuestPrompt(true);
+    
+    // FORCED AUTH: Guests must sign in/up to place order
+    if (!isAuthenticated) {
+      // Save their progress
+      localStorage.setItem('pk_pending_checkout', JSON.stringify(formData));
+      showError("Please sign in or sign up to complete your order.");
+      window.dispatchEvent(new CustomEvent('show-auth-modal', { detail: 'signin' }));
       return;
     }
+
     if (!formData.name || !formData.phone || !formData.address) {
       showError("Please fill out all fields.");
       return;
@@ -90,17 +110,8 @@ export default function Checkout() {
       const orderId = await createOrder(orderData);
       
       // Save details for next time
-      if (currentUser && currentUser.uid !== 'mock-admin') {
-        const userRef = doc(db, 'users', currentUser.uid);
-        await setDoc(userRef, { shippingDetails: formData }, { merge: true });
-      } else {
-        localStorage.setItem('pk_guest_shipping', JSON.stringify(formData));
-      }
-
-      // Save full order to localStorage for guest history
-      const guestOrders = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
-      guestOrders.push({ id: orderId, ...orderData, createdAt: null });
-      localStorage.setItem('pk_guest_orders', JSON.stringify(guestOrders));
+      const userRef = doc(db, 'users', currentUser.uid);
+      await setDoc(userRef, { shippingDetails: formData }, { merge: true });
 
       clearCart();
       showSuccess("Order placed successfully!");
@@ -115,21 +126,6 @@ export default function Checkout() {
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out] max-w-4xl mx-auto">
-      {/* Guest Sign Up Prompt */}
-      {showGuestPrompt && (
-        <SignUpPromptModal
-          onContinueAsGuest={() => {
-            setShowGuestPrompt(false);
-            setGuestConfirmed(true);
-            // Submit after state updates in next tick
-            setTimeout(() => document.getElementById('checkout-form')?.requestSubmit(), 50);
-          }}
-          onSignUp={() => {
-            setShowGuestPrompt(false);
-            setShowAuth(true);
-          }}
-        />
-      )}
       {showAuth && <AuthModal defaultTab="signup" onClose={() => setShowAuth(false)} />}
       <h1 className="text-2xl md:text-3xl font-bold mb-8 flex items-center gap-3">
         <FiLock className="text-pk-accent" /> Checkout
