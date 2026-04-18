@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
