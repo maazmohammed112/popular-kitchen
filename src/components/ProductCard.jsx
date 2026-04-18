@@ -1,46 +1,58 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiCheckCircle } from 'react-icons/fi';
+import { FiShoppingCart, FiMinus, FiPlus } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { getOptimizedUrl } from '../cloudinary/upload';
 
 export const ProductCard = ({ product }) => {
-  const { addToCart, cartItems } = useCart();
-  const { showSuccess, showError } = useToast();
+  const { addToCart, cartItems, updateQuantity, removeFromCart } = useCart();
+  const { showSuccess } = useToast();
 
-  const inCart = cartItems.some(i => i.productId === product.id);
+  const normalizedSizes = (product.sizes || []).map(s => 
+    typeof s === 'string' ? { name: s, price: product.discountPrice || product.price } : s
+  );
 
-  const handleAction = (e) => {
+  const [selectedSize, setSelectedSize] = useState(normalizedSizes.length > 0 ? normalizedSizes[0] : null);
+
+  const currentPrice = selectedSize ? selectedSize.price : (product.discountPrice || product.price);
+  
+  const inCartItem = cartItems.find(i => i.productId === product.id && i.size === (selectedSize ? selectedSize.name : null));
+  const inCart = !!inCartItem;
+  const quantity = inCartItem ? inCartItem.quantity : 0;
+
+  const handleAddToCart = (e) => {
     e.preventDefault();
-    if (inCart) {
-      window.dispatchEvent(new CustomEvent('open-cart'));
-      return;
-    }
-
-    if (product.sizes && product.sizes.length > 0) {
-      showError('Please select a size from the product details.');
-      return;
-    }
+    if (product.stockStatus === 'outOfStock') return;
 
     addToCart({
       productId: product.id,
       title: product.title,
-      price: product.discountPrice || product.price,
-      size: null, 
+      price: currentPrice,
+      size: selectedSize ? selectedSize.name : null, 
       image: getOptimizedUrl(product.images?.[0]),
       quantity: 1
     });
     showSuccess(`${product.title} added to cart`);
   };
 
-  const hasOffer = product.offerPercent > 0;
+  const handleUpdateQty = (e, newQty) => {
+    e.preventDefault();
+    if (newQty <= 0) {
+      removeFromCart(product.id, selectedSize ? selectedSize.name : null);
+    } else {
+      updateQuantity(product.id, selectedSize ? selectedSize.name : null, newQty);
+    }
+  };
+
+  const hasOffer = product.offerPercent > 0 && !selectedSize; 
   const isOutOfStock = product.stockStatus === 'outOfStock';
   const imgUrl = getOptimizedUrl(product.images?.[0]);
 
   return (
-    <Link to={`/product/${product.id}`} className="group relative bg-pk-surface rounded-2xl overflow-hidden shadow-lg flex flex-col h-[320px] transition-transform hover:-translate-y-1">
+    <div className="group relative bg-pk-surface rounded-2xl overflow-hidden shadow-lg flex flex-col transition-transform hover:-translate-y-1">
       {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
+      <div className="absolute top-3 left-3 z-10 flex flex-col gap-2 pointer-events-none">
         {hasOffer && (
           <span className="bg-pk-error text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase">
             {product.offerPercent}% OFF
@@ -53,55 +65,100 @@ export const ProductCard = ({ product }) => {
         )}
       </div>
 
-      {/* Image */}
-      <div className="w-full h-48 bg-[#1A2F50] overflow-hidden">
-        {imgUrl ? (
-          <img 
-            src={imgUrl} 
-            alt={product.title} 
-            loading="lazy" 
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`} 
-          />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full text-pk-text-muted">No Image</div>
-        )}
-        
-        {isOutOfStock && (
-          <div className="absolute inset-x-0 top-20 flex justify-center z-10">
-            <span className="bg-pk-bg-primary/90 backdrop-blur-md px-4 py-2 rounded-lg text-pk-text-main font-bold tracking-wider text-xs">
-              OUT OF STOCK
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4 flex flex-col flex-1">
-        <span className="text-xs text-pk-accent mb-1 uppercase tracking-wider">{product.category}</span>
-        <h3 className="text-sm font-semibold text-pk-text-main line-clamp-1">{product.title}</h3>
-        
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <div className="flex flex-col">
-            {hasOffer ? (
-              <>
-                <span className="text-xs text-pk-text-muted line-through">₹{product.price}</span>
-                <span className="text-lg font-bold text-pk-text-main leading-none">₹{product.discountPrice}</span>
-              </>
-            ) : (
-              <span className="text-lg font-bold text-pk-text-main">₹{product.price}</span>
-            )}
-          </div>
+      <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
+        {/* Image */}
+        <div className="w-full h-48 bg-[#1A2F50] overflow-hidden relative">
+          {imgUrl ? (
+            <img 
+              src={imgUrl} 
+              alt={product.title} 
+              loading="lazy" 
+              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`} 
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full text-pk-text-muted">No Image</div>
+          )}
           
-          <button 
-            onClick={handleAction}
-            disabled={isOutOfStock}
-            className="w-10 h-10 rounded-full bg-pk-bg-secondary flex items-center justify-center text-pk-text-main hover:bg-pk-accent transition-colors disabled:opacity-50 disabled:hover:bg-pk-bg-secondary"
-            aria-label={inCart ? "Go to cart" : "Add to cart"}
-          >
-            {inCart ? <FiCheckCircle className="w-4 h-4 text-pk-success" /> : <FiShoppingCart className="w-4 h-4" />}
-          </button>
+          {isOutOfStock && (
+            <div className="absolute inset-x-0 top-20 flex justify-center z-10">
+              <span className="bg-pk-bg-primary/90 backdrop-blur-md px-4 py-2 rounded-lg text-pk-text-main font-bold tracking-wider text-xs">
+                OUT OF STOCK
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Content */}
+        <div className="p-4 flex flex-col flex-1 pb-2">
+          <span className="text-xs text-pk-accent mb-1 uppercase tracking-wider">{product.category}</span>
+          <h3 className="text-sm font-semibold text-pk-text-main line-clamp-1 mb-2">{product.title}</h3>
+          
+          {/* Price */}
+          <div className="flex items-end justify-between mt-auto">
+            <div className="flex flex-col">
+              {hasOffer && !selectedSize ? (
+                <>
+                  <span className="text-xs text-pk-text-muted line-through">₹{product.price}</span>
+                  <span className="text-lg font-bold text-pk-text-main leading-none">₹{currentPrice}</span>
+                </>
+              ) : (
+                <span className="text-lg font-bold text-pk-text-main">₹{currentPrice}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      <div className="px-4 pb-4 bg-pk-surface relative z-20">
+        {/* Size Selection */}
+        {normalizedSizes.length > 0 && (
+          <div className="mb-3">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-1">
+              {normalizedSizes.map(size => (
+                <button
+                  key={size.name}
+                  onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
+                  className={`text-[10px] uppercase font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors border ${
+                    selectedSize?.name === size.name 
+                    ? 'border-pk-accent bg-pk-accent text-white' 
+                    : 'border-pk-bg-secondary bg-pk-bg-primary text-pk-text-muted hover:border-pk-text-muted'
+                  }`}
+                >
+                  {size.name}
+                </button>
+              ))}
+            </div>
+            {normalizedSizes.length > 0 && <span className="text-[9px] text-pk-text-muted italic block mt-1">Each size has its own price.</span>}
+          </div>
+        )}
+
+        {/* Action Button / Qty */}
+        {inCart ? (
+          <div className="flex items-center justify-between bg-pk-bg-secondary rounded-xl p-1 h-10 w-full">
+            <button 
+              onClick={(e) => handleUpdateQty(e, quantity - 1)}
+              className="w-10 h-full flex items-center justify-center text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-primary rounded-lg transition-colors"
+            >
+              <FiMinus size={14} />
+            </button>
+            <span className="text-sm font-bold w-8 text-center">{quantity}</span>
+            <button 
+              onClick={(e) => handleUpdateQty(e, quantity + 1)}
+              className="w-10 h-full flex items-center justify-center text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-primary rounded-lg transition-colors"
+            >
+              <FiPlus size={14} />
+            </button>
+          </div>
+        ) : (
+          <button 
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="w-full h-10 rounded-xl bg-pk-accent flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
+          >
+            <FiShoppingCart size={14} /> Add to Cart
+          </button>
+        )}
       </div>
-    </Link>
+    </div>
   );
 };

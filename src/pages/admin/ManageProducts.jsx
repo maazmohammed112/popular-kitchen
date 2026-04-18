@@ -19,7 +19,8 @@ export default function ManageProducts() {
     stockStatus: 'inStock', images: []
   };
   const [formData, setFormData] = useState(initialForm);
-  const [newSize, setNewSize] = useState('');
+  const [newSizeName, setNewSizeName] = useState('');
+  const [newSizePrice, setNewSizePrice] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
 
   useEffect(() => {
@@ -41,7 +42,10 @@ export default function ManageProducts() {
 
   const handleOpenModal = (product = null) => {
     if (product) {
-      setFormData({ ...product, sizes: product.sizes || [], images: product.images || [] });
+      const normalizedSizes = (product.sizes || []).map(s => 
+        typeof s === 'string' ? { name: s, price: product.discountPrice || product.price } : s
+      );
+      setFormData({ ...product, sizes: normalizedSizes, images: product.images || [] });
     } else {
       setFormData(initialForm);
     }
@@ -49,14 +53,21 @@ export default function ManageProducts() {
   };
 
   const handleAddSize = () => {
-    if (newSize && !formData.sizes.includes(newSize.trim())) {
-      setFormData(prev => ({ ...prev, sizes: [...prev.sizes, newSize.trim()] }));
-      setNewSize('');
+    if (newSizeName.trim()) {
+      const name = newSizeName.trim();
+      if (!formData.sizes.find(s => s.name === name)) {
+        setFormData(prev => ({ 
+          ...prev, 
+          sizes: [...prev.sizes, { name, price: parseFloat(newSizePrice) || parseFloat(formData.discountPrice || formData.price) || 0 }] 
+        }));
+        setNewSizeName('');
+        setNewSizePrice('');
+      }
     }
   };
 
-  const handleRemoveSize = (sizeToRemove) => {
-    setFormData(prev => ({ ...prev, sizes: prev.sizes.filter(s => s !== sizeToRemove) }));
+  const handleRemoveSize = (sizeNameToRemove) => {
+    setFormData(prev => ({ ...prev, sizes: prev.sizes.filter(s => s.name !== sizeNameToRemove) }));
   };
 
   const handleImageUpload = async (e) => {
@@ -243,16 +254,21 @@ export default function ManageProducts() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Sizes (Optional)</label>
+                  <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Sizes & Pricing (Optional)</label>
                   <div className="flex gap-2 mb-3">
-                    <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="flex-1 bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="e.g. Small, 2L, Medium" />
+                    <input type="text" value={newSizeName} onChange={e => setNewSizeName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="flex-1 bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="Size (e.g. Small)" />
+                    <input type="number" min="0" value={newSizePrice} onChange={e => setNewSizePrice(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="w-24 bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="Price ₹" />
                     <button type="button" onClick={handleAddSize} className="px-4 py-2 bg-pk-bg-secondary hover:bg-pk-accent rounded-xl transition-colors text-white text-sm font-medium">Add</button>
                   </div>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-2 max-h-32 overflow-y-auto">
                     {formData.sizes.map(size => (
-                      <span key={size} className="flex items-center gap-1 bg-pk-bg-secondary px-3 py-1 rounded-full text-xs font-bold text-pk-text-main uppercase">
-                        {size} <button type="button" onClick={() => handleRemoveSize(size)} className="text-pk-text-muted hover:text-pk-error ml-1"><FiX size={12}/></button>
-                      </span>
+                      <div key={size.name} className="flex justify-between items-center bg-pk-bg-secondary px-3 py-1.5 rounded-lg text-xs font-bold text-pk-text-main">
+                        <span className="uppercase">{size.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="text-pk-accent">₹{size.price}</span>
+                          <button type="button" onClick={() => handleRemoveSize(size.name)} className="text-pk-text-muted hover:text-pk-error"><FiX size={14}/></button>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

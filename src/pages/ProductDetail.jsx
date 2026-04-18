@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart } from 'react-icons/fi';
+import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { getProduct } from '../firebase/products';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
@@ -18,15 +18,19 @@ export default function ProductDetail() {
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const data = await getProduct(id);
         if (data) {
-          setProduct(data);
-          if (data.sizes && data.sizes.length > 0) {
-            setSelectedSize(data.sizes[0]);
+          const normalizedSizes = (data.sizes || []).map(s => 
+            typeof s === 'string' ? { name: s, price: data.discountPrice || data.price } : s
+          );
+          setProduct({...data, sizes: normalizedSizes});
+          if (normalizedSizes.length > 0) {
+            setSelectedSize(normalizedSizes[0].name);
           }
         }
       } catch (err) {
@@ -51,10 +55,14 @@ export default function ProductDetail() {
     );
   }
 
-  const hasOffer = product.offerPercent > 0;
+  const selectedSizeObj = product.sizes?.find(s => s.name === selectedSize);
+  const currentPrice = selectedSizeObj ? selectedSizeObj.price : (product.discountPrice || product.price);
+
+  const hasOffer = product.offerPercent > 0 && !selectedSizeObj;
   const isOutOfStock = product.stockStatus === 'outOfStock';
 
-  const inCart = cartItems.some(i => i.productId === product.id && i.size === (selectedSize || null));
+  const inCartItem = cartItems.find(i => i.productId === product.id && i.size === (selectedSize || null));
+  const inCart = !!inCartItem;
 
   const handleAction = () => {
     if (inCart) {
@@ -66,7 +74,7 @@ export default function ProductDetail() {
     addToCart({
       productId: product.id,
       title: product.title,
-      price: product.discountPrice || product.price,
+      price: currentPrice,
       size: selectedSize || null,
       image: getOptimizedUrl(product.images?.[0]),
       quantity
@@ -84,12 +92,15 @@ export default function ProductDetail() {
         
         {/* Images */}
         <div className="flex flex-col gap-4">
-          <div className="w-full aspect-square bg-[#1A2F50] rounded-2xl overflow-hidden relative">
+          <div 
+            className="w-full aspect-square bg-[#1A2F50] rounded-2xl overflow-hidden relative cursor-pointer group"
+            onClick={() => product.images?.length > 0 && setIsLightboxOpen(true)}
+          >
             {product.images?.[activeImage] ? (
               <img 
                 src={getOptimizedUrl(product.images[activeImage], 1200)} 
                 alt={product.title} 
-                className="w-full h-full object-cover" 
+                className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105" 
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-pk-text-muted">No Image</div>
@@ -125,10 +136,10 @@ export default function ProductDetail() {
             {hasOffer ? (
               <div className="flex flex-col">
                 <span className="text-pk-text-muted line-through text-lg">₹{product.price}</span>
-                <span className="text-3xl font-bold text-pk-text-main">₹{product.discountPrice}</span>
+                <span className="text-3xl font-bold text-pk-text-main">₹{currentPrice}</span>
               </div>
             ) : (
-              <span className="text-3xl font-bold text-pk-text-main">₹{product.price}</span>
+              <span className="text-3xl font-bold text-pk-text-main">₹{currentPrice}</span>
             )}
             
             {isOutOfStock ? (
@@ -147,15 +158,16 @@ export default function ProductDetail() {
               <div className="flex flex-wrap gap-3">
                 {product.sizes.map(size => (
                   <button 
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-5 py-2 rounded-xl text-sm font-medium transition-all ${
-                      selectedSize === size 
+                    key={size.name}
+                    onClick={() => setSelectedSize(size.name)}
+                    className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center ${
+                      selectedSize === size.name 
                       ? 'bg-pk-accent text-white shadow-[0_0_15px_rgba(30,144,255,0.4)] border-pk-accent' 
                       : 'bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary hover:border-pk-text-muted'
                     }`}
                   >
-                    {size}
+                    <span className="uppercase">{size.name}</span>
+                    <span className={`text-[10px] opacity-80 ${selectedSize === size.name ? 'text-white' : 'text-pk-accent font-bold'}`}>₹{size.price}</span>
                   </button>
                 ))}
               </div>
@@ -198,6 +210,58 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && product.images?.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
+          <button 
+            onClick={() => setIsLightboxOpen(false)}
+            className="absolute top-6 right-6 text-white/70 hover:text-white p-2 z-50 transition-colors"
+          >
+            <FiX size={32} />
+          </button>
+          
+          <div className="relative w-full max-w-5xl h-full max-h-[80vh] flex items-center justify-center px-4">
+            {product.images.length > 1 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === 0 ? product.images.length - 1 : prev - 1); }}
+                className="absolute left-4 md:left-8 text-white/50 hover:text-white p-3 z-50 bg-black/20 hover:bg-black/40 rounded-full transition-all"
+              >
+                <FiChevronLeft size={40} />
+              </button>
+            )}
+            
+            <img 
+              src={getOptimizedUrl(product.images[activeImage], 2000)} 
+              alt={product.title}
+              className="max-w-full max-h-full object-contain"
+            />
+            
+            {product.images.length > 1 && (
+              <button 
+                onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === product.images.length - 1 ? 0 : prev + 1); }}
+                className="absolute right-4 md:right-8 text-white/50 hover:text-white p-3 z-50 bg-black/20 hover:bg-black/40 rounded-full transition-all"
+              >
+                <FiChevronRight size={40} />
+              </button>
+            )}
+          </div>
+          
+          {product.images.length > 1 && (
+            <div className="absolute bottom-6 flex gap-3 overflow-x-auto max-w-full px-4 scrollbar-hide">
+              {product.images.map((img, idx) => (
+                <button 
+                  key={idx}
+                  onClick={() => setActiveImage(idx)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-pk-accent scale-110 opacity-100' : 'border-transparent opacity-50 hover:opacity-100'}`}
+                >
+                  <img src={getOptimizedUrl(img, 200)} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

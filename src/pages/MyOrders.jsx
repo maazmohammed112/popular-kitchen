@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiLogIn, FiDownload } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiDownload } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
-import { getUserOrders, cancelOrder } from '../firebase/orders';
+import { listenToUserOrders, cancelOrder } from '../firebase/orders';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
@@ -25,41 +25,43 @@ export default function MyOrders() {
 
   const isGuest = !currentUser || currentUser.uid === 'mock-admin';
 
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setFetchError(null);
-    try {
-      if (!isGuest) {
-        // ── Signed-in user ──────────────────────────────
-        const data = await getUserOrders(currentUser.uid);
+  useEffect(() => {
+    let unsubscribe;
+    if (!isGuest) {
+      setLoading(true);
+      unsubscribe = listenToUserOrders(currentUser.uid, (data) => {
         setOrders(data);
-      } else {
-        // ── Guest user: read from localStorage ──────────
-        const stored = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
-        if (stored.length === 0) {
-          setOrders([]);
-          return;
+        setLoading(false);
+      });
+    } else {
+      const fetchGuestOrders = async () => {
+        setLoading(true);
+        try {
+          const stored = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
+          if (stored.length === 0) {
+            setOrders([]);
+            return;
+          }
+          const refreshed = await Promise.all(
+            stored.map(async (o) => {
+              if (!o.id) return o;
+              try {
+                const snap = await getDoc(doc(db, 'orders', o.id));
+                if (snap.exists()) return { ...o, ...snap.data(), id: o.id };
+              } catch { /* network issue  return cached */ }
+              return o;
+            })
+          );
+          setOrders([...refreshed].reverse());
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoading(false);
         }
-        // Try to refresh status from Firestore (best-effort, don't block on failure)
-        const refreshed = await Promise.all(
-          stored.map(async (o) => {
-            if (!o.id) return o;
-            try {
-              const snap = await getDoc(doc(db, 'orders', o.id));
-              if (snap.exists()) return { ...o, ...snap.data(), id: o.id };
-            } catch { /* network issue – return cached */ }
-            return o;
-          })
-        );
-        // Newest first
-        setOrders([...refreshed].reverse());
-      }
-    } catch (err) {
-      console.error('fetchOrders error:', err);
-      setFetchError(err.message || 'Unknown error');
-    } finally {
-      setLoading(false);
+      };
+      fetchGuestOrders();
     }
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [currentUser, isGuest]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
@@ -91,14 +93,6 @@ export default function MyOrders() {
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">My Orders</h1>
-        <button
-          onClick={fetchOrders}
-          disabled={loading}
-          className="flex items-center gap-1.5 text-xs text-pk-text-muted hover:text-pk-text-main px-3 py-1.5 border border-pk-bg-secondary rounded-full transition-colors disabled:opacity-40"
-        >
-          <FiRefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          Refresh
-        </button>
       </div>
       <p className="text-pk-text-muted text-sm mb-8">
         {isGuest
@@ -152,10 +146,10 @@ export default function MyOrders() {
           <p className="font-semibold text-pk-text-main mb-1">Could not load orders</p>
           <p className="text-xs text-pk-text-muted mb-5 max-w-xs mx-auto">{fetchError}</p>
           <button
-            onClick={fetchOrders}
+            onClick={() => window.location.reload()}
             className="px-6 py-2 bg-pk-accent text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors"
           >
-            Try Again
+            Refresh Page
           </button>
         </div>
       )}
@@ -213,44 +207,62 @@ export default function MyOrders() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-wrap gap-2 pt-3 border-t border-pk-bg-secondary">
-                <button
-                  onClick={() => { navigator.clipboard.writeText(order.id); showSuccess('Order ID copied!'); }}
-                  className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-bg-primary text-pk-text-muted hover:text-pk-text-main border border-pk-bg-secondary rounded-lg transition-colors"
-                >
-                  <FiCopy size={12} /> Copy ID
-                </button>
-
-                <button
-                  onClick={async () => {
-                    try {
-                      await generateCustomerInvoice(order);
-                    } catch (err) {
-                      console.error(err);
-                      showError('Failed to download invoice.');
-                    }
-                  }}
-                  className="flex items-center gap-1 text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
-                >
-                  <FiDownload size={12} /> Invoice
-                </button>
-
-                <a
-                  href={`https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I'm checking on my order (ID: ${order.id}). Status: ${order.status || 'pending'}. Total: Rs. ${order.totalAmount}.`)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
-                >
-                  <FiMessageCircle size={12} /> WhatsApp
-                </a>
-
-                {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                  <button
-                    onClick={() => setCancelTarget(order.id)}
-                    className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-error/10 text-pk-error border border-pk-error/20 rounded-lg hover:bg-pk-error hover:text-white transition-colors ml-auto"
-                  >
-                    <FiX size={12} /> Cancel Order
-                  </button>
+              <div className="flex flex-col gap-2 pt-3 border-t border-pk-bg-secondary">
+                {order.status === 'cancelled' && order.cancelledBy === 'admin' && (
+                  <div className="bg-red-50 text-red-600 text-xs p-2 rounded-lg mb-1 border border-red-100 flex items-center justify-between">
+                    <span>Cancelled by Popular Kitchen team. Contact us on WhatsApp for details.</span>
+                  </div>
                 )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(order.id); showSuccess('Order ID copied!'); }}
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-bg-primary text-pk-text-muted hover:text-pk-text-main border border-pk-bg-secondary rounded-lg transition-colors"
+                  >
+                    <FiCopy size={12} /> Copy ID
+                  </button>
+
+                  {order.status !== 'cancelled' ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          await generateCustomerInvoice(order);
+                        } catch (err) {
+                          console.error(err);
+                          showError('Failed to download invoice.');
+                        }
+                      }}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                    >
+                      <FiDownload size={12} /> Invoice
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 bg-gray-50 text-gray-400 border border-gray-100 rounded-lg"
+                    >
+                      <FiDownload size={12} /> Invoice (Disabled)
+                    </button>
+                  )}
+
+                  <a
+                    href={order.status === 'cancelled' ? 
+                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen, my order (Order ID: #${order.id}) was cancelled. Can you tell me the reason?`)}` :
+                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I'm checking on my order (ID: #${order.id}). Status: ${order.status || 'pending'}. Total: ₹${order.totalAmount}.`)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-xs px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
+                  >
+                    <FiMessageCircle size={12} /> WhatsApp
+                  </a>
+
+                  {order.status === 'pending' && (
+                    <button
+                      onClick={() => setCancelTarget(order.id)}
+                      className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-error/10 text-pk-error border border-pk-error/20 rounded-lg hover:bg-pk-error hover:text-white transition-colors ml-auto"
+                    >
+                      <FiX size={12} /> Cancel Order
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}

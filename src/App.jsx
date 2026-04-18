@@ -25,6 +25,7 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Support from './pages/Support';
+import Search from './pages/Search';
 import MyOrders from './pages/MyOrders';
 
 const AdminRoute = ({ children }) => {
@@ -98,6 +99,7 @@ const DefaultViews = () => {
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <Routes>
         <Route path="/" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Home /></AppLayout>} />
+        <Route path="/search" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Search /></AppLayout>} />
         <Route path="/product/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><ProductDetail setIsCartOpen={setIsCartOpen} /></AppLayout>} />
         <Route path="/checkout" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Checkout /></AppLayout>} />
         <Route path="/order-success/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><OrderSuccess /></AppLayout>} />

@@ -47,13 +47,25 @@ export const getUserOrders = async (userId) => {
       .filter(o => o.userId === userId);
   }
 };
+export const listenToUserOrders = (userId, callback) => {
+  const q = query(collection(db, ORDERS_COLLECTION), where('userId', '==', userId));
+  return onSnapshot(q, (snapshot) => {
+    let orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    orders = orders.sort((a, b) => {
+      const tA = a.createdAt?.toMillis?.() || 0;
+      const tB = b.createdAt?.toMillis?.() || 0;
+      return tB - tA;
+    });
+    callback(orders);
+  });
+};
 
 export const updateOrderStatus = async (id, status, adminNote = "") => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
   await updateDoc(docRef, { status, adminNote });
 };
 
-export const cancelOrder = async (id) => {
+export const cancelOrder = async (id, cancelledBy = 'user') => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
-  await updateDoc(docRef, { status: 'cancelled' });
+  await updateDoc(docRef, { status: 'cancelled', cancelledBy });
 };

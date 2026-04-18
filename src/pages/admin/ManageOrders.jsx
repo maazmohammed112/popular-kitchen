@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend } from 'react-icons/fi';
-import { getOrders, listenToOrders, updateOrderStatus } from '../../firebase/orders';
+import { getOrders, listenToOrders, updateOrderStatus, cancelOrder } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 
@@ -9,6 +9,7 @@ export default function ManageOrders() {
   const [loading, setLoading] = useState(true);
   const [expandedRow, setExpandedRow] = useState(null);
   const [shareModal, setShareModal] = useState(null); // { order, phone }
+  const [searchTerm, setSearchTerm] = useState('');
   
   const { showSuccess, showError } = useToast();
 
@@ -24,10 +25,21 @@ export default function ManageOrders() {
   }, []);
 
   const handleStatusChange = async (id, newStatus, adminNote) => {
+    if (newStatus === 'cancelled') {
+      if (window.confirm("Are you sure you want to cancel this order? This cannot be undone.")) {
+        try {
+          await cancelOrder(id, 'admin');
+          showSuccess("Order cancelled successfully");
+        } catch (err) {
+          console.error(err);
+          showError("Failed to cancel order");
+        }
+      }
+      return;
+    }
     try {
       await updateOrderStatus(id, newStatus, adminNote);
       showSuccess(`Order status updated to ${newStatus}`);
-      // No need to setOrders manually, onSnapshot will handle it automatically!
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
@@ -62,10 +74,26 @@ export default function ManageOrders() {
 
   const isInvoiceReady = (status) => status === 'confirmed' || status === 'delivered';
 
+  const filteredOrders = orders.filter(o => 
+    o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.phone?.includes(searchTerm) ||
+    o.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    o.id.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Orders</h1>
+        <div className="w-full md:w-auto relative">
+          <input
+            type="text"
+            placeholder="Search by name, phone, ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full md:w-80 bg-pk-surface text-pk-text-main border border-pk-bg-secondary rounded-xl py-2 px-4 text-sm focus:outline-none focus:border-pk-accent"
+          />
+        </div>
       </div>
 
       {/* WhatsApp Share Modal */}
@@ -134,9 +162,9 @@ export default function ManageOrders() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map(order => (
+                {filteredOrders.map(order => (
                   <React.Fragment key={order.id}>
-                    <tr className="border-b border-pk-bg-secondary/50 hover:bg-pk-bg-primary/50 transition-colors">
+                    <tr className={`border-b border-pk-bg-secondary/50 hover:bg-pk-bg-primary/50 transition-colors ${order.status === 'cancelled' ? 'opacity-70' : ''}`}>
                       <td className="p-4">
                         <div className="flex flex-col">
                           <span className="font-mono text-pk-accent text-xs mb-1 uppercase bg-pk-accent/10 w-max px-2 py-0.5 rounded">{order.id.slice(0,8)}</span>
@@ -154,17 +182,20 @@ export default function ManageOrders() {
                       </td>
                       <td className="p-4">
                         <select
+                          disabled={order.status === 'cancelled'}
                           value={order.status}
                           onChange={(e) => handleStatusChange(order.id, e.target.value, order.adminNote || '')}
-                          className={`text-xs font-bold uppercase rounded-md px-3 py-1.5 focus:outline-none cursor-pointer border border-transparent hover:border-gray-500 transition-colors ${
+                          className={`text-xs font-bold uppercase rounded-md px-3 py-1.5 focus:outline-none cursor-pointer border border-transparent hover:border-gray-500 transition-colors disabled:opacity-80 disabled:cursor-not-allowed ${
                             order.status === 'delivered' ? 'bg-pk-success/20 text-pk-success' :
                             order.status === 'confirmed' ? 'bg-pk-warning/20 text-pk-warning' :
+                            order.status === 'cancelled' ? 'bg-pk-error/20 text-pk-error' :
                             'bg-pk-bg-primary text-pk-text-main border-pk-bg-secondary'
                           }`}
                         >
                           <option value="pending" className="bg-pk-bg-primary text-pk-text-main">Pending</option>
                           <option value="confirmed" className="bg-pk-bg-primary text-pk-text-main">Confirmed</option>
                           <option value="delivered" className="bg-pk-bg-primary text-pk-text-main">Delivered</option>
+                          <option value="cancelled" className="bg-pk-bg-primary text-pk-error font-bold">Cancel Order</option>
                         </select>
                       </td>
                       {/* Invoice column – only shows when confirmed/delivered */}

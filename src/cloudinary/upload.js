@@ -32,7 +32,7 @@ export const getOptimizedUrl = (url, width = 600) => {
   // Insert transformation parameters before the version number or public ID
   const parts = url.split("upload/");
   if (parts.length === 2) {
-    return `${parts[0]}upload/f_auto,q_auto,w_${width}/${parts[1]}`;
+    return `${parts[0]}upload/f_auto,q_auto:best,w_${width}/${parts[1]}`;
   }
   return url;
 };
