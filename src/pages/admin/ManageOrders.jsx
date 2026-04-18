@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { getOrders, updateOrderStatus } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
@@ -52,7 +52,7 @@ export default function ManageOrders() {
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Manage Orders</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Orders</h1>
       </div>
 
       <div className="bg-pk-surface rounded-3xl border border-pk-bg-secondary overflow-hidden">
@@ -79,17 +79,17 @@ export default function ManageOrders() {
                       <td className="p-4">
                         <div className="flex flex-col">
                           <span className="font-mono text-pk-accent text-xs mb-1 uppercase bg-pk-accent/10 w-max px-2 py-0.5 rounded">{order.id.slice(0,8)}</span>
-                          <span className="text-white text-sm">{order.createdAt ? new Date(order.createdAt.toMillis()).toLocaleDateString() : 'Just now'}</span>
+                          <span className="text-pk-text-main text-sm">{order.createdAt ? new Date(order.createdAt.toMillis()).toLocaleDateString() : 'Just now'}</span>
                         </div>
                       </td>
                       <td className="p-4">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-white">{order.customerName}</span>
+                          <span className="font-semibold text-pk-text-main">{order.customerName}</span>
                           <span className="text-xs text-pk-text-muted">{order.phone}</span>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="font-bold text-white">₹{order.totalAmount}</span>
+                        <span className="font-bold text-pk-text-main">₹{order.totalAmount}</span>
                       </td>
                       <td className="p-4">
                         <select 
@@ -98,18 +98,18 @@ export default function ManageOrders() {
                           className={`text-xs font-bold uppercase rounded-md px-3 py-1.5 focus:outline-none cursor-pointer border border-transparent hover:border-gray-500 transition-colors ${
                             order.status === 'delivered' ? 'bg-pk-success/20 text-pk-success' :
                             order.status === 'confirmed' ? 'bg-pk-warning/20 text-pk-warning' :
-                            'bg-pk-bg-primary text-white border-pk-bg-secondary'
+                            'bg-pk-bg-primary text-pk-text-main border-pk-bg-secondary'
                           }`}
                         >
-                          <option value="pending" className="bg-pk-bg-primary text-white">Pending</option>
-                          <option value="confirmed" className="bg-pk-bg-primary text-white">Confirmed</option>
-                          <option value="delivered" className="bg-pk-bg-primary text-white">Delivered</option>
+                          <option value="pending" className="bg-pk-bg-primary text-pk-text-main">Pending</option>
+                          <option value="confirmed" className="bg-pk-bg-primary text-pk-text-main">Confirmed</option>
+                          <option value="delivered" className="bg-pk-bg-primary text-pk-text-main">Delivered</option>
                         </select>
                       </td>
                       <td className="p-4 text-right">
                         <button 
                           onClick={() => setExpandedRow(expandedRow === order.id ? null : order.id)}
-                          className="p-2 text-pk-text-muted hover:text-white bg-pk-bg-secondary rounded-full transition-colors"
+                          className="p-2 text-pk-text-muted hover:text-pk-text-main bg-pk-bg-secondary rounded-full transition-colors"
                         >
                           {expandedRow === order.id ? <FiChevronUp /> : <FiChevronDown />}
                         </button>
@@ -124,13 +124,13 @@ export default function ManageOrders() {
                             <div className="space-y-4 text-sm">
                               <div>
                                 <span className="block text-pk-text-muted font-medium mb-1">Delivery Address</span>
-                                <p className="text-white bg-pk-surface p-3 rounded-lg border border-pk-bg-secondary">{order.address}</p>
+                                <p className="text-pk-text-main bg-pk-surface p-3 rounded-lg border border-pk-bg-secondary">{order.address}</p>
                               </div>
                               <div className="bg-pk-surface p-4 rounded-xl border border-pk-bg-secondary">
                                 <span className="block text-pk-text-muted font-medium mb-3">Order Items</span>
                                 <div className="space-y-3">
                                   {order.items.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-white pb-2 border-b border-pk-bg-secondary/50 last:border-0 last:pb-0">
+                                    <div key={idx} className="flex justify-between items-center text-pk-text-main pb-2 border-b border-pk-bg-secondary/50 last:border-0 last:pb-0">
                                       <div className="flex flex-col">
                                         <span className="font-medium line-clamp-1">{item.title}</span>
                                         <span className="text-xs text-pk-text-muted">Size: {item.size} | Qty: {item.quantity}</span>
@@ -148,7 +148,7 @@ export default function ManageOrders() {
                                  defaultValue={order.adminNote}
                                  id={`note-${order.id}`}
                                  placeholder="Add notes about delivery updates, issues, etc."
-                                 className="w-full bg-pk-surface text-white border border-pk-bg-secondary rounded-xl px-4 py-3 min-h-[120px] focus:outline-none focus:border-pk-accent text-sm resize-none mb-3"
+                                 className="w-full bg-pk-surface text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 min-h-[120px] focus:outline-none focus:border-pk-accent text-sm resize-none mb-3"
                                ></textarea>
                                <button 
                                  onClick={() => {

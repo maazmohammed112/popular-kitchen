@@ -31,7 +31,7 @@ export const CartDrawer = ({ isOpen, onClose }) => {
             <FiShoppingCart size={20} className="text-pk-accent" />
             Your Cart
           </h2>
-          <button onClick={onClose} className="p-2 text-pk-text-muted hover:text-white bg-pk-bg-secondary rounded-full">
+          <button onClick={onClose} className="p-2 text-pk-text-muted hover:text-pk-text-main bg-pk-bg-secondary rounded-full">
              <FiX size={20} />
           </button>
         </div>
@@ -87,14 +87,14 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                           <button 
                             disabled={item.quantity <= 1}
                             onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                            className="text-pk-text-muted hover:text-white disabled:opacity-30"
+                            className="text-pk-text-muted hover:text-pk-text-main disabled:opacity-30"
                           >
                             <FiMinus size={14} />
                           </button>
                           <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
                           <button 
                             onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                            className="text-pk-text-muted hover:text-white"
+                            className="text-pk-text-muted hover:text-pk-text-main"
                           >
                             <FiPlus size={14} />
                           </button>

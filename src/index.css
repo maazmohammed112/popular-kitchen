@@ -1,8 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@layer base {
+  :root {
+    --color-bg-primary: #F8FAFC;
+    --color-bg-secondary: #F1F5F9;
+    --color-surface: #FFFFFF;
+    --color-accent: #0284C7;
+    --color-text-main: #0F172A;
+    --color-text-muted: #64748B;
+    --color-success: #10B981;
+    --color-warning: #F59E0B;
+    --color-error: #EF4444;
+  }
+
+  .dark {
+    --color-bg-primary: #0A1628;
+    --color-bg-secondary: #0F2040;
+    --color-surface: #152847;
+    --color-accent: #1E90FF;
+    --color-text-main: #F5F0E8;
+    --color-text-muted: #8FA3BF;
+    --color-success: #00C896;
+    --color-warning: #FFB347;
+    --color-error: #FF4757;
+  }
+}
 
 html, body {
   margin: 0;

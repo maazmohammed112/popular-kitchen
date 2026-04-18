@@ -43,7 +43,7 @@ export default function AdminLogin() {
           <div className="w-16 h-16 bg-pk-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 border border-pk-accent/30">
             <FiLock className="text-pk-accent" size={24} />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Admin Portal</h1>
+          <h1 className="text-2xl font-bold text-pk-text-main mb-2">Admin Portal</h1>
           <p className="text-sm text-pk-text-muted">Enter your credentials to manage the store.</p>
         </div>
 
@@ -54,7 +54,7 @@ export default function AdminLogin() {
               type="text" 
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent"
+              className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent"
               placeholder="admin@popularkitchen.com"
               required
             />
@@ -65,7 +65,7 @@ export default function AdminLogin() {
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent"
+              className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent"
               placeholder="••••••••"
               required
             />

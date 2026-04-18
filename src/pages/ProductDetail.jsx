@@ -9,7 +9,7 @@ import { getOptimizedUrl } from '../cloudinary/upload';
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { showSuccess } = useToast();
   
   const [product, setProduct] = useState(null);
@@ -54,7 +54,13 @@ export default function ProductDetail() {
   const hasOffer = product.offerPercent > 0;
   const isOutOfStock = product.stockStatus === 'outOfStock';
 
-  const handleAdd = () => {
+  const inCart = cartItems.some(i => i.productId === product.id && i.size === (selectedSize || null));
+
+  const handleAction = () => {
+    if (inCart) {
+      window.dispatchEvent(new CustomEvent('open-cart'));
+      return;
+    }
     if (isOutOfStock) return;
     
     addToCart({
@@ -70,7 +76,7 @@ export default function ProductDetail() {
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-pk-text-muted hover:text-white mb-6 transition-colors">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-pk-text-muted hover:text-pk-text-main mb-6 transition-colors">
         <FiArrowLeft /> Back
       </button>
 
@@ -113,16 +119,16 @@ export default function ProductDetail() {
         {/* Details */}
         <div className="flex flex-col">
           <span className="text-pk-accent text-sm font-semibold tracking-wider uppercase mb-2">{product.category}</span>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight">{product.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-4 leading-tight">{product.title}</h1>
           
           <div className="flex items-center gap-4 mb-6 pb-6 border-b border-pk-bg-secondary">
             {hasOffer ? (
               <div className="flex flex-col">
                 <span className="text-pk-text-muted line-through text-lg">₹{product.price}</span>
-                <span className="text-3xl font-bold text-white">₹{product.discountPrice}</span>
+                <span className="text-3xl font-bold text-pk-text-main">₹{product.discountPrice}</span>
               </div>
             ) : (
-              <span className="text-3xl font-bold text-white">₹{product.price}</span>
+              <span className="text-3xl font-bold text-pk-text-main">₹{product.price}</span>
             )}
             
             {isOutOfStock ? (
@@ -161,25 +167,25 @@ export default function ProductDetail() {
             <div className="flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl p-1">
               <button 
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-white rounded-lg transition-colors"
+                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-pk-text-main rounded-lg transition-colors"
               >
                 <FiMinus />
               </button>
               <span className="w-12 text-center font-semibold">{quantity}</span>
               <button 
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-white rounded-lg transition-colors"
+                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-pk-text-main rounded-lg transition-colors"
               >
                 <FiPlus />
               </button>
             </div>
             
             <button 
-              onClick={handleAdd}
-              disabled={isOutOfStock || (product.sizes?.length > 0 && !selectedSize)}
+              onClick={handleAction}
+              disabled={(!inCart && isOutOfStock) || (!inCart && product.sizes?.length > 0 && !selectedSize)}
               className="flex-1 bg-pk-accent text-white h-12 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
             >
-              <FiShoppingCart /> Add to Cart
+              <FiShoppingCart /> {inCart ? 'Go to Cart' : 'Add to Cart'}
             </button>
           </div>
 

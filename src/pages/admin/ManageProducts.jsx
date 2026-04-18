@@ -129,7 +129,7 @@ export default function ManageProducts() {
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white">Manage Products</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
         <button 
           onClick={() => handleOpenModal()}
           className="flex items-center gap-2 px-5 py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20"
@@ -167,13 +167,13 @@ export default function ManageProducts() {
                             <div className="w-full h-full flex items-center justify-center text-[8px] text-pk-text-muted">No Img</div>
                           )}
                         </div>
-                        <span className="font-semibold text-white max-w-[200px] truncate">{product.title}</span>
+                        <span className="font-semibold text-pk-text-main max-w-[200px] truncate">{product.title}</span>
                       </div>
                     </td>
                     <td className="p-4 text-sm text-pk-text-muted uppercase">{product.category}</td>
                     <td className="p-4">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-white">₹{product.discountPrice || product.price}</span>
+                        <span className="font-semibold text-pk-text-main">₹{product.discountPrice || product.price}</span>
                         {product.offerPercent > 0 && <span className="text-[10px] text-pk-error uppercase">{product.offerPercent}% off</span>}
                       </div>
                     </td>
@@ -188,7 +188,7 @@ export default function ManageProducts() {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      <button onClick={() => handleOpenModal(product)} className="p-2 text-pk-text-muted hover:text-white transition-colors"><FiEdit2 /></button>
+                      <button onClick={() => handleOpenModal(product)} className="p-2 text-pk-text-muted hover:text-pk-text-main transition-colors"><FiEdit2 /></button>
                       <button onClick={() => handleDelete(product.id)} className="p-2 text-pk-text-muted hover:text-pk-error transition-colors ml-2"><FiTrash2 /></button>
                     </td>
                   </tr>
@@ -204,39 +204,39 @@ export default function ManageProducts() {
         <div className="fixed inset-0 bg-pk-bg-primary/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-pk-surface w-full max-w-3xl rounded-3xl border border-pk-bg-secondary p-6 md:p-8 my-8 shadow-2xl animate-[slideUp_0.3s_ease-out]">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">{formData.id ? 'Edit Product' : 'Add New Product'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-pk-bg-secondary rounded-full hover:bg-pk-bg-primary text-pk-text-muted hover:text-white"><FiX size={20}/></button>
+              <h2 className="text-xl font-bold text-pk-text-main">{formData.id ? 'Edit Product' : 'Add New Product'}</h2>
+              <button onClick={() => setIsModalOpen(false)} className="p-2 bg-pk-bg-secondary rounded-full hover:bg-pk-bg-primary text-pk-text-muted hover:text-pk-text-main"><FiX size={20}/></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Title</label>
-                  <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
+                  <input required type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Category</label>
-                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" placeholder="Cookware, Storage, etc" />
+                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" placeholder="Cookware, Storage, etc" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Price (₹)</label>
-                  <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
+                  <input required type="number" min="0" value={formData.price} onChange={e => setFormData({...formData, price: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Offer Percent (%)</label>
-                  <input type="number" min="0" max="100" value={formData.offerPercent} onChange={e => setFormData({...formData, offerPercent: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
+                  <input type="number" min="0" max="100" value={formData.offerPercent} onChange={e => setFormData({...formData, offerPercent: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" />
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Description</label>
-                <textarea required rows="4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none resize-none"></textarea>
+                <textarea required rows="4" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none resize-none"></textarea>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-pk-bg-secondary pt-6">
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Stock Status</label>
-                  <select value={formData.stockStatus} onChange={e => setFormData({...formData, stockStatus: e.target.value})} className="w-full bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none cursor-pointer">
+                  <select value={formData.stockStatus} onChange={e => setFormData({...formData, stockStatus: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none cursor-pointer">
                     <option value="inStock">In Stock</option>
                     <option value="limitedStock">Limited Stock</option>
                     <option value="outOfStock">Out of Stock</option>
@@ -245,12 +245,12 @@ export default function ManageProducts() {
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Sizes (Optional)</label>
                   <div className="flex gap-2 mb-3">
-                    <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="flex-1 bg-pk-bg-primary text-white border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="e.g. Small, 2L, Medium" />
+                    <input type="text" value={newSize} onChange={e => setNewSize(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="flex-1 bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="e.g. Small, 2L, Medium" />
                     <button type="button" onClick={handleAddSize} className="px-4 py-2 bg-pk-bg-secondary hover:bg-pk-accent rounded-xl transition-colors text-white text-sm font-medium">Add</button>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {formData.sizes.map(size => (
-                      <span key={size} className="flex items-center gap-1 bg-pk-bg-secondary px-3 py-1 rounded-full text-xs font-bold text-white uppercase">
+                      <span key={size} className="flex items-center gap-1 bg-pk-bg-secondary px-3 py-1 rounded-full text-xs font-bold text-pk-text-main uppercase">
                         {size} <button type="button" onClick={() => handleRemoveSize(size)} className="text-pk-text-muted hover:text-pk-error ml-1"><FiX size={12}/></button>
                       </span>
                     ))}
@@ -285,7 +285,7 @@ export default function ManageProducts() {
               </div>
 
               <div className="border-t border-pk-bg-secondary pt-6 flex justify-end gap-4">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 font-medium text-pk-text-muted hover:text-white transition-colors">Cancel</button>
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 font-medium text-pk-text-muted hover:text-pk-text-main transition-colors">Cancel</button>
                 <button type="submit" disabled={isSubmitting || uploadingImages} className="px-8 py-3 bg-pk-success text-pk-bg-primary font-bold rounded-xl hover:shadow-[0_0_15px_rgba(0,200,150,0.4)] transition-all disabled:opacity-50 flex items-center gap-2">
                   {isSubmitting ? 'Saving...' : 'Save Product'}
                 </button>

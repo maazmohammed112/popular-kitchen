@@ -44,7 +44,7 @@ export default function Dashboard() {
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">Admin Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-1">Admin Dashboard</h1>
           <p className="text-pk-text-muted">Overview of your store's performance.</p>
         </div>
         <button 
@@ -62,7 +62,7 @@ export default function Dashboard() {
             <div className="relative z-10 flex items-center justify-between">
               <div>
                 <p className="text-pk-text-muted text-sm font-medium mb-1">{card.title}</p>
-                <h3 className="text-3xl font-bold text-white">
+                <h3 className="text-3xl font-bold text-pk-text-main">
                   {loading ? <span className="animate-pulse opacity-50">...</span> : card.value}
                 </h3>
               </div>
@@ -83,7 +83,7 @@ export default function Dashboard() {
           <Link to="/admin/products" className="px-6 py-3 bg-pk-accent/10 border border-pk-accent text-pk-accent rounded-xl hover:bg-pk-accent hover:text-white transition-colors font-medium">
              Manage Products
           </Link>
-          <Link to="/admin/orders" className="px-6 py-3 bg-pk-bg-primary border border-pk-bg-secondary text-white rounded-xl hover:border-pk-text-muted transition-colors font-medium">
+          <Link to="/admin/orders" className="px-6 py-3 bg-pk-bg-primary border border-pk-bg-secondary text-pk-text-main rounded-xl hover:border-pk-text-muted transition-colors font-medium">
             View All Orders
           </Link>
         </div>

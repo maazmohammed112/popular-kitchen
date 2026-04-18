@@ -1,18 +1,22 @@
 import { Link } from 'react-router-dom';
-import { FiShoppingCart } from 'react-icons/fi';
+import { FiShoppingCart, FiCheckCircle } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { getOptimizedUrl } from '../cloudinary/upload';
 
 export const ProductCard = ({ product }) => {
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { showSuccess, showError } = useToast();
 
-  const handleAddToCart = (e) => {
-    e.preventDefault(); // Prevent navigating to detail page if clicked inside Link
-    
-    // If sizes exist, we should ideally require a size. 
-    // In a simple card, we might add the first size by default or route to Detail page.
+  const inCart = cartItems.some(i => i.productId === product.id);
+
+  const handleAction = (e) => {
+    e.preventDefault();
+    if (inCart) {
+      window.dispatchEvent(new CustomEvent('open-cart'));
+      return;
+    }
+
     if (product.sizes && product.sizes.length > 0) {
       showError('Please select a size from the product details.');
       return;
@@ -64,7 +68,7 @@ export const ProductCard = ({ product }) => {
         
         {isOutOfStock && (
           <div className="absolute inset-x-0 top-20 flex justify-center z-10">
-            <span className="bg-pk-bg-primary/90 backdrop-blur-md px-4 py-2 rounded-lg text-white font-bold tracking-wider text-xs">
+            <span className="bg-pk-bg-primary/90 backdrop-blur-md px-4 py-2 rounded-lg text-pk-text-main font-bold tracking-wider text-xs">
               OUT OF STOCK
             </span>
           </div>
@@ -89,12 +93,12 @@ export const ProductCard = ({ product }) => {
           </div>
           
           <button 
-            onClick={handleAddToCart}
+            onClick={handleAction}
             disabled={isOutOfStock}
             className="w-10 h-10 rounded-full bg-pk-bg-secondary flex items-center justify-center text-pk-text-main hover:bg-pk-accent transition-colors disabled:opacity-50 disabled:hover:bg-pk-bg-secondary"
-            aria-label="Add to cart"
+            aria-label={inCart ? "Go to cart" : "Add to cart"}
           >
-            <FiShoppingCart className="w-4 h-4" />
+            {inCart ? <FiCheckCircle className="w-4 h-4 text-pk-success" /> : <FiShoppingCart className="w-4 h-4" />}
           </button>
         </div>
       </div>

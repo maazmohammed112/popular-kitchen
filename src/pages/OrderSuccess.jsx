@@ -53,15 +53,15 @@ export default function OrderSuccess() {
         <FiCheckCircle size={48} />
       </div>
       
-      <h1 className="text-3xl font-bold text-white mb-2">Order Confirmed!</h1>
+      <h1 className="text-3xl font-bold text-pk-text-main mb-2">Order Confirmed!</h1>
       <p className="text-pk-text-muted mb-6">
-        Thank you, <span className="text-white font-medium">{order.customerName}</span>. Your order has been received.
+        Thank you, <span className="text-pk-text-main font-medium">{order.customerName}</span>. Your order has been received.
       </p>
 
       <div className="flex items-center justify-center gap-3 mb-8 bg-pk-surface p-3 rounded-xl border border-pk-bg-secondary w-max mx-auto shadow-inner">
         <span className="text-sm text-pk-text-muted">Order ID:</span>
         <span className="font-mono text-pk-accent font-bold tracking-wider">{order.id}</span>
-        <button onClick={handleCopyId} className="text-pk-text-muted hover:text-white transition-colors p-2 bg-pk-bg-primary rounded-lg ml-2" title="Copy Order ID">
+        <button onClick={handleCopyId} className="text-pk-text-muted hover:text-pk-text-main transition-colors p-2 bg-pk-bg-primary rounded-lg ml-2" title="Copy Order ID">
           <FiCopy />
         </button>
       </div>
@@ -74,24 +74,24 @@ export default function OrderSuccess() {
         </div>
         <div className="flex justify-between items-center mb-2">
           <span className="text-pk-text-muted">Total Amount</span>
-          <span className="text-xl font-bold text-white">₹{order.totalAmount}</span>
+          <span className="text-xl font-bold text-pk-text-main">₹{order.totalAmount}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-pk-text-muted">Items</span>
-          <span className="text-white">{order.items.length} items</span>
+          <span className="text-pk-text-main">{order.items.length} items</span>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
         <button 
           onClick={handleDownload}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-pk-bg-secondary text-white rounded-full font-medium hover:bg-pk-surface border border-pk-bg-secondary hover:border-pk-accent transition-colors text-sm"
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-pk-bg-secondary text-pk-text-main rounded-full font-medium hover:bg-pk-surface border border-pk-bg-secondary hover:border-pk-accent transition-colors text-sm"
         >
           <FiDownload /> Download Invoice
         </button>
         
         <a 
-          href={`https://wa.me/9108167067?text=${encodeURIComponent(`this is my order id ${order.id} i have place order can give further updates and payment related details etc`)}`}
+          href={`https://wa.me/9108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I have placed an order (Order ID: ${order.id}). I would like to get further updates and handle payment details. Thank you!`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-full font-medium hover:bg-[#128C7E] transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)] text-sm"

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiMoon, FiSun } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 
-export const Navbar = ({ onOpenCart, onSearch, onCategorySelect, categories = [] }) => {
+export const Navbar = ({ onOpenCart, onSearch, onCategorySelect, categories = [], toggleTheme }) => {
   const { cartItems } = useCart();
   const { currentUser, isAdmin } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -47,25 +47,34 @@ export const Navbar = ({ onOpenCart, onSearch, onCategorySelect, categories = []
           )}
 
           {/* Right Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              className="p-2 sm:p-3 hover:bg-pk-bg-secondary rounded-full transition-colors text-pk-text-muted hover:text-pk-text-main"
+            >
+              <span className="dark:hidden"><FiMoon size={20} /></span>
+              <span className="hidden dark:block"><FiSun size={20} /></span>
+            </button>
+
             {isHome && (
               <button 
                 onClick={() => setIsSearchOpen(!isSearchOpen)} 
-                className="md:hidden text-pk-text-muted hover:text-white"
+                className="md:hidden text-pk-text-muted hover:text-pk-text-main"
               >
                 <FiSearch size={20} />
               </button>
             )}
             
             {isAdmin && (
-              <Link to="/admin/dashboard" className="hidden sm:flex text-xs bg-pk-surface px-3 py-1.5 rounded-full text-pk-text-muted hover:text-white">
+              <Link to="/admin/dashboard" className="hidden sm:flex text-xs bg-pk-surface px-3 py-1.5 rounded-full text-pk-text-muted hover:text-pk-text-main">
                 Admin
               </Link>
             )}
 
             <button 
               onClick={onOpenCart} 
-              className="relative p-2 text-pk-text-muted hover:text-white"
+              className="relative p-2 text-pk-text-muted hover:text-pk-text-main"
             >
               <FiShoppingCart size={22} />
               {cartCount > 0 && (

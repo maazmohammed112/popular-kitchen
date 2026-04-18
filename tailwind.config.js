@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,15 +8,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        'pk-bg-primary': '#0A1628',
-        'pk-bg-secondary': '#0F2040',
-        'pk-surface': '#152847',
-        'pk-accent': '#1E90FF',
-        'pk-text-main': '#F5F0E8',
-        'pk-text-muted': '#8FA3BF',
-        'pk-success': '#00C896',
-        'pk-warning': '#FFB347',
-        'pk-error': '#FF4757',
+        'pk-bg-primary': 'var(--color-bg-primary)',
+        'pk-bg-secondary': 'var(--color-bg-secondary)',
+        'pk-surface': 'var(--color-surface)',
+        'pk-accent': 'var(--color-accent)',
+        'pk-text-main': 'var(--color-text-main)',
+        'pk-text-muted': 'var(--color-text-muted)',
+        'pk-success': 'var(--color-success)',
+        'pk-warning': 'var(--color-warning)',
+        'pk-error': 'var(--color-error)'
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

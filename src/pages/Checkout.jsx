@@ -186,7 +186,7 @@ export default function Checkout() {
 
             <div className="border-t border-pk-bg-secondary pt-4 flex justify-between items-end">
               <span className="text-pk-text-muted">Total Amount</span>
-              <span className="text-2xl font-bold text-white leading-none">₹{cartTotal}</span>
+              <span className="text-2xl font-bold text-pk-text-main leading-none">₹{cartTotal}</span>
             </div>
           </div>
         </div>
