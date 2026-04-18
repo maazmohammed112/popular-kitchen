@@ -86,10 +86,10 @@ export default function Checkout() {
         localStorage.setItem('pk_guest_shipping', JSON.stringify(formData));
       }
 
-      // Save order to local history
-      const savedOrders = JSON.parse(localStorage.getItem('pk_past_orders') || '[]');
-      savedOrders.push(orderId);
-      localStorage.setItem('pk_past_orders', JSON.stringify(savedOrders));
+      // Save full order to localStorage for guest history
+      const guestOrders = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
+      guestOrders.push({ id: orderId, ...orderData, createdAt: null });
+      localStorage.setItem('pk_guest_orders', JSON.stringify(guestOrders));
 
       clearCart();
       showSuccess("Order placed successfully!");

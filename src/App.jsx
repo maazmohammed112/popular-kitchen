@@ -25,6 +25,7 @@ import { AdminLayout } from './components/admin/AdminLayout';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
 import Support from './pages/Support';
+import MyOrders from './pages/MyOrders';
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -36,11 +37,11 @@ const AdminRoute = ({ children }) => {
 const AppLayout = ({ children, setIsCartOpen, toggleTheme }) => {
   return (
     <div className="flex flex-col min-h-screen bg-pk-bg-primary text-pk-text-main transition-colors duration-200">
-      <Navbar onOpenCart={() => setIsCartOpen(true)} toggleTheme={toggleTheme} />
+      <Navbar onOpenCart={() => setIsCartOpen(true)} />
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
         {children}
       </main>
-      <Footer />
+      <Footer toggleTheme={toggleTheme} />
       
       {/* Floating WhatsApp Button */}
       <a 
@@ -103,6 +104,7 @@ const DefaultViews = () => {
         <Route path="/terms" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Terms /></AppLayout>} />
         <Route path="/privacy" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Privacy /></AppLayout>} />
         <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
+        <Route path="/my-orders" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><MyOrders /></AppLayout>} />
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

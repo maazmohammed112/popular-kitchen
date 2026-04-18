@@ -27,3 +27,8 @@ export const updateOrderStatus = async (id, status, adminNote = "") => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
   await updateDoc(docRef, { status, adminNote });
 };
+
+export const cancelOrder = async (id) => {
+  const docRef = doc(db, ORDERS_COLLECTION, id);
+  await updateDoc(docRef, { status: 'cancelled' });
+};

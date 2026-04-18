@@ -32,14 +32,16 @@ export default function Home() {
 
   return (
     <div className="flex flex-col animate-[slideUp_0.4s_ease-out]">
-      {/* Hero */}
-      <div className="w-full bg-pk-surface rounded-3xl overflow-hidden mb-8 relative p-8 md:p-16 text-center border border-pk-bg-secondary flex flex-col items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0F2040] to-[#1E90FF] opacity-10"></div>
-        <h1 className="text-3xl md:text-5xl font-bold text-pk-text-main mb-4 z-10 tracking-tight">Popular Kitchenware – Official Destination for Quality</h1>
-        <p className="text-pk-text-muted md:text-lg max-w-2xl z-10">
-          Enhance your culinary journey with our carefully curated range of premium kitchen tools and cookware.
-          Based in Bangalore, we are a trusted distributor serving customers across the city and beyond.
-        </p>
+      {/* Hero Banner Image */}
+      <div
+        className="w-full mb-8 rounded-3xl overflow-hidden cursor-pointer shadow-xl hover:shadow-2xl transition-shadow"
+        onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+      >
+        <img
+          src="/hero-banner.jpg"
+          alt="Popular Kitchenware – Official Destination for Quality"
+          className="w-full object-cover max-h-[420px]"
+        />
       </div>
 
       {/* Category Filter */}
@@ -62,7 +64,7 @@ export default function Home() {
       )}
 
       {/* Product Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div id="products-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading ? (
           Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
         ) : filteredProducts.length === 0 ? (

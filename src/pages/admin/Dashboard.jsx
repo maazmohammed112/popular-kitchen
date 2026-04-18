@@ -18,7 +18,9 @@ export default function Dashboard() {
           getOrders()
         ]);
         
-        const revenue = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        const revenue = orders
+          .filter(o => o.status !== 'cancelled')
+          .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
         
         setStats({
           products: products.length,
