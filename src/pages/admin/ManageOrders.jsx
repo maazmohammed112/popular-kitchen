@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend } from 'react-icons/fi';
-import { getOrders, updateOrderStatus } from '../../firebase/orders';
+import { getOrders, listenToOrders, updateOrderStatus } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 
@@ -12,26 +12,22 @@ export default function ManageOrders() {
   
   const { showSuccess, showError } = useToast();
 
-  useEffect(() => { fetchOrders(); }, []);
-
-  const fetchOrders = async () => {
+  useEffect(() => {
     setLoading(true);
-    try {
-      const data = await getOrders();
+    // Subscribe to real-time order updates
+    const unsubscribe = listenToOrders((data) => {
       setOrders(data);
-    } catch (err) {
-      console.error(err);
-      showError("Failed to fetch orders");
-    } finally {
       setLoading(false);
-    }
-  };
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
 
   const handleStatusChange = async (id, newStatus, adminNote) => {
     try {
       await updateOrderStatus(id, newStatus, adminNote);
       showSuccess(`Order status updated to ${newStatus}`);
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus, adminNote } : o));
+      // No need to setOrders manually, onSnapshot will handle it automatically!
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
@@ -42,7 +38,6 @@ export default function ManageOrders() {
     try {
       await updateOrderStatus(id, status, adminNote);
       showSuccess("Admin note saved");
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, adminNote } : o));
     } catch (err) {
       console.error(err);
       showError("Failed to save note");

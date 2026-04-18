@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiBox, FiShoppingBag, FiDollarSign, FiLogOut } from 'react-icons/fi';
 import { getProducts } from '../../firebase/products';
-import { getOrders } from '../../firebase/orders';
+import { listenToOrders } from '../../firebase/orders';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function Dashboard() {
@@ -11,29 +11,35 @@ export default function Dashboard() {
   const { logout } = useAuth();
 
   useEffect(() => {
+    let unsubscribe = () => {};
+
     const fetchStats = async () => {
       try {
-        const [products, orders] = await Promise.all([
-          getProducts(),
-          getOrders()
-        ]);
+        const products = await getProducts();
         
-        const revenue = orders
-          .filter(o => o.status !== 'cancelled')
-          .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-        
-        setStats({
-          products: products.length,
-          orders: orders.length,
-          revenue
+        // Listen to orders in real-time
+        unsubscribe = listenToOrders((orders) => {
+          const revenue = orders
+            .filter(o => o.status !== 'cancelled')
+            .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+          
+          setStats({
+            products: products.length,
+            orders: orders.length,
+            revenue
+          });
+          setLoading(false);
         });
+
       } catch (err) {
         console.error(err);
-      } finally {
         setLoading(false);
       }
     };
+    
     fetchStats();
+
+    return () => unsubscribe();
   }, []);
 
   const statCards = [
