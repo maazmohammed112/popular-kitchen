@@ -19,11 +19,10 @@ export const WelcomeModal = () => {
     setShow(false);
   };
 
-  const handleAction = (path) => {
+  const handleAction = (type) => {
     localStorage.setItem('pk_welcomed', 'true');
     setShow(false);
-    // Add real navigation once routes exist, for now just skip
-    // navigate(path);
+    window.dispatchEvent(new CustomEvent('show-auth-modal', { detail: type }));
   };
 
   if (!show) return null;
@@ -43,13 +42,13 @@ export const WelcomeModal = () => {
         
         <div className="space-y-3 flex flex-col">
           <button 
-            onClick={() => handleAction('/login')}
+            onClick={() => handleAction('signin')}
             className="w-full py-3 rounded-xl bg-pk-accent text-white font-medium hover:bg-blue-600 transition-colors"
           >
             Sign In
           </button>
           <button 
-            onClick={() => handleAction('/register')}
+            onClick={() => handleAction('signup')}
             className="w-full py-3 rounded-xl bg-pk-bg-secondary text-pk-text-main font-medium border border-pk-bg-secondary hover:border-pk-text-muted transition-colors"
           >
             Create Account

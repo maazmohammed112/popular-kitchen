@@ -16,6 +16,14 @@ export const Navbar = ({ onOpenCart }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const handleAuthEvent = (e) => {
+      setShowAuth(e.detail || 'signin');
+    };
+    window.addEventListener('show-auth-modal', handleAuthEvent);
+    return () => window.removeEventListener('show-auth-modal', handleAuthEvent);
+  }, []);
+
   const isHome = location.pathname === '/';
   // Allow search bar everywhere
   const showSearchBar = true;

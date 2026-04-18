@@ -43,6 +43,9 @@ export default function AdminLogin() {
         <div className="absolute -top-10 -right-10 w-32 h-32 bg-pk-accent/20 rounded-full blur-3xl"></div>
         
         <div className="text-center mb-8 relative z-10">
+          <div className="flex items-center justify-center mb-6">
+            <img src="/logo.png" alt="Popular Kitchen" className="h-12 w-auto object-contain" />
+          </div>
           <div className="w-16 h-16 bg-pk-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 border border-pk-accent/30">
             <FiLock className="text-pk-accent" size={24} />
           </div>
