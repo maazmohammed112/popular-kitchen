@@ -166,7 +166,7 @@ export default function ProductDetail() {
         <div className="flex flex-col">
           <div className="flex justify-between items-start mb-2">
             <span className="text-pk-accent text-sm font-semibold tracking-wider uppercase">{product.category}</span>
-            <ShareButton product={product} className="bg-pk-bg-primary border-pk-bg-secondary text-pk-text-main shadow-none" />
+            <ShareButton product={product} className="hover:scale-110" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-4 leading-tight">{product.title}</h1>
           
