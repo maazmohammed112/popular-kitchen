@@ -17,6 +17,7 @@ export const Footer = () => {
         <div className="flex gap-4 text-xs text-pk-text-muted">
           <Link to="/terms" className="hover:text-pk-text-main">Terms</Link>
           <Link to="/privacy" className="hover:text-pk-text-main">Privacy</Link>
+          <Link to="/support" className="hover:text-pk-text-main">Support</Link>
           <Link to="/admin/login" className="hover:text-pk-accent">Admin Staff</Link>
         </div>
       </div>

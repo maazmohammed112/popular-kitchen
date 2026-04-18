@@ -8,7 +8,7 @@ import { useToast } from '../contexts/ToastContext';
 
 export default function OrderSuccess() {
   const { id } = useParams();
-  const { showError } = useToast();
+  const { showError, showSuccess } = useToast();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 

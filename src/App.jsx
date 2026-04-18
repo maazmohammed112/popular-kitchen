@@ -24,6 +24,7 @@ import ManageOrders from './pages/admin/ManageOrders';
 import { AdminLayout } from './components/admin/AdminLayout';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+import Support from './pages/Support';
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -101,6 +102,7 @@ const DefaultViews = () => {
         <Route path="/order-success/:id" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><OrderSuccess /></AppLayout>} />
         <Route path="/terms" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Terms /></AppLayout>} />
         <Route path="/privacy" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Privacy /></AppLayout>} />
+        <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
         
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

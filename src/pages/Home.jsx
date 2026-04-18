@@ -35,29 +35,11 @@ export default function Home() {
       {/* Hero */}
       <div className="w-full bg-pk-surface rounded-3xl overflow-hidden mb-8 relative p-8 md:p-16 text-center border border-pk-bg-secondary flex flex-col items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-r from-[#0F2040] to-[#1E90FF] opacity-10"></div>
-        <h1 className="text-3xl md:text-5xl font-bold text-pk-text-main mb-4 z-10 tracking-tight">Premium Kitchenware</h1>
+        <h1 className="text-3xl md:text-5xl font-bold text-pk-text-main mb-4 z-10 tracking-tight">Popular Kitchenware – Official Destination for Quality</h1>
         <p className="text-pk-text-muted md:text-lg max-w-2xl z-10">
-          Elevate your culinary journey with our curated selection of high-quality tools, cookware, and accessories designed for perfection.
+          Enhance your culinary journey with our carefully curated range of premium kitchen tools and cookware.
+          Based in Bangalore, we are a trusted distributor serving customers across the city and beyond.
         </p>
-      </div>
-
-      {/* Features Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <div className="bg-pk-surface p-6 rounded-2xl border border-pk-bg-secondary flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 bg-pk-accent/20 text-pk-accent rounded-full flex items-center justify-center mb-4 text-xl">🚚</div>
-          <h3 className="text-pk-text-main font-bold mb-2">Free Fast Delivery</h3>
-          <p className="text-sm text-pk-text-muted">Enjoy free doorstep delivery on all premium orders above ₹500.</p>
-        </div>
-        <div className="bg-pk-surface p-6 rounded-2xl border border-pk-bg-secondary flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 bg-pk-success/20 text-pk-success rounded-full flex items-center justify-center mb-4 text-xl">🛡️</div>
-          <h3 className="text-pk-text-main font-bold mb-2">1 Year Warranty</h3>
-          <p className="text-sm text-pk-text-muted">We stand by our appliances with comprehensive coverage.</p>
-        </div>
-        <div className="bg-pk-surface p-6 rounded-2xl border border-pk-bg-secondary flex flex-col items-center text-center hover:-translate-y-1 transition-transform">
-          <div className="w-12 h-12 bg-pk-warning/20 text-pk-warning rounded-full flex items-center justify-center mb-4 text-xl">💬</div>
-          <h3 className="text-pk-text-main font-bold mb-2">24/7 Support</h3>
-          <p className="text-sm text-pk-text-muted">Direct WhatsApp support for product setups and questions.</p>
-        </div>
       </div>
 
       {/* Category Filter */}
