@@ -28,7 +28,6 @@ export const Navbar = ({ onOpenCart }) => {
   // Allow search bar everywhere
   const showSearchBar = true;
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isGuest = !currentUser;
 
   const handleSearch = (e) => {
