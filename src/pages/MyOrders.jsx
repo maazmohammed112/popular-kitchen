@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiLogIn } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiLogIn, FiDownload } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserOrders, cancelOrder } from '../firebase/orders';
 import { useToast } from '../contexts/ToastContext';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import { generateCustomerInvoice } from '../utils/invoiceGenerator';
 
 const STATUS_STYLES = {
   pending:   'bg-amber-100 text-amber-700',
@@ -218,6 +219,20 @@ export default function MyOrders() {
                   className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-bg-primary text-pk-text-muted hover:text-pk-text-main border border-pk-bg-secondary rounded-lg transition-colors"
                 >
                   <FiCopy size={12} /> Copy ID
+                </button>
+
+                <button
+                  onClick={async () => {
+                    try {
+                      await generateCustomerInvoice(order);
+                    } catch (err) {
+                      console.error(err);
+                      showError('Failed to download invoice.');
+                    }
+                  }}
+                  className="flex items-center gap-1 text-xs px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200 rounded-lg transition-colors"
+                >
+                  <FiDownload size={12} /> Invoice
                 </button>
 
                 <a
