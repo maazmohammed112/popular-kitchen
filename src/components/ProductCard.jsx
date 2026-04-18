@@ -151,9 +151,8 @@ export const ProductCard = ({ product }) => {
         )}
 
         {/* Action Button / Qty */}
-        <div className="flex flex-col gap-2">
-           <div className="flex items-center bg-pk-bg-secondary rounded-xl overflow-hidden h-10">
-              <span className="text-[10px] font-bold text-pk-text-muted px-3 uppercase">Qty</span>
+        <div className="flex items-center gap-2">
+           <div className="w-[40%] flex items-center bg-pk-bg-secondary rounded-xl overflow-hidden h-10 border border-pk-bg-secondary focus-within:border-pk-accent transition-colors">
               <input 
                 type="number"
                 value={localQty === 0 ? "" : localQty}
@@ -162,25 +161,25 @@ export const ProductCard = ({ product }) => {
                   setLocalQty(val >= 0 ? val : 0);
                 }}
                 onFocus={(e) => e.target.select()}
-                placeholder="0"
-                className="flex-1 bg-transparent border-none text-sm font-bold text-pk-text-main focus:ring-0 px-2 h-full text-center appearance-none"
+                placeholder="Qty"
+                className="w-full bg-transparent border-none text-sm font-bold text-pk-text-main focus:ring-0 px-2 h-full text-center appearance-none placeholder:text-pk-text-muted/50"
               />
            </div>
 
            <button 
              onClick={handleAddToCart}
              disabled={isOutOfStock || localQty <= 0}
-             className="w-full h-10 rounded-xl bg-pk-accent flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
+             className="w-[60%] h-10 rounded-xl bg-pk-accent flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-blue-600 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
            >
-             <FiShoppingCart size={14} /> Add to Cart
+             <FiShoppingCart size={14} /> Add
            </button>
-           
-           {inCart && (
-             <p className="text-[10px] text-center text-pk-success font-medium">
-               In Cart: {quantity} items
-             </p>
-           )}
         </div>
+        
+        {inCart && (
+          <p className="text-[10px] text-center text-pk-success font-medium mt-2">
+            In Cart: <span className="font-bold">{quantity}</span> items
+          </p>
+        )}
       </div>
     </div>
   );

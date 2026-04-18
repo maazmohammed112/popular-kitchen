@@ -221,8 +221,7 @@ export default function ProductDetail() {
 
           {/* Actions */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl overflow-hidden h-12 w-32">
-               <span className="text-xs font-bold text-pk-text-muted px-3 uppercase border-r border-pk-bg-secondary">Qty</span>
+            <div className="w-[40%] flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-2xl overflow-hidden h-14 focus-within:border-pk-accent transition-all shadow-inner">
                <input 
                  type="number"
                  value={quantity === 0 ? "" : quantity}
@@ -231,17 +230,17 @@ export default function ProductDetail() {
                    setQuantity(val >= 0 ? val : 0);
                  }}
                  onFocus={(e) => e.target.select()}
-                 placeholder="0"
-                 className="flex-1 bg-transparent border-none text-base font-bold text-pk-text-main focus:ring-0 px-2 h-full text-center appearance-none"
+                 placeholder="Quantity"
+                 className="flex-1 bg-transparent border-none text-lg font-bold text-pk-text-main focus:ring-0 px-4 h-full text-center appearance-none placeholder:text-pk-text-muted/30"
                />
             </div>
             
             <button 
               onClick={handleAction}
               disabled={(!inCart && isOutOfStock) || (!inCart && product.sizes?.length > 0 && !selectedSize) || (!inCart && quantity <= 0)}
-              className="flex-1 bg-pk-accent text-white h-12 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
+              className="w-[60%] bg-pk-accent text-white h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-blue-600 hover:shadow-[0_8px_25px_rgba(30,144,255,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:shadow-none"
             >
-              <FiShoppingCart /> {inCart ? 'Go to Cart' : 'Add to Cart'}
+              <FiShoppingCart size={22} /> {inCart ? 'Go to Cart' : 'Add to Cart'}
             </button>
           </div>
 
