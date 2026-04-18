@@ -28,6 +28,7 @@ const Support = lazy(() => import('./pages/Support'));
 const Search = lazy(() => import('./pages/Search'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -120,7 +121,7 @@ const DefaultViews = () => {
             <Route path="orders" element={<ManageOrders />} />
           </Route>
           
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><NotFound /></AppLayout>} />
         </Routes>
       </Suspense>
     </>
