@@ -38,34 +38,38 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
+            // Navigation requests — always try network first (critical for React Router)
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages-cache',
+              networkTimeoutSeconds: 5,
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'cloudinary-images',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
-              },
-              cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+              expiration: { maxEntries: 50, maxAgeSeconds: 30 * 24 * 60 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
           {
             urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'firebase-data',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 24 * 60 * 60 // 1 day
-              },
-              networkTimeoutSeconds: 5
-            }
-          }
+              expiration: { maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 },
+              networkTimeoutSeconds: 5,
+            },
+          },
         ],
-        navigateFallback: '/offline.html',
-        navigateFallbackAllowlist: [/^(?!\/__).*/]
+        // No navigateFallback — React Router handles all routing client-side
+        skipWaiting: true,
+        clientsClaim: true,
       }
     })
   ],

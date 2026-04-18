@@ -29,10 +29,10 @@ export default function OrderSuccess() {
     fetchOrder();
   }, [id]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!order) return;
     try {
-      generateInvoice(order);
+      await generateInvoice(order);
     } catch (err) {
       console.error(err);
       showError("Failed to generate invoice.");

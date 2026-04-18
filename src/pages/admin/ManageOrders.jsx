@@ -49,9 +49,9 @@ export default function ManageOrders() {
     }
   };
 
-  const handleDownloadInvoice = (order) => {
+  const handleDownloadInvoice = async (order) => {
     try {
-      generateAdminInvoice(order);
+      await generateAdminInvoice(order);
     } catch (err) {
       console.error(err);
       showError("Failed to generate invoice.");
