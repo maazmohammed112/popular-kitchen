@@ -34,11 +34,12 @@ export default function Home() {
   return (
     <div className="flex flex-col animate-[slideUp_0.4s_ease-out]">
       <SEO 
-        title="Premium Kitchenware & Designer Cookware"
-        description="Shop the finest collection of premium kitchenware and designer cookware in Bangalore. Popular Kitchen offers professional-grade tools for every home chef."
+        title="Popular Kitchenware Bangalore | Kitchen Items in Shivajinagar"
+        description="Buy premium kitchen tools, restaurant equipment, and cookware in Bangalore. Trusted kitchenware supplier in Shivajinagar. Fast delivery across Bangalore."
+        url="https://popularkitchen.store/"
       />
       
-      <h1 className="sr-only">Popular Kitchen - Premium Kitchenware Bangalore</h1>
+      <h1 className="sr-only">Kitchenware Store in Bangalore – Popular Kitchenware Shivajinagar</h1>
       
       {/* Hero Banner Image */}
       <div
@@ -47,14 +48,19 @@ export default function Home() {
       >
         <img
           src="/hero-banner.png"
-          alt="Popular Kitchen Premium Kitchenware Hero Banner - High-quality cookware and kitchen accessories"
+          alt="Popular Kitchenware Bangalore – Premium kitchen tools and restaurant equipment in Shivajinagar"
           className="w-full h-auto block"
           loading="eager"
           fetchpriority="high"
         />
       </div>
 
-      {/* Category Filter */}
+      {/* SEO Content Paragraph */}
+      <div className="bg-pk-surface rounded-2xl p-5 mb-6 border border-pk-bg-secondary">
+        <p className="text-sm text-pk-text-muted leading-relaxed">
+          <strong className="text-pk-text-main">Popular Kitchenware</strong> is a trusted kitchen equipment supplier in Shivajinagar, Bangalore, offering a wide range of kitchen tools, restaurant equipment, and commercial cooking essentials. From induction stoves, hand blenders, and gas lighters to barbecue tools and shawarma machines, we serve homes, hotels, and restaurants across Bangalore.
+        </p>
+      </div>
       {!loading && categories.length > 1 && (
         <div className="flex overflow-x-auto gap-3 pb-4 mb-4 scrollbar-hide">
           {categories.map(cat => (

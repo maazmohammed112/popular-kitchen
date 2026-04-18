@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Block admin pages from indexing
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /order-success/
+
+# Allow image indexing
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.webp
+
+Sitemap: https://popularkitchen.store/sitemap.xml

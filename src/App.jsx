@@ -29,6 +29,14 @@ const Search = lazy(() => import('./pages/Search'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+// SEO Location Landing Pages
+const KitchenItemsBangalore = lazy(() => import('./pages/seo/KitchenItemsBangalore'));
+const KitchenItemsShivajinagar = lazy(() => import('./pages/seo/KitchenItemsShivajinagar'));
+const RestaurantEquipmentBangalore = lazy(() => import('./pages/seo/RestaurantEquipmentBangalore'));
+const RestaurantSuppliesShivajinagar = lazy(() => import('./pages/seo/RestaurantSuppliesShivajinagar'));
+const CommercialKitchenEquipmentBangalore = lazy(() => import('./pages/seo/CommercialKitchenEquipmentBangalore'));
+const BarbecueToolsBangalore = lazy(() => import('./pages/seo/BarbecueToolsBangalore'));
+const ShawarmaMachineBangalore = lazy(() => import('./pages/seo/ShawarmaMachineBangalore'));
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -112,6 +120,15 @@ const DefaultViews = () => {
           <Route path="/privacy" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Privacy /></AppLayout>} />
           <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
           <Route path="/my-orders" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><MyOrders /></AppLayout>} />
+
+          {/* SEO Location Landing Pages */}
+          <Route path="/kitchen-items-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><KitchenItemsBangalore /></AppLayout>} />
+          <Route path="/kitchen-items-shivajinagar" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><KitchenItemsShivajinagar /></AppLayout>} />
+          <Route path="/restaurant-equipment-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><RestaurantEquipmentBangalore /></AppLayout>} />
+          <Route path="/restaurant-supplies-shivajinagar" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><RestaurantSuppliesShivajinagar /></AppLayout>} />
+          <Route path="/commercial-kitchen-equipment-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><CommercialKitchenEquipmentBangalore /></AppLayout>} />
+          <Route path="/barbecue-tools-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><BarbecueToolsBangalore /></AppLayout>} />
+          <Route path="/shawarma-machine-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><ShawarmaMachineBangalore /></AppLayout>} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
