@@ -48,7 +48,7 @@ export default function Home() {
         <img
           src="/hero-banner.png"
           alt="Popular Kitchen Premium Kitchenware Hero Banner - High-quality cookware and kitchen accessories"
-          className="w-full object-cover max-h-[420px] block"
+          className="w-full h-auto block"
           loading="eager"
           fetchpriority="high"
         />
