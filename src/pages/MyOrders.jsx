@@ -64,7 +64,7 @@ export default function MyOrders() {
     return () => { if (unsubscribe) unsubscribe(); };
   }, [currentUser, isGuest]);
 
-  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
 
   const handleCancel = async () => {
     if (!cancelTarget) return;
