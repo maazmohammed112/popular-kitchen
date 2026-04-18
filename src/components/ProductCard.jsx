@@ -14,6 +14,7 @@ export const ProductCard = ({ product }) => {
   );
 
   const [selectedSize, setSelectedSize] = useState(normalizedSizes.length > 0 ? normalizedSizes[0] : null);
+  const [localQty, setLocalQty] = useState(0);
 
   const hasBasePrice = product.price > 0;
   const currentPrice = selectedSize ? selectedSize.price : (product.discountPrice || product.price || 0);
@@ -33,8 +34,9 @@ export const ProductCard = ({ product }) => {
       price: currentPrice,
       size: selectedSize ? selectedSize.name : null, 
       image: getOptimizedUrl(product.images?.[0]),
-      quantity: 1
+      quantity: Number(localQty)
     });
+    setLocalQty(0);
     showSuccess(`${product.title} added to cart`);
   };
 
@@ -123,7 +125,11 @@ export const ProductCard = ({ product }) => {
               {normalizedSizes.map(size => (
                 <button
                   key={size.name}
-                  onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    setSelectedSize(size);
+                    setLocalQty(0);
+                  }}
                   className={`text-[10px] uppercase font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors border ${
                     selectedSize?.name === size.name 
                     ? 'border-pk-accent bg-pk-accent text-white' 
@@ -139,31 +145,36 @@ export const ProductCard = ({ product }) => {
         )}
 
         {/* Action Button / Qty */}
-        {inCart ? (
-          <div className="flex items-center justify-between bg-pk-bg-secondary rounded-xl p-1 h-10 w-full">
-            <button 
-              onClick={(e) => handleUpdateQty(e, quantity - 1)}
-              className="w-10 h-full flex items-center justify-center text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-primary rounded-lg transition-colors"
-            >
-              <FiMinus size={14} />
-            </button>
-            <span className="text-sm font-bold w-8 text-center">{quantity}</span>
-            <button 
-              onClick={(e) => handleUpdateQty(e, quantity + 1)}
-              className="w-10 h-full flex items-center justify-center text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-primary rounded-lg transition-colors"
-            >
-              <FiPlus size={14} />
-            </button>
-          </div>
-        ) : (
-          <button 
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className="w-full h-10 rounded-xl bg-pk-accent flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
-          >
-            <FiShoppingCart size={14} /> Add to Cart
-          </button>
-        )}
+        <div className="flex flex-col gap-2">
+           <div className="flex items-center bg-pk-bg-secondary rounded-xl overflow-hidden h-10">
+              <span className="text-[10px] font-bold text-pk-text-muted px-3 uppercase">Qty</span>
+              <input 
+                type="number"
+                value={localQty === 0 ? "" : localQty}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                  setLocalQty(val >= 0 ? val : 0);
+                }}
+                onFocus={(e) => e.target.select()}
+                placeholder="0"
+                className="flex-1 bg-transparent border-none text-sm font-bold text-pk-text-main focus:ring-0 px-2 h-full text-center appearance-none"
+              />
+           </div>
+
+           <button 
+             onClick={handleAddToCart}
+             disabled={isOutOfStock || localQty <= 0}
+             className="w-full h-10 rounded-xl bg-pk-accent flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
+           >
+             <FiShoppingCart size={14} /> Add to Cart
+           </button>
+           
+           {inCart && (
+             <p className="text-[10px] text-center text-pk-success font-medium">
+               In Cart: {quantity} items
+             </p>
+           )}
+        </div>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   
   const [selectedSize, setSelectedSize] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -81,8 +81,9 @@ export default function ProductDetail() {
       price: currentPrice,
       size: selectedSize || null,
       image: getOptimizedUrl(product.images?.[0]),
-      quantity
+      quantity: Number(quantity)
     });
+    setQuantity(0);
     showSuccess(`${product.title} added to cart!`);
   };
 
@@ -196,7 +197,10 @@ export default function ProductDetail() {
                 {product.sizes.map(size => (
                   <button 
                     key={size.name}
-                    onClick={() => setSelectedSize(size.name)}
+                    onClick={() => {
+                      setSelectedSize(size.name);
+                      setQuantity(0);
+                    }}
                     className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center ${
                       selectedSize === size.name 
                       ? 'bg-pk-accent text-white shadow-[0_0_15px_rgba(30,144,255,0.4)] border-pk-accent' 
@@ -213,25 +217,24 @@ export default function ProductDetail() {
 
           {/* Actions */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl p-1">
-              <button 
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-pk-text-main rounded-lg transition-colors"
-              >
-                <FiMinus />
-              </button>
-              <span className="w-12 text-center font-semibold">{quantity}</span>
-              <button 
-                onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 flex items-center justify-center text-pk-text-muted hover:text-pk-text-main rounded-lg transition-colors"
-              >
-                <FiPlus />
-              </button>
+            <div className="flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl overflow-hidden h-12 w-32">
+               <span className="text-xs font-bold text-pk-text-muted px-3 uppercase border-r border-pk-bg-secondary">Qty</span>
+               <input 
+                 type="number"
+                 value={quantity === 0 ? "" : quantity}
+                 onChange={(e) => {
+                   const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                   setQuantity(val >= 0 ? val : 0);
+                 }}
+                 onFocus={(e) => e.target.select()}
+                 placeholder="0"
+                 className="flex-1 bg-transparent border-none text-base font-bold text-pk-text-main focus:ring-0 px-2 h-full text-center appearance-none"
+               />
             </div>
             
             <button 
               onClick={handleAction}
-              disabled={(!inCart && isOutOfStock) || (!inCart && product.sizes?.length > 0 && !selectedSize)}
+              disabled={(!inCart && isOutOfStock) || (!inCart && product.sizes?.length > 0 && !selectedSize) || (!inCart && quantity <= 0)}
               className="flex-1 bg-pk-accent text-white h-12 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-pk-accent"
             >
               <FiShoppingCart /> {inCart ? 'Go to Cart' : 'Add to Cart'}

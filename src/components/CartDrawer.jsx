@@ -82,22 +82,23 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                     )}
                     
                     <div className="mt-auto flex justify-between items-center pt-2">
-                       <span className="font-bold text-sm">₹{item.price * item.quantity}</span>
-                       <div className="flex items-center gap-3 bg-pk-bg-secondary rounded-full px-2 py-1">
-                          <button 
-                            disabled={item.quantity <= 1}
-                            onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
-                            className="text-pk-text-muted hover:text-pk-text-main disabled:opacity-30"
-                          >
-                            <FiMinus size={14} />
-                          </button>
-                          <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
-                            className="text-pk-text-muted hover:text-pk-text-main"
-                          >
-                            <FiPlus size={14} />
-                          </button>
+                       <span className="font-bold text-sm">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                       <div className="flex items-center gap-2 bg-pk-bg-secondary rounded-lg px-2 py-1 w-24 border border-pk-bg-secondary">
+                          <span className="text-[9px] font-bold text-pk-text-muted uppercase">Qty</span>
+                          <input 
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                              if (val === 0) {
+                                removeFromCart(item.productId, item.size);
+                              } else {
+                                updateQuantity(item.productId, item.size, val >= 0 ? val : 1);
+                              }
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="w-full bg-transparent border-none text-xs font-bold text-pk-text-main focus:ring-0 p-0 text-right appearance-none"
+                          />
                        </div>
                     </div>
                   </div>
