@@ -1,5 +1,6 @@
-import { collection, doc, getDocs, addDoc, updateDoc, serverTimestamp, query, orderBy, where, onSnapshot } from "firebase/firestore";
+import { collection, doc, getDocs, addDoc, updateDoc, serverTimestamp, query, orderBy, where, onSnapshot, getDoc } from "firebase/firestore";
 import { db } from "./config";
+import { notifyNewOrder, notifyStatusUpdate, notifyOrderCancelled } from "./notifications";
 
 const ORDERS_COLLECTION = "orders";
 
@@ -8,6 +9,10 @@ export const createOrder = async (orderData) => {
     ...orderData,
     createdAt: serverTimestamp()
   });
+  
+  // Trigger immediate notification
+  notifyNewOrder(docRef.id, orderData).catch(err => console.error("Notify error:", err));
+  
   return docRef.id;
 };
 
@@ -62,10 +67,19 @@ export const listenToUserOrders = (userId, callback) => {
 
 export const updateOrderStatus = async (id, status, adminNote = "") => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
+  const snap = await getDoc(docRef);
+  const oldStatus = snap.exists() ? snap.data().status : 'unknown';
+  
   await updateDoc(docRef, { status, adminNote });
+  
+  // Notify status change
+  notifyStatusUpdate(id, oldStatus, status, adminNote).catch(err => console.error("Notify error:", err));
 };
 
 export const cancelOrder = async (id, cancelledBy = 'user') => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
   await updateDoc(docRef, { status: 'cancelled', cancelledBy });
+  
+  // Notify cancellation
+  notifyOrderCancelled(id, cancelledBy).catch(err => console.error("Notify error:", err));
 };
