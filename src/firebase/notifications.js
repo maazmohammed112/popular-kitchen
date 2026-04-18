@@ -70,17 +70,21 @@ const getContactButtons = (orderId, orderData, statusLabel) => {
 
   const buttons = [];
   
+  // WhatsApp only if phone exists
   if (phone) {
+    // Ensure numeric characters only for the URL
+    const cleanPhone = phone.startsWith('91') ? phone : '91' + phone;
     buttons.push([{ 
       text: "📱 Message WhatsApp", 
-      url: `https://wa.me/${phone.startsWith('91') ? phone : '91'+phone}?text=${text}` 
+      url: `https://wa.me/${cleanPhone}?text=${text}` 
     }]);
   }
 
-  if (email) {
+  // Email only if email exists (Telegram requires HTTP/HTTPS URLs for buttons)
+  if (email && email.includes('@')) {
     buttons.push([{ 
       text: "✉️ Send Email", 
-      url: `mailto:${email}?subject=${subject}&body=${text}` 
+      url: `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${subject}&body=${text}` 
     }]);
   }
 
