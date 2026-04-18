@@ -56,7 +56,10 @@ export default function ProductDetail() {
   }
 
   const selectedSizeObj = product.sizes?.find(s => s.name === selectedSize);
-  const currentPrice = selectedSizeObj ? selectedSizeObj.price : (product.discountPrice || product.price);
+  
+  const hasBasePrice = product.price > 0;
+  const currentPrice = selectedSizeObj ? selectedSizeObj.price : (product.discountPrice || product.price || 0);
+  const showSizeTag = selectedSizeObj && (!hasBasePrice || selectedSizeObj.price !== product.price);
 
   const hasOffer = product.offerPercent > 0 && !selectedSizeObj;
   const isOutOfStock = product.stockStatus === 'outOfStock';
@@ -137,12 +140,12 @@ export default function ProductDetail() {
               <div className="flex flex-col">
                 <span className="text-pk-text-muted line-through text-lg">₹{product.price}</span>
                 <span className="text-3xl font-bold text-pk-text-main">
-                  ₹{currentPrice} {selectedSizeObj && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
+                  ₹{currentPrice} {showSizeTag && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
                 </span>
               </div>
             ) : (
               <span className="text-3xl font-bold text-pk-text-main">
-                ₹{currentPrice} {selectedSizeObj && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
+                ₹{currentPrice} {showSizeTag && <span className="text-base font-normal text-pk-text-muted">({selectedSizeObj.name})</span>}
               </span>
             )}
             
