@@ -36,9 +36,9 @@ export const sendTelegramMessage = async (message, buttons = null) => {
     };
 
     if (buttons) {
-      body.reply_markup = {
+      body.reply_markup = JSON.stringify({
         inline_keyboard: buttons
-      };
+      });
     }
 
     const response = await fetch(url, {
