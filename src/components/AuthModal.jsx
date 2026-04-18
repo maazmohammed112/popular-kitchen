@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { FiX, FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
 import {
   createUserWithEmailAndPassword,
@@ -9,6 +10,7 @@ import {
 import { doc, setDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // After sign-up, migrate any guest cart/orders from localStorage to Firestore
 const migrateGuestDataToFirebase = async (user) => {
@@ -43,6 +45,8 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
   const [showPass, setShowPass] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const { showSuccess, showError } = useToast();
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handle = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -52,8 +56,17 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const isNew = result._tokenResponse?.isNewUser;
       if (isNew) await migrateGuestDataToFirebase(result.user);
+      
+      // Check for admin redirect
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const role = userDoc.exists() ? userDoc.data().role : 'user';
+      
       showSuccess(`Welcome, ${result.user.displayName}!`);
       onClose();
+      
+      if (role === 'admin') {
+        navigate('/admin/dashboard');
+      }
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         showError(err.message.replace('Firebase: ', '').replace(/\(.*\)/, '').trim());
@@ -72,11 +85,15 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         await updateProfile(cred.user, { displayName: form.name });
         await migrateGuestDataToFirebase(cred.user);
         showSuccess('Account created! Welcome to Popular Kitchen 🎉');
+        onClose();
       } else {
-        await signInWithEmailAndPassword(auth, form.email, form.password);
+        const { role } = await login(form.email, form.password);
         showSuccess('Signed in successfully!');
+        onClose();
+        if (role === 'admin') {
+          navigate('/admin/dashboard');
+        }
       }
-      onClose();
     } catch (err) {
       showError(err.message.replace('Firebase: ', '').replace(/\(.*\)/, '').trim());
     } finally {

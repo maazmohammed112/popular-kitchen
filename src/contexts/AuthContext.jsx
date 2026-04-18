@@ -47,16 +47,27 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    // Hardcoded Admin logic check requested by user
+    // Hardcoded Admin logic check
     if (email === 'admin' && password === 'admin') {
       localStorage.setItem('pk_hardcoded_admin', 'true');
-      setCurrentUser({ uid: 'mock-admin', email: 'admin@popularkitchen.com', displayName: 'Mock Admin' });
+      const mockUser = { uid: 'mock-admin', email: 'admin@popularkitchen.com', displayName: 'Mock Admin' };
+      setCurrentUser(mockUser);
       setUserRole('admin');
-      return;
+      return { user: mockUser, role: 'admin' };
     }
     
     // Normal Firebase flow
-    await signInWithEmailAndPassword(auth, email, password);
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    
+    // Explicitly fetch role here for immediate use after login
+    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+    const role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
+    
+    // Update local state immediately
+    setCurrentUser(result.user);
+    setUserRole(role);
+    
+    return { user: result.user, role };
   };
 
   const logout = async () => {

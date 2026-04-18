@@ -22,10 +22,13 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
-      // AuthContext handles setting isAdmin
-      showSuccess("Welcome to the Admin Dashboard");
-      navigate('/admin/dashboard');
+      const { role } = await login(email, password);
+      if (role === 'admin') {
+        showSuccess("Welcome to the Admin Dashboard");
+        navigate('/admin/dashboard');
+      } else {
+        showError("You do not have administrative privileges.");
+      }
     } catch (err) {
       console.error(err);
       showError("Invalid credentials. Please try again.");
