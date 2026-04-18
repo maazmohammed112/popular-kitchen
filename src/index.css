@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,26 +6,48 @@
 
 @layer base {
   :root {
-    --color-bg-primary: #F8FAFC;
-    --color-bg-secondary: #F1F5F9;
+    /* Core palette from design guide */
+    --color-primary: #1A354A;
+    --color-secondary: #435E91;
+    --color-tertiary: #D87333;
+    --color-neutral: #FAF8F5;
+
+    /* Light mode surfaces */
+    --color-bg-primary: #F8F6F3;
+    --color-bg-secondary: #EDE9E4;
     --color-surface: #FFFFFF;
-    --color-accent: #0284C7;
-    --color-text-main: #0F172A;
-    --color-text-muted: #64748B;
+
+    /* Accent maps to primary */
+    --color-accent: #1A354A;
+    --color-accent-alt: #435E91;
+
+    /* Text */
+    --color-text-main: #1A354A;
+    --color-text-muted: #6B7A8D;
+
+    /* Status */
     --color-success: #10B981;
-    --color-warning: #F59E0B;
-    --color-error: #EF4444;
+    --color-warning: #D87333;
+    --color-error: #E53E3E;
   }
 
   .dark {
-    --color-bg-primary: #0A1628;
-    --color-bg-secondary: #0F2040;
-    --color-surface: #152847;
-    --color-accent: #1E90FF;
-    --color-text-main: #F5F0E8;
+    --color-primary: #1A354A;
+    --color-secondary: #435E91;
+    --color-tertiary: #D87333;
+    --color-neutral: #FAF8F5;
+
+    --color-bg-primary: #0C1C29;
+    --color-bg-secondary: #122336;
+    --color-surface: #163048;
+    --color-accent: #435E91;
+    --color-accent-alt: #D87333;
+
+    --color-text-main: #FAF8F5;
     --color-text-muted: #8FA3BF;
+
     --color-success: #00C896;
-    --color-warning: #FFB347;
+    --color-warning: #D87333;
     --color-error: #FF4757;
   }
 }
@@ -33,24 +55,69 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: theme('colors.pk-bg-primary');
-  color: theme('colors.pk-text-main');
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-main);
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Typography scale */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--color-text-main);
+}
+
+/* Professional button base */
+@layer components {
+  .btn-primary {
+    @apply bg-pk-primary text-white font-semibold px-6 py-2.5 rounded-xl transition-all hover:brightness-110 hover:shadow-lg active:scale-95;
+  }
+  .btn-secondary {
+    @apply bg-pk-secondary text-white font-semibold px-6 py-2.5 rounded-xl transition-all hover:brightness-110 hover:shadow-lg active:scale-95;
+  }
+  .btn-tertiary {
+    @apply bg-pk-tertiary text-white font-semibold px-6 py-2.5 rounded-xl transition-all hover:brightness-110 hover:shadow-lg active:scale-95;
+  }
+  .btn-outlined {
+    @apply border-2 border-pk-primary text-pk-primary font-semibold px-6 py-2.5 rounded-xl transition-all hover:bg-pk-primary hover:text-white active:scale-95;
+  }
+  .pk-card {
+    @apply bg-pk-surface rounded-2xl border border-pk-bg-secondary shadow-sm hover:shadow-md transition-shadow;
+  }
+  .pk-input {
+    @apply bg-pk-bg-primary border border-pk-bg-secondary rounded-xl px-4 py-2.5 text-pk-text-main focus:outline-none focus:border-pk-secondary focus:ring-2 focus:ring-pk-secondary/20 transition-all;
+  }
+  .pk-badge-primary {
+    @apply bg-pk-primary/10 text-pk-primary border border-pk-primary/20 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide;
+  }
+  .pk-badge-tertiary {
+    @apply bg-pk-tertiary/10 text-pk-tertiary border border-pk-tertiary/20 text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide;
+  }
+  .pk-icon-circle {
+    @apply w-9 h-9 rounded-full flex items-center justify-center transition-all;
+  }
 }
 
 /* Hide scrollbar globally */
 * {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
-*::-webkit-scrollbar { 
-  display: none; /* WebKit */
+*::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
