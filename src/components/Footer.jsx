@@ -37,11 +37,11 @@ export const Footer = ({ toggleTheme }) => {
                 </div>
                 +91 88928 36046
               </a>
-              <a href="mailto:mma@popularkitchen.store" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
+              <a href="mailto:mohammed@popularkitchen.store" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15 group-hover:border-white/30 transition-colors" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <FiMail size={13} />
                 </div>
-                mma@popularkitchen.store
+                mohammed@popularkitchen.store
               </a>
               <div className="flex items-start gap-3 text-sm text-white/60">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15" style={{ background: 'rgba(255,255,255,0.08)' }}>

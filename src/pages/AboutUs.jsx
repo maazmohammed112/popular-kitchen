@@ -154,8 +154,8 @@ export default function AboutUs() {
                 </div>
                 <div>
                   <p className="font-bold text-pk-text-main text-sm">Email</p>
-                  <a href="mailto:mma@popularkitchen.store" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
-                    mma@popularkitchen.store
+                  <a href="mailto:mohammed@popularkitchen.store" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
+                    mohammed@popularkitchen.store
                   </a>
                 </div>
               </div>
