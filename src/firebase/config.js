@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
@@ -20,7 +20,6 @@ const auth = getAuth(app);
 
 // Enable offline persistence for lightning-fast loading
 if (typeof window !== "undefined") {
-  const { enableIndexedDbPersistence } = await import("firebase/firestore");
   enableIndexedDbPersistence(db).catch((err) => {
     if (err.code === 'failed-precondition') {
       console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
