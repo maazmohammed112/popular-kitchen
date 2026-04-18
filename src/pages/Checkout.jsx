@@ -9,6 +9,7 @@ import { db } from '../firebase/config';
 import { createOrder } from '../firebase/orders';
 import { SignUpPromptModal } from '../components/SignUpPromptModal';
 import { AuthModal } from '../components/AuthModal';
+import { ConfirmOrderModal } from '../components/ConfirmOrderModal';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -23,6 +24,7 @@ export default function Checkout() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const isAuthenticated = !!currentUser;
 
   useEffect(() => {
@@ -88,6 +90,11 @@ export default function Checkout() {
       return;
     }
 
+    // Step 2: Show confirmation modal
+    setShowConfirmModal(true);
+  };
+
+  const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     try {
       const orderData = {
@@ -113,6 +120,7 @@ export default function Checkout() {
       const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(userRef, { shippingDetails: formData }, { merge: true });
 
+      setShowConfirmModal(false);
       clearCart();
       showSuccess("Order placed successfully!");
       navigate(`/order-success/${orderId}`);
@@ -127,6 +135,13 @@ export default function Checkout() {
   return (
     <div className="animate-[slideUp_0.4s_ease-out] max-w-4xl mx-auto">
       {showAuth && <AuthModal defaultTab="signup" onClose={() => setShowAuth(false)} />}
+      {showConfirmModal && (
+        <ConfirmOrderModal 
+          onConfirm={handleFinalSubmit} 
+          onCancel={() => setShowConfirmModal(false)}
+          isSubmitting={isSubmitting}
+        />
+      )}
       <h1 className="text-2xl md:text-3xl font-bold mb-8 flex items-center gap-3">
         <FiLock className="text-pk-accent" /> Checkout
       </h1>
