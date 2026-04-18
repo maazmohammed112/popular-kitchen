@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const BUSINESS = {
   name: 'Popular Kitchen',
@@ -112,7 +112,7 @@ export const generateCustomerInvoice = async (order) => {
     `Rs. ${(Number(i.price || 0) * Number(i.quantity || 1)).toLocaleString('en-IN')}`,
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 92,
     head: [['Item Name', 'Size', 'Qty', 'Unit Price', 'Total']],
     body: rows,
@@ -205,7 +205,7 @@ export const generateAdminInvoice = async (order) => {
     `Rs. ${(Number(i.price || 0) * Number(i.quantity || 1)).toLocaleString('en-IN')}`,
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: 85,
     head: [['Item Name', 'Size', 'Qty', 'Unit Price', 'Total']],
     body: rows,
