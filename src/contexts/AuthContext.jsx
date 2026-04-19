@@ -16,17 +16,23 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        // Check for admin role
+        
+        // Check for admin role - Hardcoded override + Firestore check
+        const adminEmails = ['login@admin.com', 'admin@admin.com'];
+        const isEmailAdmin = adminEmails.includes(user.email.toLowerCase());
+
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            setUserRole(userDoc.data().role || 'user');
+          if (userDoc.exists() && userDoc.data().role === 'admin') {
+            setUserRole('admin');
+          } else if (isEmailAdmin) {
+            setUserRole('admin');
           } else {
             setUserRole('user');
           }
         } catch (error) {
           console.error("Error fetching user role", error);
-          setUserRole('user');
+          setUserRole(isEmailAdmin ? 'admin' : 'user');
         }
       } else {
         // Logged out
@@ -34,7 +40,6 @@ export const AuthProvider = ({ children }) => {
         setUserRole('user');
         
         // Handle HARDCODED ADMIN (mock session via localStorage)
-        // This handles cases where user bypasses firebase auth entirely
         if (localStorage.getItem('pk_hardcoded_admin') === 'true') {
           setCurrentUser({ uid: 'mock-admin', email: 'admin@admin.com', displayName: 'Mock Admin' });
           setUserRole('admin');
@@ -50,9 +55,16 @@ export const AuthProvider = ({ children }) => {
     // Normal Firebase flow
     const result = await signInWithEmailAndPassword(auth, email, password);
     
-    // Explicitly fetch role here for immediate use after login
+    // Check for admin role - Hardcoded override + Firestore check
+    const adminEmails = ['login@admin.com', 'admin@admin.com'];
+    const isEmailAdmin = adminEmails.includes(result.user.email.toLowerCase());
+
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-    const role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
+    let role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
+    
+    if (isEmailAdmin) {
+      role = 'admin';
+    }
     
     // Update local state immediately
     setCurrentUser(result.user);

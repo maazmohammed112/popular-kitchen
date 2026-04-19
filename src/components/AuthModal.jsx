@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiX, FiMail, FiLock, FiUser, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiX, FiMail, FiLock, FiUser, FiEye, FiEyeOff, FiCheckCircle, FiLoader } from 'react-icons/fi';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -43,6 +43,7 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [redirectingToAdmin, setRedirectingToAdmin] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const { showSuccess, showError } = useToast();
   const { login } = useAuth();
@@ -58,14 +59,23 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
       if (isNew) await migrateGuestDataToFirebase(result.user);
       
       // Check for admin redirect
+      const adminEmails = ['login@admin.com', 'admin@admin.com'];
+      const isEmailAdmin = adminEmails.includes(result.user.email.toLowerCase());
+
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      const role = userDoc.exists() ? userDoc.data().role : 'user';
+      let role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
       
-      showSuccess(`Welcome, ${result.user.displayName}!`);
-      onClose();
-      
+      if (isEmailAdmin) role = 'admin';
+
       if (role === 'admin') {
+        setRedirectingToAdmin(true);
+        // Special delay for visual polish
+        await new Promise(r => setTimeout(r, 2000));
         navigate('/admin/dashboard');
+        onClose();
+      } else {
+        showSuccess(`Welcome, ${result.user.displayName}!`);
+        onClose();
       }
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
@@ -88,10 +98,16 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         onClose();
       } else {
         const { role } = await login(form.email, form.password);
-        showSuccess('Signed in successfully!');
-        onClose();
+        
         if (role === 'admin') {
+          setRedirectingToAdmin(true);
+          // Special delay for visual polish
+          await new Promise(r => setTimeout(r, 2000));
           navigate('/admin/dashboard');
+          onClose();
+        } else {
+          showSuccess('Signed in successfully!');
+          onClose();
         }
       }
     } catch (err) {
@@ -110,7 +126,26 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         className="bg-pk-surface border border-pk-bg-secondary rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-[slideUp_0.3s_ease-out]"
         onClick={e => e.stopPropagation()}
       >
-        {/* Logo */}
+        {redirectingToAdmin ? (
+          <div className="text-center py-8 animate-[fadeIn_0.5s_ease-out]">
+            <div className="flex flex-col items-center gap-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-success/20 rounded-full blur-2xl animate-pulse"></div>
+                <FiCheckCircle className="text-success relative z-10" size={70} />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-bold text-pk-text-main">Welcome Back</h3>
+                <p className="text-sm text-pk-text-muted">Loading Admin Dashboard...</p>
+              </div>
+              <div className="flex items-center gap-3 mt-4 px-5 py-2.5 bg-pk-bg-primary rounded-2xl border border-pk-bg-secondary">
+                <FiLoader className="text-pk-accent animate-spin" size={18} />
+                <span className="text-sm font-semibold text-pk-text-main">Authenticating Portal</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Logo */}
         <div className="flex justify-between items-start mb-5">
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Popular Kitchen" className="h-8 object-contain" onError={e => e.target.style.display='none'} />
@@ -206,7 +241,9 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
           <a href="/terms" target="_blank" className="underline hover:text-pk-text-main">Terms</a> &amp;{' '}
           <a href="/privacy" target="_blank" className="underline hover:text-pk-text-main">Privacy Policy</a>
         </p>
-      </div>
+      </>
+    )}
+  </div>
     </div>
   );
 };
