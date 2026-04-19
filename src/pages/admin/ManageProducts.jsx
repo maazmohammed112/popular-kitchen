@@ -490,7 +490,6 @@ export default function ManageProducts() {
                </button>
             </div>
           </div>
-          </div>
         </div>
       )}
 
