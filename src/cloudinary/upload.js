@@ -27,26 +27,35 @@ export const uploadImageToCloudinary = async (file) => {
 };
 
 export const getOptimizedUrl = (url, width = 600) => {
-  if (!url) return url;
+  if (!url || url.startsWith('/') || url.startsWith('blob:') || url.startsWith('data:')) return url;
 
-  // Handle Google Drive links to make them direct-viewable
-  if (url.includes("drive.google.com")) {
+  let finalUrl = url;
+
+  // 1. Handle Google Drive links to make them direct-viewable
+  if (url.includes("drive.google.com") || url.includes("docs.google.com")) {
     let fileId = "";
     if (url.includes("/file/d/")) {
       fileId = url.split("/file/d/")[1].split("/")[0].split("?")[0];
     } else if (url.includes("id=")) {
-      fileId = url.split("id=")[1].split("&")[0];
+      fileId = url.split("id=")[1].split("&")[0].split("/")[0];
     }
-    if (fileId) return `https://lh3.googleusercontent.com/d/${fileId}`;
-    return url;
+    
+    if (fileId) {
+      // Use LH3 for better reliability
+      finalUrl = `https://lh3.googleusercontent.com/d/${fileId}=s${width > 1200 ? 1200 : width}`;
+    }
   }
 
-  if (!url.includes("cloudinary.com")) return url;
-  
-  // Insert transformation parameters before the version number or public ID
-  const parts = url.split("upload/");
-  if (parts.length === 2) {
-    return `${parts[0]}upload/f_auto,q_auto:best,w_${width}/${parts[1]}`;
+  // 2. If it's already a Cloudinary URL, use standard transformation
+  if (finalUrl.includes("cloudinary.com")) {
+    const parts = finalUrl.split("upload/");
+    if (parts.length === 2) {
+      return `${parts[0]}upload/f_auto,q_auto:best,w_${width}/${parts[1]}`;
+    }
+    return finalUrl;
   }
-  return url;
+
+  // 3. For ALL external URLs (Google Drive, Imgur, etc.), use Cloudinary Fetch!
+  // This proxies the image, optimizes it, and ensures it loads reliably.
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/f_auto,q_auto,w_${width}/${encodeURIComponent(finalUrl)}`;
 };
