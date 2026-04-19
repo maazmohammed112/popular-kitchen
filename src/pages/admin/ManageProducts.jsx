@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
+import Cropper from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
+import getCroppedImg from '../../utils/cropImage';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -22,6 +25,15 @@ export default function ManageProducts() {
   const [newSizeName, setNewSizeName] = useState('');
   const [newSizePrice, setNewSizePrice] = useState('');
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [cropState, setCropState] = useState({
+    imageSrc: null,
+    crop: { x: 0, y: 0 },
+    zoom: 1,
+    rotation: 0,
+    croppedAreaPixels: null
+  });
+
+  const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
   useEffect(() => {
     fetchProducts();
@@ -70,18 +82,52 @@ export default function ManageProducts() {
     setFormData(prev => ({ ...prev, sizes: prev.sizes.filter(s => s.name !== sizeNameToRemove) }));
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    
-    setUploadingImages(true);
+  const readFile = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.addEventListener('load', () => resolve(reader.result), false);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageSelect = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      let imageDataUrl = await readFile(file);
+      setCropState({
+        imageSrc: imageDataUrl,
+        crop: { x: 0, y: 0 },
+        zoom: 1,
+        rotation: 0,
+        croppedAreaPixels: null
+      });
+      // reset input value so re-selecting same file works
+      e.target.value = '';
+    }
+  };
+
+  const onCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCropState(prev => ({ ...prev, croppedAreaPixels }));
+  };
+
+  const handleSaveCrop = async () => {
     try {
-      const urls = await Promise.all(files.map(file => uploadImageToCloudinary(file)));
-      setFormData(prev => ({ ...prev, images: [...prev.images, ...urls] }));
-      showSuccess("Images uploaded");
+      const croppedImageBlob = await getCroppedImg(
+        cropState.imageSrc,
+        cropState.croppedAreaPixels,
+        cropState.rotation
+      );
+      const file = new File([croppedImageBlob], "cropped.jpg", { type: "image/jpeg" });
+      
+      setCropState(prev => ({ ...prev, imageSrc: null }));
+      setUploadingImages(true);
+      
+      const url = await uploadImageToCloudinary(file);
+      setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
+      showSuccess("Image uploaded successfully");
     } catch (err) {
       console.error(err);
-      showError("Image upload failed");
+      showError("Image upload or crop failed");
     } finally {
       setUploadingImages(false);
     }
@@ -227,7 +273,12 @@ export default function ManageProducts() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Category</label>
-                  <input required type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" placeholder="Cookware, Storage, etc" />
+                  <input required list="category-list" type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" placeholder="Cookware, Storage, etc" />
+                  <datalist id="category-list">
+                    {existingCategories.map((cat, idx) => (
+                      <option key={idx} value={cat} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Base Price (₹) - Optional if sizes have prices</label>
@@ -292,8 +343,8 @@ export default function ManageProducts() {
                     ) : (
                       <>
                         <FiImage size={24} className="group-hover:-translate-y-1 transition-transform" />
-                        <span className="text-[10px] uppercase font-bold mt-2">Add Files</span>
-                        <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploadingImages} />
+                        <span className="text-[10px] uppercase font-bold mt-2">Add file</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
                       </>
                     )}
                   </label>
@@ -307,6 +358,61 @@ export default function ManageProducts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Image Crop Modal */}
+      {cropState.imageSrc && (
+        <div className="fixed inset-0 bg-pk-bg-primary/95 z-[60] flex flex-col items-center justify-center p-4">
+          <div className="relative w-full max-w-2xl h-[55vh] bg-black rounded-xl overflow-hidden mb-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+            <Cropper
+              image={cropState.imageSrc}
+              crop={cropState.crop}
+              rotation={cropState.rotation}
+              zoom={cropState.zoom}
+              aspect={1}
+              onCropChange={(crop) => setCropState(p => ({...p, crop}))}
+              onRotationChange={(rotation) => setCropState(p => ({...p, rotation}))}
+              onCropComplete={onCropComplete}
+              onZoomChange={(zoom) => setCropState(p => ({...p, zoom}))}
+            />
+          </div>
+          <div className="flex flex-col gap-4 w-full max-w-2xl bg-pk-surface p-6 rounded-2xl border border-pk-bg-secondary shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-pk-text-muted uppercase tracking-wider">Zoom</label>
+                <input 
+                  type="range" 
+                  value={cropState.zoom} 
+                  min={1} 
+                  max={3} 
+                  step={0.1}
+                  aria-labelledby="Zoom"
+                  onChange={(e) => setCropState(p => ({...p, zoom: e.target.value}))} 
+                  className="w-full accent-pk-accent"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold text-pk-text-muted uppercase tracking-wider">Rotation</label>
+                <input 
+                  type="range" 
+                  value={cropState.rotation} 
+                  min={0} 
+                  max={360} 
+                  step={1}
+                  aria-labelledby="Rotation"
+                  onChange={(e) => setCropState(p => ({...p, rotation: e.target.value}))} 
+                  className="w-full accent-pk-accent"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-4 border-t border-pk-bg-secondary pt-4">
+               <button type="button" onClick={() => setCropState({...cropState, imageSrc: null})} className="px-5 py-2.5 font-medium text-pk-text-muted hover:text-pk-text-main transition-colors">Cancel</button>
+               <button type="button" onClick={handleSaveCrop} className="px-6 py-2.5 bg-pk-accent text-white font-bold rounded-xl hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20">
+                 Crop & Upload
+               </button>
+            </div>
           </div>
         </div>
       )}
