@@ -53,7 +53,8 @@ export const ProductCard = ({ product }) => {
 
   const hasOffer = product.offerPercent > 0 && !selectedSize; 
   const isOutOfStock = product.stockStatus === 'outOfStock';
-  const imgUrl = getOptimizedUrl(product.images?.[0]);
+  const rawImg = product.images?.[0];
+  const imgUrl = rawImg ? getOptimizedUrl(rawImg) : null;
 
   return (
     <div className="group relative bg-pk-surface rounded-2xl overflow-hidden border border-pk-bg-secondary shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
@@ -82,12 +83,21 @@ export const ProductCard = ({ product }) => {
       <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
         {/* Image */}
         <div className="w-full h-48 overflow-hidden relative bg-pk-bg-primary">
-          <ImageWithSkeleton 
-            src={imgUrl} 
-            alt={product.title} 
-            containerClassName="w-full h-full bg-white"
-            className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
-          />
+          {imgUrl ? (
+            <ImageWithSkeleton 
+              src={imgUrl} 
+              alt={product.title} 
+              containerClassName="w-full h-full bg-white"
+              className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+            />
+          ) : (
+            <div className="w-full h-full bg-pk-bg-secondary flex flex-col items-center justify-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-pk-text-muted opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-[10px] text-pk-text-muted font-medium uppercase tracking-wide">No Image</span>
+            </div>
+          )}
           
           {isOutOfStock && (
             <div className="absolute inset-x-0 top-20 flex justify-center z-10">
