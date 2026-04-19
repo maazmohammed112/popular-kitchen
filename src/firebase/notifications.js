@@ -192,3 +192,22 @@ export const notifyEmptySearch = async (query, userData) => {
 
   return sendTelegramMessage(message);
 };
+
+/**
+ * Format a 'Guest Search' notification
+ */
+export const notifyGuestSearch = async (query) => {
+  const message = `
+<b>🔍 GUEST VISITOR SEARCH</b>
+
+<b>Query:</b> <code>${escapeHTML(query)}</code>
+<b>User:</b> Guest / Non-Logged In
+<b>Time:</b> ${new Date().toLocaleString('en-IN')}
+
+<i>A guest visitor is browsing for this item.</i>
+
+<a href="${window.location.origin}/search?q=${encodeURIComponent(query)}">View Product Results</a>
+  `;
+
+  return sendTelegramMessage(message);
+};

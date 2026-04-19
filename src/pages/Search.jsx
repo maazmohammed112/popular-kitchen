@@ -5,19 +5,37 @@ import { getProducts } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
 import { useAuth } from '../contexts/AuthContext';
-import { notifyEmptySearch } from '../firebase/notifications';
-import { useRef } from 'react';
+import { notifyEmptySearch, notifyGuestSearch } from '../firebase/notifications';
+
+// Session-wide deduplication — stored in sessionStorage so it persists
+// across re-renders and component remounts within the same browser tab.
+const SESSION_KEY = 'pk_notified_searches';
+
+const hasBeenNotified = (key) => {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '[]');
+    return stored.includes(key);
+  } catch { return false; }
+};
+
+const markAsNotified = (key) => {
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '[]');
+    if (!stored.includes(key)) {
+      stored.push(key);
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(stored));
+    }
+  } catch { /* ignore storage errors */ }
+};
 
 export default function Search() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
-  const notifiedQueries = useRef(new Set());
   
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Extract search query from URL
   const searchParams = new URLSearchParams(location.search);
   const query = searchParams.get('q') || '';
 
@@ -48,12 +66,25 @@ export default function Search() {
     fetchAndFilterProducts();
   }, [query]);
 
-  // Notify admin if no results found
+  // Single notification effect — fires once per unique query per browser session
   useEffect(() => {
-    if (!loading && query.trim() && products.length === 0) {
-      if (!notifiedQueries.current.has(query.toLowerCase())) {
-        notifiedQueries.current.add(query.toLowerCase());
+    if (loading || !query.trim()) return;
+
+    const lowerQuery = query.toLowerCase();
+
+    if (products.length === 0) {
+      // No results found — alert admin with user info if available
+      const key = `empty:${lowerQuery}`;
+      if (!hasBeenNotified(key)) {
+        markAsNotified(key);
         notifyEmptySearch(query, currentUser);
+      }
+    } else if (!currentUser) {
+      // Results found but user is not logged in — alert admin of guest interest
+      const key = `guest:${lowerQuery}`;
+      if (!hasBeenNotified(key)) {
+        markAsNotified(key);
+        notifyGuestSearch(query);
       }
     }
   }, [loading, products, query, currentUser]);
