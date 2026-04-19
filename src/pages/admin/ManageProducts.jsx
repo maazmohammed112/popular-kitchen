@@ -45,6 +45,7 @@ export default function ManageProducts() {
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState({}); // Stores status for blob URLs
 
   const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
@@ -147,30 +148,45 @@ export default function ManageProducts() {
   const handleImageSelect = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      const blobUrl = URL.createObjectURL(file);
       
+      // 1. Optimistic Update: Add to list immediately
+      setFormData(prev => ({ ...prev, images: [...prev.images, blobUrl] }));
+      setPendingUploads(prev => ({ ...prev, [blobUrl]: true }));
+      
+      // 2. Background Upload
       try {
-        setUploadingImages(true);
-        
-        // Compression options
         const options = {
-          maxSizeMB: 0.2, // 200KB
+          maxSizeMB: 0.2,
           maxWidthOrHeight: 1200,
           useWebWorker: true,
           initialQuality: 0.8
         };
         
         const compressedFile = await imageCompression(file, options);
-        const url = await uploadImageToCloudinary(compressedFile);
+        const realUrl = await uploadImageToCloudinary(compressedFile);
         
-        setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
-        showSuccess("Image uploaded successfully");
+        // Replace blobUrl with realUrl
+        setFormData(prev => ({
+          ...prev,
+          images: prev.images.map(img => img === blobUrl ? realUrl : img)
+        }));
+        setPendingUploads(prev => {
+          const newState = { ...prev };
+          delete newState[blobUrl];
+          return newState;
+        });
+        showSuccess("Image joined the gallery");
       } catch (err) {
         console.error(err);
-        showError("Image upload failed");
+        showError("Upload failed, removing preview...");
+        setFormData(prev => ({
+          ...prev,
+          images: prev.images.filter(img => img !== blobUrl)
+        }));
       } finally {
-        setUploadingImages(false);
-        // reset input value
         e.target.value = '';
+        // Note: We don't revoke immediately because it's being used in the preview
       }
     }
   };
@@ -225,6 +241,14 @@ export default function ManageProducts() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Check if any uploads are still pending
+    if (Object.keys(pendingUploads).length > 0) {
+      showError("Please wait for images to finish uploading");
+      return;
+    }
+
+    const backupProducts = [...products];
     setIsSubmitting(true);
     
     try {
@@ -240,22 +264,35 @@ export default function ManageProducts() {
         category: formData.category,
         sizes: formData.sizes,
         stockStatus: formData.stockStatus,
-        images: formData.images
+        images: formData.images,
+        updatedAt: new Date()
       };
 
+      // --- Optimistic UI Update ---
       if (formData.id) {
-        await updateProduct(formData.id, payload);
-        showSuccess("Product updated successfully");
+        setProducts(prev => prev.map(p => p.id === formData.id ? { ...p, ...payload } : p));
       } else {
-        await addProduct(payload);
-        showSuccess("Product created successfully");
+        const tempId = `temp-${Date.now()}`;
+        setProducts(prev => [{ ...payload, id: tempId }, ...prev]);
       }
       
-      setIsModalOpen(false);
-      fetchProducts();
+      setIsModalOpen(false); // Close instantly
+      showSuccess(formData.id ? "Updating product..." : "Adding product...");
+
+      // --- Background Backend Call ---
+      if (formData.id) {
+        await updateProduct(formData.id, payload);
+        showSuccess("Changes synchronized");
+      } else {
+        await addProduct(payload);
+        showSuccess("Product verified & added");
+      }
+      
+      fetchProducts(); // Refresh in background to get real IDs/ServerTimestamps
     } catch (err) {
       console.error(err);
-      showError("Error saving product");
+      showError("Sync failed. Rolling back changes.");
+      setProducts(backupProducts); // Rollback
     } finally {
       setIsSubmitting(false);
     }
@@ -263,12 +300,18 @@ export default function ManageProducts() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
+      const backupProducts = [...products];
+      
+      // Optimistic Update
+      setProducts(prev => prev.filter(p => p.id !== id));
+      showSuccess("Deleting product...");
+
       try {
         await deleteProduct(id);
-        showSuccess("Product deleted");
-        fetchProducts();
+        showSuccess("Product removed from database");
       } catch (err) {
-        showError("Failed to delete product");
+        showError("Delete failed. Reverting...");
+        setProducts(backupProducts); // Rollback
       }
     }
   };
@@ -466,24 +509,34 @@ export default function ManageProducts() {
               <div className="border-t border-pk-bg-secondary pt-6">
                 <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Images</label>
                 <div className="flex flex-wrap gap-4 mb-4">
-                  {formData.images.map((img, idx) => (
-                    <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden relative group border border-pk-bg-secondary bg-pk-bg-primary">
-                      <ImageWithSkeleton 
-                        src={getOptimizedUrl(img, 200)} 
-                        alt="" 
-                        containerClassName="w-full h-full"
-                        className="w-full h-full object-contain" 
-                      />
-                      <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <button type="button" onClick={() => handleOpenCrop(img, idx)} className="bg-pk-bg-primary/80 backdrop-blur text-pk-accent p-1.5 rounded-lg hover:text-white hover:bg-pk-accent transition-all">
-                          <FiCrop size={14}/>
-                        </button>
-                        <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter((_, i) => i !== idx)}))} className="bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1.5 rounded-lg hover:text-white hover:bg-pk-error transition-all">
-                          <FiTrash2 size={14}/>
-                        </button>
+                  {formData.images.map((img, idx) => {
+                    const isPending = pendingUploads[img];
+                    return (
+                      <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden relative group border border-pk-bg-secondary bg-pk-bg-primary">
+                        <ImageWithSkeleton 
+                          src={isPending ? img : getOptimizedUrl(img, 200)} 
+                          alt="" 
+                          containerClassName="w-full h-full"
+                          className={`w-full h-full object-contain ${isPending ? 'opacity-50 blur-[1px]' : ''}`} 
+                        />
+                        {isPending && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
+                            <div className="w-6 h-6 border-2 border-pk-accent border-t-transparent rounded-full animate-spin"></div>
+                          </div>
+                        )}
+                        <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          {!isPending && (
+                            <button type="button" onClick={() => handleOpenCrop(img, idx)} className="bg-pk-bg-primary/80 backdrop-blur text-pk-accent p-1.5 rounded-lg hover:text-white hover:bg-pk-accent transition-all">
+                              <FiCrop size={14}/>
+                            </button>
+                          )}
+                          <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter((_, i) => i !== idx)}))} className="bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1.5 rounded-lg hover:text-white hover:bg-pk-error transition-all">
+                            <FiTrash2 size={14}/>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   
                   <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
                     {uploadingImages ? (
