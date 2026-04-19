@@ -555,6 +555,7 @@ export default function ManageProducts() {
       {/* CSV Import Modal */}
       {isCsvModalOpen && (
         <CSVUploadModal
+          existingCategories={existingCategories}
           onClose={() => setIsCsvModalOpen(false)}
           onSuccess={fetchProducts}
         />

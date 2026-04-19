@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import { getProduct } from '../firebase/products';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight, FiArrowRight } from 'react-icons/fi';
+import { getProduct, getProducts } from '../firebase/products';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { SEO } from '../components/SEO';
@@ -16,6 +16,7 @@ export default function ProductDetail() {
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(0);
@@ -34,6 +35,10 @@ export default function ProductDetail() {
           if (normalizedSizes.length > 0) {
             setSelectedSize(normalizedSizes[0].name);
           }
+          // Fetch related products in same category
+          const allProducts = await getProducts();
+          const related = allProducts.filter(p => p.id !== id && p.category === data.category).slice(0, 6);
+          setRelatedProducts(related);
         }
       } catch (err) {
         console.error(err);
@@ -253,6 +258,62 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      {/* More in this Category */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-14 animate-[slideUp_0.5s_ease-out]">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-xs font-bold text-pk-accent uppercase tracking-widest mb-1">More in {product.category}</p>
+              <h2 className="text-xl md:text-2xl font-bold text-pk-text-main">You might also like</h2>
+            </div>
+            <Link
+              to={`/?category=${encodeURIComponent(product.category)}`}
+              className="flex items-center gap-1.5 text-sm font-semibold text-pk-accent hover:text-pk-text-main transition-colors"
+            >
+              View all <FiArrowRight size={16} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {relatedProducts.map(p => {
+              const hasOff = p.offerPercent > 0;
+              const displayPrice = p.discountPrice || p.price || 0;
+              return (
+                <Link
+                  key={p.id}
+                  to={`/product/${p.id}`}
+                  className="group bg-pk-surface border border-pk-bg-secondary rounded-2xl overflow-hidden hover:border-pk-accent transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] hover:-translate-y-1"
+                >
+                  <div className="aspect-square bg-pk-bg-primary overflow-hidden relative">
+                    {p.images?.[0] ? (
+                      <img
+                        src={getOptimizedUrl(p.images[0], 400)}
+                        alt={p.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-pk-text-muted text-xs">No Image</div>
+                    )}
+                    {hasOff && (
+                      <span className="absolute top-2 left-2 bg-pk-error text-white text-[10px] font-bold px-2 py-0.5 rounded-md">{p.offerPercent}% OFF</span>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className="text-xs font-semibold text-pk-text-main leading-tight line-clamp-2 mb-2">{p.title}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-pk-text-main">₹{displayPrice}</span>
+                      {hasOff && <span className="text-[10px] text-pk-text-muted line-through">₹{p.price}</span>}
+                    </div>
+                    {p.stockStatus === 'outOfStock' && (
+                      <span className="text-[10px] text-pk-error font-bold uppercase mt-1 block">Out of Stock</span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Lightbox Modal */}
       {isLightboxOpen && product.images?.length > 0 && (
