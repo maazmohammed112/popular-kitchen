@@ -163,3 +163,26 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
   const buttons = getContactButtons(orderId, orderData, 'cancelled');
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
+
+/**
+ * Format an 'Empty Search' notification
+ */
+export const notifyEmptySearch = async (query, userData) => {
+  const customerInfo = userData?.email 
+    ? `${escapeHTML(userData.displayName || 'User')} (${escapeHTML(userData.email)})`
+    : 'Guest Customer';
+
+  const message = `
+<b>🔍 MISSING PRODUCT SEARCH</b>
+
+<b>Query:</b> <code>${escapeHTML(query)}</code>
+<b>User:</b> ${customerInfo}
+<b>Time:</b> ${new Date().toLocaleString('en-IN')}
+
+<i>A customer searched for this but found no results. Consider adding this product to your store.</i>
+
+<a href="${window.location.origin}/search?q=${encodeURIComponent(query)}">View Search Results</a>
+  `;
+
+  return sendTelegramMessage(message);
+};

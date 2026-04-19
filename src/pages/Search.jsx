@@ -4,10 +4,14 @@ import { FiArrowLeft, FiSearch } from 'react-icons/fi';
 import { getProducts } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
+import { useAuth } from '../contexts/AuthContext';
+import { notifyEmptySearch } from '../firebase/notifications';
+import { useRef } from 'react';
 
 export default function Search() {
-  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
+  const notifiedQueries = useRef(new Set());
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -42,6 +46,16 @@ export default function Search() {
     
     fetchAndFilterProducts();
   }, [query]);
+
+  // Notify admin if no results found
+  useEffect(() => {
+    if (!loading && query.trim() && products.length === 0) {
+      if (!notifiedQueries.current.has(query.toLowerCase())) {
+        notifiedQueries.current.add(query.toLowerCase());
+        notifyEmptySearch(query, currentUser);
+      }
+    }
+  }, [loading, products, query, currentUser]);
 
   return (
     <div className="flex flex-col animate-[slideUp_0.4s_ease-out]">
