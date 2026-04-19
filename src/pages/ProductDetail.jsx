@@ -25,6 +25,11 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
+  // Scroll to top whenever the product id changes (related product click)
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [id]);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
