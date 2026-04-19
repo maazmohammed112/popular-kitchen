@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { FiPlus, FiTrash2, FiImage, FiX, FiChevronDown, FiChevronUp, FiPackage } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiImage, FiX, FiChevronDown, FiChevronUp, FiPackage, FiCrop } from 'react-icons/fi';
 import Cropper from 'react-easy-crop';
 import 'react-easy-crop/react-easy-crop.css';
+import imageCompression from 'browser-image-compression';
 import { addProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import getCroppedImg from '../../utils/cropImage';
@@ -29,9 +30,10 @@ export default function BulkAddModal({ existingCategories, onClose, onSuccess })
   const [products, setProducts] = useState([createEmptyProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Crop state: { productIndex, imageSrc, crop, zoom, rotation, croppedAreaPixels }
   const [cropState, setCropState] = useState(null);
   const [uploadingIndex, setUploadingIndex] = useState(null);
+  // pendingImages: { [productIndex_imageUrl]: true } for images still being uploaded
+  const [pendingImages, setPendingImages] = useState({});
 
   /* ─── helpers ─── */
   const updateProduct = (index, patch) =>
@@ -66,40 +68,80 @@ export default function BulkAddModal({ existingCategories, onClose, onSuccess })
   };
 
   /* ─── image ─── */
-  const readFile = (file) => new Promise(resolve => {
-    const reader = new FileReader();
-    reader.addEventListener('load', () => resolve(reader.result));
-    reader.readAsDataURL(file);
-  });
-
   const handleImageSelect = async (e, productIndex) => {
     if (!e.target.files || !e.target.files[0]) return;
-    const imageDataUrl = await readFile(e.target.files[0]);
+    const file = e.target.files[0];
+    e.target.value = '';
+
+    // 1. Optimistic: show blob preview immediately
+    const blobUrl = URL.createObjectURL(file);
+    updateProduct(productIndex, { images: [...products[productIndex].images, blobUrl] });
+    const pendingKey = `${productIndex}_${blobUrl}`;
+    setPendingImages(prev => ({ ...prev, [pendingKey]: true }));
+
+    // 2. Background: compress + upload
+    try {
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 0.2,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+        initialQuality: 0.8,
+      });
+      const realUrl = await uploadImageToCloudinary(compressed);
+      setProducts(prev => prev.map((p, i) => {
+        if (i !== productIndex) return p;
+        return { ...p, images: p.images.map(img => img === blobUrl ? realUrl : img) };
+      }));
+      showSuccess('Image uploaded!');
+    } catch (err) {
+      console.error(err);
+      showError('Image upload failed');
+      setProducts(prev => prev.map((p, i) => {
+        if (i !== productIndex) return p;
+        return { ...p, images: p.images.filter(img => img !== blobUrl) };
+      }));
+    } finally {
+      setPendingImages(prev => {
+        const next = { ...prev };
+        delete next[pendingKey];
+        return next;
+      });
+    }
+  };
+
+  // Open crop modal for an already-uploaded image
+  const handleOpenCrop = (productIndex, imgUrl, imgIdx) => {
     setCropState({
       productIndex,
-      imageSrc: imageDataUrl,
+      imgIdx,
+      originalUrl: imgUrl,
+      imageSrc: imgUrl,
       crop: { x: 0, y: 0 },
       zoom: 1,
       rotation: 0,
       croppedAreaPixels: null,
     });
-    e.target.value = '';
   };
 
   const handleSaveCrop = async () => {
     if (!cropState) return;
-    const { productIndex } = cropState;
+    const { productIndex, imgIdx } = cropState;
     try {
       const blob = await getCroppedImg(cropState.imageSrc, cropState.croppedAreaPixels, cropState.rotation);
       const file = new File([blob], 'cropped.jpg', { type: 'image/jpeg' });
       setCropState(null);
       setUploadingIndex(productIndex);
       const url = await uploadImageToCloudinary(file);
-      updateProduct(productIndex, { images: [...products[productIndex].images, url] });
-      showSuccess('Image uploaded!');
+      setProducts(prev => prev.map((p, i) => {
+        if (i !== productIndex) return p;
+        const newImages = [...p.images];
+        newImages[imgIdx] = url;
+        return { ...p, images: newImages };
+      }));
+      showSuccess('Image cropped & updated!');
     } catch (err) {
       console.error(err);
-      showError('Image upload failed');
+      showError('Crop upload failed');
     } finally {
       setUploadingIndex(null);
     }
@@ -355,23 +397,43 @@ export default function BulkAddModal({ existingCategories, onClose, onSuccess })
                       <div className="border-t border-pk-bg-secondary pt-4">
                         <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Images</label>
                         <div className="flex flex-wrap gap-3">
-                          {product.images.map((img, imgIdx) => (
-                            <div key={imgIdx} className="w-20 h-20 rounded-xl overflow-hidden relative group border border-pk-bg-secondary flex-shrink-0">
-                              <ImageWithSkeleton 
-                                src={getOptimizedUrl(img, 200)} 
-                                alt="" 
-                                containerClassName="w-full h-full"
-                                className="w-full h-full object-cover" 
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index, img)}
-                                className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                              >
-                                <FiTrash2 size={12} />
-                              </button>
-                            </div>
-                          ))}
+                          {product.images.map((img, imgIdx) => {
+                            const pendingKey = `${index}_${img}`;
+                            const isPending = pendingImages[pendingKey];
+                            return (
+                              <div key={imgIdx} className="w-20 h-20 rounded-xl overflow-hidden relative group border border-pk-bg-secondary flex-shrink-0 bg-pk-bg-primary">
+                                <ImageWithSkeleton 
+                                  src={isPending ? img : getOptimizedUrl(img, 200)} 
+                                  alt="" 
+                                  containerClassName="w-full h-full"
+                                  className={`w-full h-full object-contain ${isPending ? 'opacity-50 blur-[1px]' : ''}`} 
+                                />
+                                {isPending && (
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
+                                    <div className="w-5 h-5 border-2 border-pk-accent border-t-transparent rounded-full animate-spin"></div>
+                                  </div>
+                                )}
+                                <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  {!isPending && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenCrop(index, img, imgIdx)}
+                                      className="bg-pk-bg-primary/80 backdrop-blur text-pk-accent p-1 rounded-md hover:text-white hover:bg-pk-accent transition-all"
+                                    >
+                                      <FiCrop size={12} />
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => removeImage(index, img)}
+                                    className="bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-md hover:text-white hover:bg-pk-error transition-all"
+                                  >
+                                    <FiTrash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                           <label className="w-20 h-20 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-surface flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group flex-shrink-0">
                             {uploadingIndex === index ? (
                               <span className="animate-pulse text-[9px] uppercase font-bold text-center px-1">Uploading...</span>
