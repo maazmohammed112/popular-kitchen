@@ -9,6 +9,7 @@ import { notifyEmptySearch } from '../firebase/notifications';
 import { useRef } from 'react';
 
 export default function Search() {
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
   const notifiedQueries = useRef(new Set());

@@ -8,6 +8,7 @@ import { SEO } from '../components/SEO';
 import { getOptimizedUrl } from '../cloudinary/upload';
 import { ShareButton } from '../components/ShareButton';
 import { ImageWithSkeleton } from '../components/ImageWithSkeleton';
+import { ProductCard } from '../components/ProductCard';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -272,40 +273,10 @@ export default function ProductDetail() {
               View all <FiArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {relatedProducts.map(p => {
-              const hasOff = p.offerPercent > 0;
-              const displayPrice = p.discountPrice || p.price || 0;
-              return (
-                <Link
-                  key={p.id}
-                  to={`/product/${p.id}`}
-                  className="group bg-pk-surface border border-pk-bg-secondary rounded-2xl overflow-hidden hover:border-pk-accent transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] hover:-translate-y-1"
-                >
-                  <div className="aspect-square bg-pk-bg-primary overflow-hidden relative">
-                    <ImageWithSkeleton
-                      src={getOptimizedUrl(p.images[0], 400)}
-                      alt={p.title}
-                      containerClassName="w-full h-full bg-white"
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {hasOff && (
-                      <span className="absolute top-2 left-2 bg-pk-error text-white text-[10px] font-bold px-2 py-0.5 rounded-md">{p.offerPercent}% OFF</span>
-                    )}
-                  </div>
-                  <div className="p-3">
-                    <p className="text-xs font-semibold text-pk-text-main leading-tight line-clamp-2 mb-2">{p.title}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-pk-text-main">₹{displayPrice}</span>
-                      {hasOff && <span className="text-[10px] text-pk-text-muted line-through">₹{p.price}</span>}
-                    </div>
-                    {p.stockStatus === 'outOfStock' && (
-                      <span className="text-[10px] text-pk-error font-bold uppercase mt-1 block">Out of Stock</span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {relatedProducts.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
           </div>
         </div>
       )}
