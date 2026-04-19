@@ -32,6 +32,10 @@ export default function ManageProducts() {
     rotation: 0,
     croppedAreaPixels: null
   });
+  
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState({ old: '', new: '' });
+  const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
 
   const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
@@ -49,6 +53,47 @@ export default function ManageProducts() {
       showError("Failed to fetch products");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditCategory = async () => {
+    if (!editingCategory.old || !editingCategory.new.trim() || editingCategory.old === editingCategory.new.trim()) {
+      setEditingCategory({ old: '', new: '' });
+      return;
+    }
+    setIsCategorySubmitting(true);
+    try {
+      const targetProducts = products.filter(p => p.category === editingCategory.old);
+      for(let p of targetProducts) {
+        await updateProduct(p.id, { category: editingCategory.new.trim() });
+      }
+      showSuccess(`Updated category for ${targetProducts.length} products`);
+      setEditingCategory({ old: '', new: '' });
+      await fetchProducts();
+    } catch (e) {
+      console.error(e);
+      showError("Failed to update category");
+    } finally {
+      setIsCategorySubmitting(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat) => {
+    if(window.confirm(`Are you sure you want to delete the "${cat}" category?\nAll products in this category will become "Uncategorized".`)) {
+       setIsCategorySubmitting(true);
+       try {
+         const targetProducts = products.filter(p => p.category === cat);
+         for(let p of targetProducts) {
+           await updateProduct(p.id, { category: 'Uncategorized' });
+         }
+         showSuccess(`Removed category from ${targetProducts.length} products`);
+         await fetchProducts();
+       } catch (e) {
+         console.error(e);
+         showError("Failed to delete category");
+       } finally {
+         setIsCategorySubmitting(false);
+       }
     }
   };
 
@@ -187,12 +232,20 @@ export default function ManageProducts() {
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-5 py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20"
-        >
-          <FiPlus /> Add Product
-        </button>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary"
+          >
+            Manage Categories
+          </button>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-5 py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20"
+          >
+            <FiPlus /> Add Product
+          </button>
+        </div>
       </div>
 
       <div className="bg-pk-surface rounded-3xl border border-pk-bg-secondary overflow-hidden">
@@ -437,6 +490,41 @@ export default function ManageProducts() {
                </button>
             </div>
           </div>
+          </div>
+        </div>
+      )}
+
+      {/* Categories Manage Modal */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 bg-pk-bg-primary/95 z-[70] flex items-center justify-center p-4">
+           <div className="bg-pk-surface w-full max-w-md rounded-3xl border border-pk-bg-secondary p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+             <div className="flex justify-between items-center mb-6">
+               <h2 className="text-xl font-bold text-pk-text-main">Manage Categories</h2>
+               <button onClick={() => { setIsCategoryModalOpen(false); setEditingCategory({old:'',new:''}) }} className="p-2 bg-pk-bg-secondary rounded-full text-pk-text-muted hover:text-pk-text-main"><FiX /></button>
+             </div>
+             <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-2">
+               {existingCategories.length === 0 && <p className="text-pk-text-muted text-sm text-center py-4 border border-dashed border-pk-bg-secondary rounded-xl uppercase tracking-wider">No Categories Found.</p>}
+               {existingCategories.map(cat => (
+                 <div key={cat} className="flex flex-col gap-2 p-4 bg-pk-bg-primary border border-pk-bg-secondary rounded-xl hover:border-pk-accent transition-colors group">
+                   {editingCategory.old === cat ? (
+                     <div className="flex gap-2 items-center">
+                       <input autoFocus type="text" value={editingCategory.new} onChange={e => setEditingCategory({...editingCategory, new: e.target.value})} onKeyDown={e => e.key === 'Enter' && handleEditCategory()} className="flex-1 bg-pk-surface border border-pk-bg-secondary px-3 py-2 rounded-lg text-sm font-semibold text-pk-text-main outline-none focus:border-pk-accent" />
+                       <button disabled={isCategorySubmitting} onClick={handleEditCategory} className="px-4 py-2 bg-pk-accent text-white text-xs font-bold rounded-lg disabled:opacity-50">Save</button>
+                       <button disabled={isCategorySubmitting} onClick={() => setEditingCategory({old:'', new:''})} className="px-4 py-2 bg-pk-bg-secondary text-pk-text-muted text-xs font-bold rounded-lg hover:text-pk-text-main">Cancel</button>
+                     </div>
+                   ) : (
+                     <div className="flex justify-between items-center">
+                       <span className="font-semibold text-pk-text-main">{cat}</span>
+                       <div className="flex gap-2">
+                         <button onClick={() => setEditingCategory({old: cat, new: cat})} className="p-2 text-pk-text-muted hover:text-pk-accent transition-colors bg-pk-surface rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100"><FiEdit2 size={16}/></button>
+                         <button onClick={() => handleDeleteCategory(cat)} className="p-2 text-pk-text-muted hover:text-pk-error transition-colors bg-pk-surface rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100"><FiTrash2 size={16}/></button>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+               ))}
+             </div>
+           </div>
         </div>
       )}
     </div>
