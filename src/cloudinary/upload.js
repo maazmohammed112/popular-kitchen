@@ -27,7 +27,21 @@ export const uploadImageToCloudinary = async (file) => {
 };
 
 export const getOptimizedUrl = (url, width = 600) => {
-  if (!url || !url.includes("cloudinary.com")) return url;
+  if (!url) return url;
+
+  // Handle Google Drive links to make them direct-viewable
+  if (url.includes("drive.google.com")) {
+    let fileId = "";
+    if (url.includes("/file/d/")) {
+      fileId = url.split("/file/d/")[1].split("/")[0].split("?")[0];
+    } else if (url.includes("id=")) {
+      fileId = url.split("id=")[1].split("&")[0];
+    }
+    if (fileId) return `https://drive.google.com/uc?id=${fileId}`;
+    return url;
+  }
+
+  if (!url.includes("cloudinary.com")) return url;
   
   // Insert transformation parameters before the version number or public ID
   const parts = url.split("upload/");

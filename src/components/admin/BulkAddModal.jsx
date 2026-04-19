@@ -7,6 +7,8 @@ import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import getCroppedImg from '../../utils/cropImage';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
+import { getOptimizedUrl } from '../../cloudinary/upload';
+import { ImageWithSkeleton } from '../ImageWithSkeleton';
 
 const createEmptyProduct = () => ({
   title: '',
@@ -355,11 +357,16 @@ export default function BulkAddModal({ existingCategories, onClose, onSuccess })
                         <div className="flex flex-wrap gap-3">
                           {product.images.map((img, imgIdx) => (
                             <div key={imgIdx} className="w-20 h-20 rounded-xl overflow-hidden relative group border border-pk-bg-secondary flex-shrink-0">
-                              <img src={img} alt="" className="w-full h-full object-cover" />
+                              <ImageWithSkeleton 
+                                src={getOptimizedUrl(img, 200)} 
+                                alt="" 
+                                containerClassName="w-full h-full"
+                                className="w-full h-full object-cover" 
+                              />
                               <button
                                 type="button"
                                 onClick={() => removeImage(index, img)}
-                                className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
                               >
                                 <FiTrash2 size={12} />
                               </button>

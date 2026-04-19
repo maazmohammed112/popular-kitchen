@@ -5,6 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { getOptimizedUrl } from '../cloudinary/upload';
 import { ShareButton } from './ShareButton';
+import { ImageWithSkeleton } from './ImageWithSkeleton';
 
 export const ProductCard = ({ product }) => {
   const { addToCart, cartItems, updateQuantity, removeFromCart } = useCart();
@@ -80,17 +81,13 @@ export const ProductCard = ({ product }) => {
 
       <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
         {/* Image */}
-        <div className="w-full h-48 overflow-hidden relative" style={{ background: 'var(--color-primary)' }}>
-          {imgUrl ? (
-            <img 
-              src={imgUrl} 
-              alt={product.title} 
-              loading="lazy" 
-              className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`} 
-            />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full text-white/30 text-sm">No Image</div>
-          )}
+        <div className="w-full h-48 overflow-hidden relative bg-pk-bg-primary">
+          <ImageWithSkeleton 
+            src={imgUrl} 
+            alt={product.title} 
+            containerClassName="w-full h-full"
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+          />
           
           {isOutOfStock && (
             <div className="absolute inset-x-0 top-20 flex justify-center z-10">

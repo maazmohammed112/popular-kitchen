@@ -9,6 +9,8 @@ import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 import BulkAddModal from '../../components/admin/BulkAddModal';
 import CSVUploadModal from '../../components/admin/CSVUploadModal';
+import { ImageWithSkeleton } from '../../components/ImageWithSkeleton';
+import { getOptimizedUrl } from '../../cloudinary/upload';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -288,7 +290,12 @@ export default function ManageProducts() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-pk-bg-primary overflow-hidden flex-shrink-0">
                           {product.images?.[0] ? (
-                            <img src={product.images[0]} alt="" className="w-full h-full object-cover" />
+                            <ImageWithSkeleton 
+                              src={getOptimizedUrl(product.images[0], 100)} 
+                              alt="" 
+                              containerClassName="w-full h-full"
+                              className="w-full h-full object-cover" 
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[8px] text-pk-text-muted">No Img</div>
                           )}
@@ -422,8 +429,13 @@ export default function ManageProducts() {
                 <div className="flex flex-wrap gap-4 mb-4">
                   {formData.images.map((img, idx) => (
                     <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden relative group border border-pk-bg-secondary">
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter(i => i !== img)}))} className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ImageWithSkeleton 
+                        src={getOptimizedUrl(img, 200)} 
+                        alt="" 
+                        containerClassName="w-full h-full"
+                        className="w-full h-full object-cover" 
+                      />
+                      <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter(i => i !== img)}))} className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
                         <FiTrash2 size={14}/>
                       </button>
                     </div>

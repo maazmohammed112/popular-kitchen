@@ -7,6 +7,7 @@ import { useToast } from '../contexts/ToastContext';
 import { SEO } from '../components/SEO';
 import { getOptimizedUrl } from '../cloudinary/upload';
 import { ShareButton } from '../components/ShareButton';
+import { ImageWithSkeleton } from '../components/ImageWithSkeleton';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -133,18 +134,15 @@ export default function ProductDetail() {
         {/* Images */}
         <div className="flex flex-col gap-4">
           <div 
-            className="w-full aspect-square bg-[#1A2F50] rounded-2xl overflow-hidden relative cursor-pointer group"
+            className="w-full aspect-square bg-pk-bg-primary rounded-2xl overflow-hidden relative cursor-pointer group"
             onClick={() => product.images?.length > 0 && setIsLightboxOpen(true)}
           >
-            {product.images?.[activeImage] ? (
-              <img 
-                src={getOptimizedUrl(product.images[activeImage], 1200)} 
-                alt={product.title} 
-                className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105" 
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-pk-text-muted">No Image</div>
-            )}
+            <ImageWithSkeleton 
+              src={getOptimizedUrl(product.images?.[activeImage], 1200)} 
+              alt={product.title} 
+              containerClassName="w-full h-full"
+              className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105"
+            />
             {hasOffer && (
               <span className="absolute top-4 left-4 bg-pk-error text-white font-bold px-3 py-1 rounded-lg uppercase text-xs shadow-lg">
                 {product.offerPercent}% OFF
@@ -285,15 +283,12 @@ export default function ProductDetail() {
                   className="group bg-pk-surface border border-pk-bg-secondary rounded-2xl overflow-hidden hover:border-pk-accent transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] hover:-translate-y-1"
                 >
                   <div className="aspect-square bg-pk-bg-primary overflow-hidden relative">
-                    {p.images?.[0] ? (
-                      <img
-                        src={getOptimizedUrl(p.images[0], 400)}
-                        alt={p.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-pk-text-muted text-xs">No Image</div>
-                    )}
+                    <ImageWithSkeleton
+                      src={getOptimizedUrl(p.images[0], 400)}
+                      alt={p.title}
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                     {hasOff && (
                       <span className="absolute top-2 left-2 bg-pk-error text-white text-[10px] font-bold px-2 py-0.5 rounded-md">{p.offerPercent}% OFF</span>
                     )}
@@ -335,9 +330,10 @@ export default function ProductDetail() {
               </button>
             )}
             
-            <img 
+            <ImageWithSkeleton 
               src={getOptimizedUrl(product.images[activeImage], 2000)} 
               alt={product.title}
+              containerClassName="max-w-full max-h-full"
               className="max-w-full max-h-full object-contain"
             />
             

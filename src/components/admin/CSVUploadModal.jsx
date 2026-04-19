@@ -3,6 +3,8 @@ import { FiUpload, FiX, FiDownload, FiCheckCircle, FiAlertCircle, FiFileText, Fi
 import { addProduct } from '../../firebase/products';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
+import { getOptimizedUrl } from '../../cloudinary/upload';
+import { ImageWithSkeleton } from '../ImageWithSkeleton';
 
 const SAMPLE_CSV = `title,description,price,offerPercent,category,stockStatus,sizes,image1,image2,image3
 Stainless Steel Pan,Heavy duty 5-litre cooking pan,999,10,Cookware,inStock,Small:250 Medium:450 Large:750,,
@@ -215,7 +217,13 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
             🖼 {product.images.length} image{product.images.length > 1 ? 's' : ''}
             <span className="flex gap-1">
               {product.images.slice(0, 3).map((url, i) => (
-                <img key={i} src={url} alt="" className="w-6 h-6 rounded object-cover border border-pk-bg-secondary inline" onError={e => e.target.style.display = 'none'} />
+                <ImageWithSkeleton 
+                  key={i} 
+                  src={getOptimizedUrl(url, 100)} 
+                  alt="" 
+                  containerClassName="w-6 h-6 rounded overflow-hidden border border-pk-bg-secondary"
+                  className="w-full h-full object-cover"
+                />
               ))}
             </span>
           </span>
