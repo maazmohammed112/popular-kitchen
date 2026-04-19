@@ -245,7 +245,7 @@ export default function ManageProducts() {
           </button>
           <button 
             onClick={() => setIsCsvModalOpen(true)}
-            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-tertiary/90 hover:bg-pk-tertiary text-white rounded-xl font-medium transition-colors shadow-lg text-sm"
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#D87333] hover:bg-[#bf652d] text-white rounded-xl font-bold transition-all shadow-lg text-sm shadow-orange-900/10"
           >
             <FiUpload size={16} /> CSV Import
           </button>

@@ -21,17 +21,17 @@ export function ReloadPrompt() {
     setNeedRefresh(false);
   };
 
-  if (!offlineReady && !needRefresh) return null;
+  if (!needRefresh) return null;
 
   return (
     <div className="fixed bottom-20 right-4 left-4 z-[99] sm:left-auto sm:max-w-sm pointer-events-none animate-[slideUp_0.4s_ease-out]">
       <div className="bg-pk-surface border border-pk-accent/30 rounded-2xl p-5 shadow-2xl pointer-events-auto flex items-center gap-4">
         <div className="flex-1">
           <p className="text-sm text-pk-text-main font-semibold mb-1">
-            {needRefresh ? 'New version available!' : 'App ready to work offline'}
+            New version available!
           </p>
           <p className="text-xs text-pk-text-muted">
-            {needRefresh ? 'Refresh to see the latest premium kitchenware.' : 'You can browse Popular Kitchen even without internet.'}
+            Refresh to see the latest premium kitchenware.
           </p>
         </div>
         
