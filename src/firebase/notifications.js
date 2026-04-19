@@ -25,36 +25,42 @@ export const sendTelegramMessage = async (message, buttons = null) => {
     return;
   }
 
-  const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-  
-  try {
-    const body = {
-      chat_id: CHAT_ID,
-      text: message,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true
-    };
+  const ids = CHAT_ID.toString().split(',').map(id => id.trim()).filter(Boolean);
+  const results = [];
 
-    if (buttons) {
-      body.reply_markup = JSON.stringify({
-        inline_keyboard: buttons
+  for (const id of ids) {
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    try {
+      const body = {
+        chat_id: id,
+        text: message,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      };
+
+      if (buttons) {
+        body.reply_markup = JSON.stringify({
+          inline_keyboard: buttons
+        });
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
       });
-    }
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      console.error("Telegram API Error:", result);
+      const result = await response.json();
+      if (!response.ok) {
+        console.error(`Telegram API Error for ID ${id}:`, result);
+      }
+      results.push(result);
+    } catch (error) {
+      console.error(`Failed to send Telegram notification to ID ${id}:`, error);
     }
-    return result;
-  } catch (error) {
-    console.error("Failed to send Telegram notification:", error);
   }
+
+  return results;
 };
 
 /**
