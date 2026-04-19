@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import Cropper from 'react-easy-crop';
@@ -7,6 +7,7 @@ import 'react-easy-crop/react-easy-crop.css';
 import getCroppedImg from '../../utils/cropImage';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
+import BulkAddModal from '../../components/admin/BulkAddModal';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -36,6 +37,7 @@ export default function ManageProducts() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState({ old: '', new: '' });
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
 
   const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
@@ -230,20 +232,26 @@ export default function ManageProducts() {
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button 
             onClick={() => setIsCategoryModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary"
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary text-sm"
           >
             Manage Categories
           </button>
           <button 
-            onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20"
+            onClick={() => setIsBulkModalOpen(true)}
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-secondary text-white rounded-xl font-medium hover:opacity-90 transition-colors shadow-lg text-sm"
           >
-            <FiPlus /> Add Product
+            <FiLayers size={16} /> Bulk Add
+          </button>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20 text-sm"
+          >
+            <FiPlus size={16} /> Add Product
           </button>
         </div>
       </div>
@@ -525,6 +533,15 @@ export default function ManageProducts() {
              </div>
            </div>
         </div>
+      )}
+
+      {/* Bulk Add Modal */}
+      {isBulkModalOpen && (
+        <BulkAddModal
+          existingCategories={existingCategories}
+          onClose={() => setIsBulkModalOpen(false)}
+          onSuccess={fetchProducts}
+        />
       )}
     </div>
   );
