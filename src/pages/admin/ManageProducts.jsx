@@ -311,8 +311,8 @@ export default function ManageProducts() {
 
       {/* Modal Form */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-pk-bg-primary/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-pk-surface w-full max-w-3xl rounded-3xl border border-pk-bg-secondary p-6 md:p-8 my-8 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+        <div className="fixed inset-0 bg-pk-bg-primary/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-pk-surface w-full max-w-3xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] rounded-3xl border border-pk-bg-secondary p-6 md:p-8 shadow-2xl animate-[slideUp_0.3s_ease-out]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold text-pk-text-main">{formData.id ? 'Edit Product' : 'Add New Product'}</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-pk-bg-secondary rounded-full hover:bg-pk-bg-primary text-pk-text-muted hover:text-pk-text-main"><FiX size={20}/></button>
@@ -440,7 +440,7 @@ export default function ManageProducts() {
 
       {/* Image Crop Modal */}
       {cropState.imageSrc && (
-        <div className="fixed inset-0 bg-pk-bg-primary/95 z-[60] flex flex-col items-center justify-center p-4">
+        <div className="fixed inset-0 bg-pk-bg-primary/95 z-[60] flex flex-col items-center justify-center p-4 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="relative w-full max-w-2xl h-[55vh] bg-black rounded-xl overflow-hidden mb-6 shadow-[0_0_20px_rgba(0,0,0,0.5)]">
             <Cropper
               image={cropState.imageSrc}
