@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import Cropper from 'react-easy-crop';
@@ -8,6 +8,7 @@ import getCroppedImg from '../../utils/cropImage';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 import BulkAddModal from '../../components/admin/BulkAddModal';
+import CSVUploadModal from '../../components/admin/CSVUploadModal';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -38,6 +39,7 @@ export default function ManageProducts() {
   const [editingCategory, setEditingCategory] = useState({ old: '', new: '' });
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
 
   const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
@@ -240,6 +242,12 @@ export default function ManageProducts() {
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary text-sm"
           >
             Manage Categories
+          </button>
+          <button 
+            onClick={() => setIsCsvModalOpen(true)}
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-tertiary/90 hover:bg-pk-tertiary text-white rounded-xl font-medium transition-colors shadow-lg text-sm"
+          >
+            <FiUpload size={16} /> CSV Import
           </button>
           <button 
             onClick={() => setIsBulkModalOpen(true)}
@@ -540,6 +548,14 @@ export default function ManageProducts() {
         <BulkAddModal
           existingCategories={existingCategories}
           onClose={() => setIsBulkModalOpen(false)}
+          onSuccess={fetchProducts}
+        />
+      )}
+
+      {/* CSV Import Modal */}
+      {isCsvModalOpen && (
+        <CSVUploadModal
+          onClose={() => setIsCsvModalOpen(false)}
           onSuccess={fetchProducts}
         />
       )}
