@@ -73,11 +73,14 @@ function parseCSV(text) {
 }
 
 /* ── Image Manager inside EditableRow ─────────────────────────────── */
-function ImageManager({ images, onChange }) {
+function ImageManager({ images, onChange, onUploadingChange }) {
   const [urlInput, setUrlInput] = useState('');
-  const [uploading, setUploading] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const [pendingMap, setPendingMap] = useState({}); // blobUrl → true while uploading
   const fileRef = useRef();
+
+  const incrementPending = () => setPendingCount(c => { const n = c + 1; onUploadingChange?.(n > 0); return n; });
+  const decrementPending = () => setPendingCount(c => { const n = Math.max(0, c - 1); onUploadingChange?.(n > 0); return n; });
 
   const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files || []);
@@ -89,6 +92,7 @@ function ImageManager({ images, onChange }) {
       // Optimistic: show preview immediately
       onChange(prev => [...prev, blobUrl]);
       setPendingMap(p => ({ ...p, [blobUrl]: true }));
+      incrementPending();
 
       try {
         const compressed = await imageCompression(file, {
@@ -98,11 +102,14 @@ function ImageManager({ images, onChange }) {
           initialQuality: 0.8,
         });
         const realUrl = await uploadImageToCloudinary(compressed);
+        // Replace blob URL with real Cloudinary URL
         onChange(prev => prev.map(u => u === blobUrl ? realUrl : u));
       } catch {
+        // Remove failed image
         onChange(prev => prev.filter(u => u !== blobUrl));
       } finally {
         setPendingMap(p => { const n = { ...p }; delete n[blobUrl]; return n; });
+        decrementPending();
       }
     }
   };
@@ -188,6 +195,7 @@ function ImageManager({ images, onChange }) {
 function EditableRow({ product, index, onUpdate, onRemove, existingCategories }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({ ...product, _sizesRaw: sizeToString(product.sizes) });
+  const [imageUploading, setImageUploading] = useState(false);
 
   const saveEdit = () => {
     const price = parseFloat(draft.price) || 0;
@@ -195,8 +203,11 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
     const errors = [];
     if (!draft.title.trim()) errors.push('Missing title');
     if (!draft.category.trim()) errors.push('Missing category');
+    // Safety: never save blob: URLs — filter them out
+    const safeImages = draft.images.filter(u => u && !u.startsWith('blob:'));
     onUpdate(index, {
       ...draft,
+      images: safeImages,
       price,
       offerPercent,
       discountPrice: calculateDiscountPrice(price, offerPercent),
@@ -220,8 +231,17 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
         <div className="flex items-center justify-between px-4 py-2.5 bg-pk-accent/10 border-b border-pk-accent/20">
           <span className="text-xs font-bold text-pk-accent uppercase tracking-wider">Editing Product {index + 1}</span>
           <div className="flex gap-2">
-            <button type="button" onClick={saveEdit} className="flex items-center gap-1 px-3 py-1.5 bg-pk-success text-pk-bg-primary text-xs font-bold rounded-lg">
-              <FiSave size={12} /> Save
+            <button
+              type="button"
+              onClick={saveEdit}
+              disabled={imageUploading}
+              className="flex items-center gap-1 px-3 py-1.5 bg-pk-success text-pk-bg-primary text-xs font-bold rounded-lg disabled:opacity-50"
+            >
+              {imageUploading ? (
+                <><div className="w-3 h-3 border-2 border-pk-bg-primary border-t-transparent rounded-full animate-spin" /> Uploading…</>
+              ) : (
+                <><FiSave size={12} /> Save</>
+              )}
             </button>
             <button type="button" onClick={cancelEdit} className="flex items-center gap-1 px-3 py-1.5 bg-pk-bg-secondary text-pk-text-muted text-xs font-bold rounded-lg hover:text-pk-text-main">
               Cancel
@@ -281,8 +301,15 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
             </label>
             <ImageManager
               images={draft.images}
+              onUploadingChange={setImageUploading}
               onChange={(updater) => setDraft(d => ({ ...d, images: typeof updater === 'function' ? updater(d.images) : updater }))}
             />
+            {imageUploading && (
+              <p className="text-[10px] text-pk-accent mt-1.5 flex items-center gap-1">
+                <span className="inline-block w-2.5 h-2.5 border border-pk-accent border-t-transparent rounded-full animate-spin" />
+                Image uploading — Save will be available when complete
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -415,7 +442,9 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
           title: p.title, description: p.description, price: p.price,
           offerPercent: p.offerPercent, discountPrice: p.discountPrice,
           category: p.category, stockStatus: p.stockStatus,
-          sizes: p.sizes, images: p.images,
+          sizes: p.sizes,
+          // Safety: filter blob: URLs — real Cloudinary URLs only
+          images: p.images.filter(u => u && !u.startsWith('blob:')),
         });
         done++;
         setSaveProgress({ done, total: valid.length });
