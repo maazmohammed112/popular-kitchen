@@ -103,15 +103,25 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Hide scrollbar globally */
+/* Custom sleek scrollbar for desktop UX */
 * {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-bg-secondary) transparent;
 }
 *::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
 }
-
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-bg-secondary);
+  border-radius: 10px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
