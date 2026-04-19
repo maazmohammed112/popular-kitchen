@@ -91,6 +91,16 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
     setLoading(true);
     try {
       if (tab === 'signup') {
+        // Prevent users from using "admin" in their name or email
+        const lowerName = form.name.toLowerCase();
+        const lowerEmail = form.email.toLowerCase();
+        
+        if (lowerName.includes('admin') || lowerEmail.includes('admin')) {
+          showError('Security: Names or emails containing "admin" are reserved for system officials.');
+          setLoading(false);
+          return;
+        }
+
         const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
         await updateProfile(cred.user, { displayName: form.name });
         await migrateGuestDataToFirebase(cred.user);
