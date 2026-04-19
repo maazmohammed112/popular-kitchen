@@ -1,8 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export const ImageWithSkeleton = ({ src, alt, className, containerClassName, width, height }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState(false);
+
+  // Reset state when src changes
+  useEffect(() => {
+    setIsLoaded(false);
+    setError(false);
+  }, [src]);
 
   return (
     <div className={`relative overflow-hidden ${containerClassName || ''}`}>

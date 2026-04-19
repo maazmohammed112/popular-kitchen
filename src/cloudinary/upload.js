@@ -37,7 +37,7 @@ export const getOptimizedUrl = (url, width = 600) => {
     } else if (url.includes("id=")) {
       fileId = url.split("id=")[1].split("&")[0];
     }
-    if (fileId) return `https://drive.google.com/uc?id=${fileId}`;
+    if (fileId) return `https://lh3.googleusercontent.com/d/${fileId}`;
     return url;
   }
 
