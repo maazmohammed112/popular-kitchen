@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react';
-import { FiUpload, FiX, FiDownload, FiCheckCircle, FiAlertCircle, FiFileText, FiTrash2, FiEdit2, FiSave, FiPlus } from 'react-icons/fi';
+import { FiUpload, FiX, FiDownload, FiCheckCircle, FiAlertCircle, FiFileText, FiTrash2, FiEdit2, FiSave, FiPlus, FiImage, FiLink } from 'react-icons/fi';
+import imageCompression from 'browser-image-compression';
 import { addProduct } from '../../firebase/products';
+import { uploadImageToCloudinary, getOptimizedUrl } from '../../cloudinary/upload';
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
-import { getOptimizedUrl } from '../../cloudinary/upload';
 import { ImageWithSkeleton } from '../ImageWithSkeleton';
 
 const SAMPLE_CSV = `title,description,price,offerPercent,category,stockStatus,sizes,image1,image2,image3
@@ -69,6 +70,118 @@ function parseCSV(text) {
     return p;
   });
   return { products, error: null };
+}
+
+/* ── Image Manager inside EditableRow ─────────────────────────────── */
+function ImageManager({ images, onChange }) {
+  const [urlInput, setUrlInput] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [pendingMap, setPendingMap] = useState({}); // blobUrl → true while uploading
+  const fileRef = useRef();
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = '';
+    if (!files.length) return;
+
+    for (const file of files) {
+      const blobUrl = URL.createObjectURL(file);
+      // Optimistic: show preview immediately
+      onChange(prev => [...prev, blobUrl]);
+      setPendingMap(p => ({ ...p, [blobUrl]: true }));
+
+      try {
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 0.2,
+          maxWidthOrHeight: 1200,
+          useWebWorker: true,
+          initialQuality: 0.8,
+        });
+        const realUrl = await uploadImageToCloudinary(compressed);
+        onChange(prev => prev.map(u => u === blobUrl ? realUrl : u));
+      } catch {
+        onChange(prev => prev.filter(u => u !== blobUrl));
+      } finally {
+        setPendingMap(p => { const n = { ...p }; delete n[blobUrl]; return n; });
+      }
+    }
+  };
+
+  const handleAddUrl = () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    onChange(prev => [...prev, url]);
+    setUrlInput('');
+  };
+
+  const removeImage = (url) => onChange(prev => prev.filter(u => u !== url));
+
+  return (
+    <div className="space-y-2">
+      {/* Thumbnails */}
+      {images.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {images.map((img, i) => {
+            const isPending = pendingMap[img];
+            return (
+              <div key={i} className="relative w-16 h-16 rounded-lg overflow-hidden border border-pk-bg-secondary group bg-pk-bg-primary flex-shrink-0">
+                <ImageWithSkeleton
+                  src={isPending ? img : getOptimizedUrl(img, 120)}
+                  alt=""
+                  containerClassName="w-full h-full"
+                  className={`w-full h-full object-contain ${isPending ? 'opacity-50' : ''}`}
+                />
+                {isPending && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <div className="w-4 h-4 border-2 border-pk-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+                {!isPending && (
+                  <button
+                    type="button"
+                    onClick={() => removeImage(img)}
+                    className="absolute top-0.5 right-0.5 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <FiX size={10} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Upload File */}
+      <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-pk-bg-secondary hover:border-pk-accent rounded-lg cursor-pointer text-xs text-pk-text-muted hover:text-pk-accent transition-colors">
+        <FiImage size={13} />
+        <span>Upload image file</span>
+        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+      </label>
+
+      {/* Paste URL */}
+      <div className="flex gap-2">
+        <div className="flex-1 flex items-center gap-1.5 bg-pk-surface border border-pk-bg-secondary rounded-lg px-2.5 focus-within:border-pk-accent transition-colors">
+          <FiLink size={11} className="text-pk-text-muted flex-shrink-0" />
+          <input
+            type="url"
+            value={urlInput}
+            onChange={e => setUrlInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddUrl())}
+            className="flex-1 py-2 text-xs text-pk-text-main bg-transparent outline-none placeholder:text-pk-text-muted/60"
+            placeholder="Paste image URL and press Enter…"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={handleAddUrl}
+          disabled={!urlInput.trim()}
+          className="px-3 py-2 bg-pk-accent text-white text-xs font-bold rounded-lg disabled:opacity-40 hover:bg-blue-600 transition-colors"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
 }
 
 /* ── Inline-editable row ─────────────────────────────────────────── */
@@ -160,14 +273,15 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
             <label className="block text-[10px] font-bold text-pk-text-muted mb-1 uppercase tracking-wider">Description</label>
             <textarea rows="2" value={draft.description} onChange={e => setDraft(d => ({ ...d, description: e.target.value }))} className="w-full bg-pk-surface border border-pk-bg-secondary rounded-lg px-3 py-2 text-sm text-pk-text-main outline-none focus:border-pk-accent resize-none" />
           </div>
+
+          {/* ── Image Manager ── */}
           <div className="sm:col-span-2">
-            <label className="block text-[10px] font-bold text-pk-text-muted mb-1 uppercase tracking-wider">Image URLs (one per line)</label>
-            <textarea
-              rows="3"
-              value={draft.images.join('\n')}
-              onChange={e => setDraft(d => ({ ...d, images: e.target.value.split('\n').map(s => s.trim()).filter(Boolean) }))}
-              className="w-full bg-pk-surface border border-pk-bg-secondary rounded-lg px-3 py-2 text-sm text-pk-text-main outline-none focus:border-pk-accent resize-none font-mono"
-              placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"
+            <label className="block text-[10px] font-bold text-pk-text-muted mb-2 uppercase tracking-wider flex items-center gap-1.5">
+              <FiImage size={11} /> Images — Upload File OR Paste URL
+            </label>
+            <ImageManager
+              images={draft.images}
+              onChange={(updater) => setDraft(d => ({ ...d, images: typeof updater === 'function' ? updater(d.images) : updater }))}
             />
           </div>
         </div>
@@ -207,26 +321,36 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
         </div>
       </div>
 
-      {/* Details strip */}
-      <div className="flex flex-wrap gap-x-6 gap-y-1 px-4 pb-3 text-xs text-pk-text-muted border-t border-pk-bg-secondary/50 pt-2">
-        {product.description && <span className="truncate max-w-[260px]">📝 {product.description}</span>}
-        {product.price > 0 && <span>💰 ₹{product.price}{product.offerPercent > 0 ? ` → ₹${product.discountPrice}` : ''}</span>}
-        {product.sizes.length > 0 && <span>📐 {product.sizes.map(s => `${s.name}: ₹${s.price}`).join(' · ')}</span>}
-        {product.images.length > 0 && (
-          <span className="flex items-center gap-1.5">
-            🖼 {product.images.length} image{product.images.length > 1 ? 's' : ''}
-            <span className="flex gap-1">
-              {product.images.slice(0, 3).map((url, i) => (
-                <ImageWithSkeleton 
-                  key={i} 
-                  src={getOptimizedUrl(url, 100)} 
-                  alt="" 
-                  containerClassName="w-6 h-6 rounded overflow-hidden border border-pk-bg-secondary"
-                  className="w-full h-full object-cover"
+      {/* Details + image thumbnails */}
+      <div className="px-4 pb-3 border-t border-pk-bg-secondary/50 pt-2 space-y-2">
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-pk-text-muted">
+          {product.description && <span className="truncate max-w-[260px]">📝 {product.description}</span>}
+          {product.price > 0 && <span>💰 ₹{product.price}{product.offerPercent > 0 ? ` → ₹${product.discountPrice}` : ''}</span>}
+          {product.sizes.length > 0 && <span>📐 {product.sizes.map(s => `${s.name}: ₹${s.price}`).join(' · ')}</span>}
+        </div>
+
+        {/* Image thumbnails row */}
+        {product.images.length > 0 ? (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {product.images.map((url, i) => (
+              <div key={i} className="w-14 h-14 rounded-lg overflow-hidden border border-pk-bg-secondary bg-white flex-shrink-0">
+                <ImageWithSkeleton
+                  src={getOptimizedUrl(url, 120)}
+                  alt=""
+                  containerClassName="w-full h-full"
+                  className="w-full h-full object-contain"
                 />
-              ))}
-            </span>
-          </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-1.5 text-[11px] text-pk-text-muted hover:text-pk-accent transition-colors border border-dashed border-pk-bg-secondary hover:border-pk-accent rounded-lg px-3 py-1.5"
+          >
+            <FiImage size={12} /> Add images
+          </button>
         )}
       </div>
     </div>
@@ -352,7 +476,7 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
                       { col: 'category', req: true, ex: 'Cookware', note: 'Product category' },
                       { col: 'stockStatus', req: false, ex: 'inStock', note: 'inStock | limitedStock | outOfStock' },
                       { col: 'sizes', req: false, ex: 'Small:250 Large:450', note: 'Name:Price pairs, space-separated' },
-                      { col: 'image1', req: false, ex: 'https://…', note: 'Public image URL' },
+                      { col: 'image1', req: false, ex: 'https://…', note: 'Public image URL (or add in preview)' },
                       { col: 'image2', req: false, ex: 'https://…', note: 'Second image (optional)' },
                       { col: 'image3', req: false, ex: 'https://…', note: 'Third image (optional)' },
                     ].map(r => (
@@ -371,14 +495,9 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
                 </table>
               </div>
 
-              <div className="bg-pk-bg-secondary/40 border border-pk-bg-secondary rounded-2xl p-4 space-y-2">
-                <p className="text-sm font-bold text-pk-text-main">📸 How to add images via CSV</p>
-                <p className="text-xs text-pk-text-muted">Use public image URLs in <code className="bg-pk-bg-secondary px-1 rounded text-pk-accent">image1</code>/<code className="bg-pk-bg-secondary px-1 rounded text-pk-accent">image2</code>/<code className="bg-pk-bg-secondary px-1 rounded text-pk-accent">image3</code>. Sources:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                  {[['Imgur', 'Upload at imgur.com → right-click → Copy image address'], ['Cloudinary', 'Copy secure_url from your Media Library'], ['Google Drive', 'https://drive.google.com/uc?id=FILE_ID (set sharing to Anyone)'], ['Leave blank', 'Add images later via Edit button on each product']].map(([k, v]) => (
-                    <div key={k} className="flex gap-2"><span className="font-bold text-pk-text-main w-24 flex-shrink-0">{k}</span><span className="text-pk-text-muted">{v}</span></div>
-                  ))}
-                </div>
+              <div className="bg-pk-accent/10 border border-pk-accent/30 rounded-2xl p-4 space-y-2">
+                <p className="text-sm font-bold text-pk-text-main flex items-center gap-2"><FiImage className="text-pk-accent" /> Images — CSV columns OR add in preview</p>
+                <p className="text-xs text-pk-text-muted">You can leave image columns blank in the CSV and <strong className="text-pk-text-main">add images after parsing</strong> — each row in the preview has an image manager where you can upload a file or paste a URL.</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3">
