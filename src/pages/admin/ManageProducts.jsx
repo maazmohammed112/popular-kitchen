@@ -273,12 +273,35 @@ export default function ManageProducts() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Category</label>
-                  <input required list="category-list" type="text" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none" placeholder="Cookware, Storage, etc" />
-                  <datalist id="category-list">
-                    {existingCategories.map((cat, idx) => (
-                      <option key={idx} value={cat} />
-                    ))}
-                  </datalist>
+                  <div className="flex flex-col gap-3">
+                    <select 
+                      value={existingCategories.includes(formData.category) ? formData.category : 'custom'} 
+                      onChange={e => {
+                        if(e.target.value !== 'custom') setFormData({...formData, category: e.target.value});
+                        else setFormData({...formData, category: ''});
+                      }}
+                      className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none cursor-pointer"
+                    >
+                      <option value="custom" className="font-bold text-pk-accent">+ Add New Category</option>
+                      {existingCategories.length > 0 && (
+                        <optgroup label="Existing Categories">
+                          {existingCategories.map((cat, idx) => (
+                            <option key={idx} value={cat}>{cat}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                    {!existingCategories.includes(formData.category) && (
+                      <input 
+                        required 
+                        type="text" 
+                        value={formData.category} 
+                        onChange={e => setFormData({...formData, category: e.target.value})} 
+                        className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:border-pk-accent outline-none animate-[slideUp_0.2s_ease-out]" 
+                        placeholder="Type new category name..." 
+                      />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Base Price (₹) - Optional if sizes have prices</label>
