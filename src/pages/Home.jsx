@@ -4,10 +4,15 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
 import { SEO } from '../components/SEO';
 
+// Module-level cache — survives React re-renders and back-navigation within the same session
+let cachedProducts = null;
+let cachedCategories = null;
+
 export default function Home() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState(['All']);
+  // Initialise state from cache immediately (no skeleton on back-nav)
+  const [products, setProducts] = useState(cachedProducts || []);
+  const [loading, setLoading] = useState(!cachedProducts);
+  const [categories, setCategories] = useState(cachedCategories || ['All']);
   const [activeCategory, setActiveCategory] = useState('All');
 
   useEffect(() => {
@@ -15,9 +20,10 @@ export default function Home() {
       try {
         const data = await getProducts();
         setProducts(data);
-        
+        cachedProducts = data;
         const uniqueCategories = ['All', ...new Set(data.map(p => p.category).filter(Boolean))];
         setCategories(uniqueCategories);
+        cachedCategories = uniqueCategories;
       } catch (err) {
         console.error("Error fetching products:", err);
       } finally {

@@ -7,6 +7,9 @@ import { ProductSkeleton } from '../components/Skeletons';
 import { useAuth } from '../contexts/AuthContext';
 import { notifyEmptySearch, notifyGuestSearch } from '../firebase/notifications';
 
+// Module-level cache — survives back-navigation within the same session
+let allProductsCache = null;
+
 // Session-wide deduplication — stored in sessionStorage so it persists
 // across re-renders and component remounts within the same browser tab.
 const SESSION_KEY = 'pk_notified_searches';
@@ -40,29 +43,37 @@ export default function Search() {
   const query = searchParams.get('q') || '';
 
   useEffect(() => {
+    const filterProducts = (allProducts) => {
+      if (!query.trim()) return allProducts;
+      const lowerQuery = query.toLowerCase();
+      return allProducts.filter(p =>
+        (p.title && p.title.toLowerCase().includes(lowerQuery)) ||
+        (p.category && p.category.toLowerCase().includes(lowerQuery)) ||
+        (p.description && p.description.toLowerCase().includes(lowerQuery))
+      );
+    };
+
     const fetchAndFilterProducts = async () => {
-      setLoading(true);
+      // Show cached results instantly (no skeleton flash on back-nav)
+      if (allProductsCache) {
+        setProducts(filterProducts(allProductsCache));
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+
+      // Always revalidate in background
       try {
         const allProducts = await getProducts();
-        
-        if (!query.trim()) {
-          setProducts(allProducts);
-        } else {
-          const lowerQuery = query.toLowerCase();
-          const filtered = allProducts.filter(p => 
-            (p.title && p.title.toLowerCase().includes(lowerQuery)) ||
-            (p.category && p.category.toLowerCase().includes(lowerQuery)) ||
-            (p.description && p.description.toLowerCase().includes(lowerQuery))
-          );
-          setProducts(filtered);
-        }
+        allProductsCache = allProducts;
+        setProducts(filterProducts(allProducts));
       } catch (error) {
         console.error("Failed to search products", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchAndFilterProducts();
   }, [query]);
 

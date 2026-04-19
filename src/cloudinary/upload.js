@@ -26,7 +26,7 @@ export const uploadImageToCloudinary = async (file) => {
   }
 };
 
-export const getOptimizedUrl = (url, width = 600) => {
+export const getOptimizedUrl = (url, width = 400) => {
   if (!url || url.startsWith('/') || url.startsWith('blob:') || url.startsWith('data:')) return url;
 
   let finalUrl = url;
@@ -41,21 +41,22 @@ export const getOptimizedUrl = (url, width = 600) => {
     }
     
     if (fileId) {
-      // Use LH3 for better reliability
       finalUrl = `https://lh3.googleusercontent.com/d/${fileId}=s${width > 1200 ? 1200 : width}`;
     }
   }
 
-  // 2. If it's already a Cloudinary URL, use standard transformation
+  // 2. If it's already a Cloudinary URL — use fast WebP transformation
   if (finalUrl.includes("cloudinary.com")) {
+    // Strip any existing transformation to avoid double-transform
     const parts = finalUrl.split("upload/");
     if (parts.length === 2) {
-      return `${parts[0]}upload/f_auto,q_auto:best,w_${width}/${parts[1]}`;
+      // Remove any existing transformation segment (starts with f_, q_, w_, etc.)
+      const afterUpload = parts[1].replace(/^([a-z_,0-9:]+\/)+/, '');
+      return `${parts[0]}upload/f_webp,q_auto:eco,w_${width},c_limit/${afterUpload}`;
     }
     return finalUrl;
   }
 
-  // 3. For ALL external URLs (Google Drive, Imgur, etc.), use Cloudinary Fetch!
-  // This proxies the image, optimizes it, and ensures it loads reliably.
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/f_auto,q_auto,w_${width}/${encodeURIComponent(finalUrl)}`;
+  // 3. For all other external URLs — proxy through Cloudinary Fetch for reliability
+  return `https://res.cloudinary.com/${CLOUD_NAME}/image/fetch/f_webp,q_auto:eco,w_${width}/${encodeURIComponent(finalUrl)}`;
 };
