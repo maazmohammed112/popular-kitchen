@@ -12,6 +12,7 @@
   "dependencies": {
     "autoprefixer": "^10.5.0",
     "axios": "^1.15.0",
+    "browser-image-compression": "^2.0.2",
     "dotenv": "^17.4.2",
     "firebase": "^12.12.0",
     "firebase-admin": "^13.8.0",

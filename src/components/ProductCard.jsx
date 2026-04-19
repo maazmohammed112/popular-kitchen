@@ -85,8 +85,8 @@ export const ProductCard = ({ product }) => {
           <ImageWithSkeleton 
             src={imgUrl} 
             alt={product.title} 
-            containerClassName="w-full h-full"
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+            containerClassName="w-full h-full bg-white"
+            className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
           />
           
           {isOutOfStock && (

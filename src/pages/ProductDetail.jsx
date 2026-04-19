@@ -141,7 +141,7 @@ export default function ProductDetail() {
               src={getOptimizedUrl(product.images?.[activeImage], 1200)} 
               alt={product.title} 
               containerClassName="w-full h-full"
-              className="w-full h-full object-contain md:object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
             />
             {hasOffer && (
               <span className="absolute top-4 left-4 bg-pk-error text-white font-bold px-3 py-1 rounded-lg uppercase text-xs shadow-lg">
@@ -286,8 +286,8 @@ export default function ProductDetail() {
                     <ImageWithSkeleton
                       src={getOptimizedUrl(p.images[0], 400)}
                       alt={p.title}
-                      containerClassName="w-full h-full"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      containerClassName="w-full h-full bg-white"
+                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     {hasOff && (
                       <span className="absolute top-2 left-2 bg-pk-error text-white text-[10px] font-bold px-2 py-0.5 rounded-md">{p.offerPercent}% OFF</span>

@@ -11,6 +11,8 @@ import BulkAddModal from '../../components/admin/BulkAddModal';
 import CSVUploadModal from '../../components/admin/CSVUploadModal';
 import { ImageWithSkeleton } from '../../components/ImageWithSkeleton';
 import { getOptimizedUrl } from '../../cloudinary/upload';
+import imageCompression from 'browser-image-compression';
+import { FiCrop } from 'react-icons/fi';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -34,7 +36,8 @@ export default function ManageProducts() {
     crop: { x: 0, y: 0 },
     zoom: 1,
     rotation: 0,
-    croppedAreaPixels: null
+    croppedAreaPixels: null,
+    editingIndex: null
   });
   
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -144,17 +147,43 @@ export default function ManageProducts() {
   const handleImageSelect = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      let imageDataUrl = await readFile(file);
-      setCropState({
-        imageSrc: imageDataUrl,
-        crop: { x: 0, y: 0 },
-        zoom: 1,
-        rotation: 0,
-        croppedAreaPixels: null
-      });
-      // reset input value so re-selecting same file works
-      e.target.value = '';
+      
+      try {
+        setUploadingImages(true);
+        
+        // Compression options
+        const options = {
+          maxSizeMB: 0.2, // 200KB
+          maxWidthOrHeight: 1200,
+          useWebWorker: true,
+          initialQuality: 0.8
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+        const url = await uploadImageToCloudinary(compressedFile);
+        
+        setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
+        showSuccess("Image uploaded successfully");
+      } catch (err) {
+        console.error(err);
+        showError("Image upload failed");
+      } finally {
+        setUploadingImages(false);
+        // reset input value
+        e.target.value = '';
+      }
     }
+  };
+
+  const handleOpenCrop = (imgUrl, index) => {
+    setCropState({
+      imageSrc: imgUrl,
+      crop: { x: 0, y: 0 },
+      zoom: 1,
+      rotation: 0,
+      croppedAreaPixels: null,
+      editingIndex: index
+    });
   };
 
   const onCropComplete = (croppedArea, croppedAreaPixels) => {
@@ -168,17 +197,27 @@ export default function ManageProducts() {
         cropState.croppedAreaPixels,
         cropState.rotation
       );
-      const file = new File([croppedImageBlob], "cropped.jpg", { type: "image/jpeg" });
+      const file = new File([croppedImageBlob], `cropped_${Date.now()}.jpg`, { type: "image/jpeg" });
       
       setCropState(prev => ({ ...prev, imageSrc: null }));
       setUploadingImages(true);
       
       const url = await uploadImageToCloudinary(file);
-      setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
-      showSuccess("Image uploaded successfully");
+      
+      if (cropState.editingIndex !== null) {
+        setFormData(prev => {
+          const newImages = [...prev.images];
+          newImages[cropState.editingIndex] = url;
+          return { ...prev, images: newImages };
+        });
+      } else {
+        setFormData(prev => ({ ...prev, images: [...prev.images, url] }));
+      }
+      
+      showSuccess("Image updated successfully");
     } catch (err) {
       console.error(err);
-      showError("Image upload or crop failed");
+      showError("Image crop or upload failed");
     } finally {
       setUploadingImages(false);
     }
@@ -293,8 +332,8 @@ export default function ManageProducts() {
                             <ImageWithSkeleton 
                               src={getOptimizedUrl(product.images[0], 100)} 
                               alt="" 
-                              containerClassName="w-full h-full"
-                              className="w-full h-full object-cover" 
+                              containerClassName="w-full h-full bg-[#1e2a44]"
+                              className="w-full h-full object-contain" 
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[8px] text-pk-text-muted">No Img</div>
@@ -428,16 +467,21 @@ export default function ManageProducts() {
                 <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Images</label>
                 <div className="flex flex-wrap gap-4 mb-4">
                   {formData.images.map((img, idx) => (
-                    <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden relative group border border-pk-bg-secondary">
+                    <div key={idx} className="w-24 h-24 rounded-xl overflow-hidden relative group border border-pk-bg-secondary bg-pk-bg-primary">
                       <ImageWithSkeleton 
                         src={getOptimizedUrl(img, 200)} 
                         alt="" 
                         containerClassName="w-full h-full"
-                        className="w-full h-full object-cover" 
+                        className="w-full h-full object-contain" 
                       />
-                      <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter(i => i !== img)}))} className="absolute top-1 right-1 bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                        <FiTrash2 size={14}/>
-                      </button>
+                      <div className="absolute top-1 right-1 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button type="button" onClick={() => handleOpenCrop(img, idx)} className="bg-pk-bg-primary/80 backdrop-blur text-pk-accent p-1.5 rounded-lg hover:text-white hover:bg-pk-accent transition-all">
+                          <FiCrop size={14}/>
+                        </button>
+                        <button type="button" onClick={() => setFormData(prev => ({...prev, images: prev.images.filter((_, i) => i !== idx)}))} className="bg-pk-bg-primary/80 backdrop-blur text-pk-error p-1.5 rounded-lg hover:text-white hover:bg-pk-error transition-all">
+                          <FiTrash2 size={14}/>
+                        </button>
+                      </div>
                     </div>
                   ))}
                   
