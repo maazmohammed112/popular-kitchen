@@ -26,17 +26,21 @@ export const AuthProvider = ({ children }) => {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           const dbRole = userDoc.exists() ? userDoc.data().role : null;
 
-          if (dbRole === 'admin' || user.email?.toLowerCase() === adminEmail) {
+          // Both full admin and product manager should have 'admin' role for Firestore compatibility
+          // But we distinguish them in the UI via canManageOrders
+          if (
+            dbRole === 'admin' || 
+            user.email?.toLowerCase() === adminEmail || 
+            (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid)
+          ) {
             setUserRole('admin');
-          } else if (dbRole === 'product_admin' || (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid)) {
-            setUserRole('product_admin');
           } else {
             setUserRole('user');
           }
         } catch (error) {
           console.error("Error fetching user role", error);
           if (user.email?.toLowerCase() === adminEmail) setUserRole('admin');
-          else if (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid) setUserRole('product_admin');
+          else if (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid) setUserRole('admin');
           else setUserRole('user');
         }
       } else {
@@ -67,10 +71,11 @@ export const AuthProvider = ({ children }) => {
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     let role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
     
-    if (result.user.email?.toLowerCase() === adminEmail) {
+    if (
+      result.user.email?.toLowerCase() === adminEmail || 
+      (result.user.email?.toLowerCase() === productAdminEmail && result.user.uid === productAdminUid)
+    ) {
       role = 'admin';
-    } else if (result.user.email?.toLowerCase() === productAdminEmail && result.user.uid === productAdminUid) {
-      role = 'product_admin';
     }
     
     // Update local state immediately
@@ -89,8 +94,8 @@ export const AuthProvider = ({ children }) => {
     userRole,
     login,
     logout,
-    isAdmin: ['admin', 'product_admin'].includes(userRole),
-    canManageOrders: userRole === 'admin',
+    isAdmin: userRole === 'admin',
+    canManageOrders: userRole === 'admin' && currentUser?.email?.toLowerCase() !== 'login@admin.com',
   };
 
   return (
