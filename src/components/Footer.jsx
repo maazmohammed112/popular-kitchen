@@ -79,7 +79,15 @@ export const Footer = ({ toggleTheme }) => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
           <p className="text-xs text-white/40">
             © {new Date().getFullYear()} Popular Kitchen. Built by{' '}
-            <span className="font-mono font-bold" style={{ color: 'var(--color-tertiary)' }}>&lt;mma/&gt;</span>
+            <a 
+              href="https://www.maazportfolio.site/" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="font-mono font-bold hover:opacity-80 transition-opacity" 
+              style={{ color: 'var(--color-tertiary)' }}
+            >
+              &lt;mma/&gt;
+            </a>
           </p>
           <button
             onClick={toggleTheme}
