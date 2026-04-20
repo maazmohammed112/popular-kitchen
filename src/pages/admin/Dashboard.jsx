@@ -8,7 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 export default function Dashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, revenue: 0 });
   const [loading, setLoading] = useState(true);
-  const { logout } = useAuth();
+  const { logout, canManageOrders } = useAuth();
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -17,19 +17,25 @@ export default function Dashboard() {
       try {
         const products = await getProducts();
         
-        // Listen to orders in real-time
-        unsubscribe = listenToOrders((orders) => {
-          const revenue = orders
-            .filter(o => o.status !== 'cancelled')
-            .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
-          
-          setStats({
-            products: products.length,
-            orders: orders.length,
-            revenue
+        if (canManageOrders) {
+          // Full admin: Listen to orders in real-time
+          unsubscribe = listenToOrders((orders) => {
+            const revenue = orders
+              .filter(o => o.status !== 'cancelled')
+              .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+            
+            setStats({
+              products: products.length,
+              orders: orders.length,
+              revenue
+            });
+            setLoading(false);
           });
+        } else {
+          // Product admin: only products
+          setStats(prev => ({ ...prev, products: products.length }));
           setLoading(false);
-        });
+        }
 
       } catch (err) {
         console.error(err);
@@ -44,8 +50,10 @@ export default function Dashboard() {
 
   const statCards = [
     { title: 'Total Products', value: stats.products, icon: FiBox, color: 'text-pk-accent', bg: 'bg-pk-accent/10', link: '/admin/products' },
-    { title: 'Total Orders', value: stats.orders, icon: FiShoppingBag, color: 'text-pk-warning', bg: 'bg-pk-warning/10', link: '/admin/orders' },
-    { title: 'Total Revenue', value: `₹${stats.revenue}`, icon: FiDollarSign, color: 'text-pk-success', bg: 'bg-pk-success/10', link: null },
+    ...(canManageOrders ? [
+      { title: 'Total Orders', value: stats.orders, icon: FiShoppingBag, color: 'text-pk-warning', bg: 'bg-pk-warning/10', link: '/admin/orders' },
+      { title: 'Total Revenue', value: `₹${stats.revenue}`, icon: FiDollarSign, color: 'text-pk-success', bg: 'bg-pk-success/10', link: null },
+    ] : []),
   ];
 
   return (
@@ -91,9 +99,11 @@ export default function Dashboard() {
           <Link to="/admin/products" className="px-6 py-3 bg-pk-accent/10 border border-pk-accent text-pk-accent rounded-xl hover:bg-pk-accent hover:text-white transition-colors font-medium">
              Manage Products
           </Link>
-          <Link to="/admin/orders" className="px-6 py-3 bg-pk-bg-primary border border-pk-bg-secondary text-pk-text-main rounded-xl hover:border-pk-text-muted transition-colors font-medium">
-            View All Orders
-          </Link>
+          {canManageOrders && (
+            <Link to="/admin/orders" className="px-6 py-3 bg-pk-bg-primary border border-pk-bg-secondary text-pk-text-main rounded-xl hover:border-pk-text-muted transition-colors font-medium">
+              View All Orders
+            </Link>
+          )}
         </div>
       </div>
     </div>

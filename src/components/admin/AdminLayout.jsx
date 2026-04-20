@@ -4,12 +4,12 @@ import { useAuth } from '../../contexts/AuthContext';
 
 export const AdminLayout = () => {
   const { pathname } = useLocation();
-  const { logout } = useAuth();
+  const { logout, canManageOrders } = useAuth();
   
   const navItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: FiHome },
     { name: 'Products', path: '/admin/products', icon: FiBox },
-    { name: 'Orders', path: '/admin/orders', icon: FiShoppingBag },
+    ...(canManageOrders ? [{ name: 'Orders', path: '/admin/orders', icon: FiShoppingBag }] : []),
   ];
 
   return (

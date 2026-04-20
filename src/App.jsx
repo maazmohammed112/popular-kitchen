@@ -46,6 +46,12 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+const OrderProtectedRoute = ({ children }) => {
+  const { canManageOrders } = useAuth();
+  if (!canManageOrders) return <Navigate to="/admin/dashboard" replace />;
+  return children;
+};
+
 const AppLayout = ({ children, setIsCartOpen, toggleTheme }) => {
   return (
     <div className="flex flex-col min-h-screen bg-pk-bg-primary text-pk-text-main transition-colors duration-200">
@@ -137,7 +143,11 @@ const DefaultViews = () => {
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<ManageProducts />} />
-            <Route path="orders" element={<ManageOrders />} />
+            <Route path="orders" element={
+              <OrderProtectedRoute>
+                <ManageOrders />
+              </OrderProtectedRoute>
+            } />
           </Route>
           
           <Route path="*" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><NotFound /></AppLayout>} />

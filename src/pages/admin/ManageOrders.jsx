@@ -4,7 +4,11 @@ import { getOrders, listenToOrders, updateOrderStatus, cancelOrder } from '../..
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 
+import { useAuth } from '../../contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
+
 export default function ManageOrders() {
+  const { canManageOrders } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -12,6 +16,8 @@ export default function ManageOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const { showSuccess, showError } = useToast();
+
+  if (!canManageOrders) return <Navigate to="/admin/dashboard" replace />;
 
   useEffect(() => {
     setLoading(true);

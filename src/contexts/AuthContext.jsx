@@ -17,22 +17,27 @@ export const AuthProvider = ({ children }) => {
       if (user) {
         setCurrentUser(user);
         
-        // Check for admin role - Hardcoded override + Firestore check
-        const adminEmails = ['login@admin.com', 'admin@admin.com'];
-        const isEmailAdmin = adminEmails.includes(user.email.toLowerCase());
+        // Check for admin roles
+        const adminEmail = 'admin@admin.com';
+        const productAdminEmail = 'login@admin.com';
+        const productAdminUid = '9LGdqksF7UP4IG9KCh3Cj7pK0xA3';
 
         try {
           const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists() && userDoc.data().role === 'admin') {
+          const dbRole = userDoc.exists() ? userDoc.data().role : null;
+
+          if (dbRole === 'admin' || user.email?.toLowerCase() === adminEmail) {
             setUserRole('admin');
-          } else if (isEmailAdmin) {
-            setUserRole('admin');
+          } else if (dbRole === 'product_admin' || (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid)) {
+            setUserRole('product_admin');
           } else {
             setUserRole('user');
           }
         } catch (error) {
           console.error("Error fetching user role", error);
-          setUserRole(isEmailAdmin ? 'admin' : 'user');
+          if (user.email?.toLowerCase() === adminEmail) setUserRole('admin');
+          else if (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid) setUserRole('product_admin');
+          else setUserRole('user');
         }
       } else {
         // Logged out
@@ -55,15 +60,17 @@ export const AuthProvider = ({ children }) => {
     // Normal Firebase flow
     const result = await signInWithEmailAndPassword(auth, email, password);
     
-    // Check for admin role - Hardcoded override + Firestore check
-    const adminEmails = ['login@admin.com', 'admin@admin.com'];
-    const isEmailAdmin = adminEmails.includes(result.user.email.toLowerCase());
+    const adminEmail = 'admin@admin.com';
+    const productAdminEmail = 'login@admin.com';
+    const productAdminUid = '9LGdqksF7UP4IG9KCh3Cj7pK0xA3';
 
     const userDoc = await getDoc(doc(db, 'users', result.user.uid));
     let role = userDoc.exists() ? (userDoc.data().role || 'user') : 'user';
     
-    if (isEmailAdmin) {
+    if (result.user.email?.toLowerCase() === adminEmail) {
       role = 'admin';
+    } else if (result.user.email?.toLowerCase() === productAdminEmail && result.user.uid === productAdminUid) {
+      role = 'product_admin';
     }
     
     // Update local state immediately
@@ -82,7 +89,8 @@ export const AuthProvider = ({ children }) => {
     userRole,
     login,
     logout,
-    isAdmin: userRole === 'admin',
+    isAdmin: ['admin', 'product_admin'].includes(userRole),
+    canManageOrders: userRole === 'admin',
   };
 
   return (
