@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiX, FiDownload, FiCheckCircle, FiAlertCircle, FiFileText, FiTrash2, FiEdit2, FiSave, FiPlus, FiImage, FiLink } from 'react-icons/fi';
 import imageCompression from 'browser-image-compression';
 import { addProduct } from '../../firebase/products';
@@ -45,6 +45,7 @@ function parseRow(row, headers) {
     images,
     _errors: [],
     _editing: false,
+    _tempId: Math.random().toString(36).substr(2, 9),
   };
 }
 
@@ -162,7 +163,7 @@ function ImageManager({ images, onChange, onUploadingChange }) {
       <label className="flex items-center gap-2 px-3 py-2 border border-dashed border-pk-bg-secondary hover:border-pk-accent rounded-lg cursor-pointer text-xs text-pk-text-muted hover:text-pk-accent transition-colors">
         <FiImage size={13} />
         <span>Upload image file</span>
-        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+        <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} disabled={pendingCount > 0} />
       </label>
 
       {/* Paste URL */}
@@ -196,6 +197,11 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({ ...product, _sizesRaw: sizeToString(product.sizes) });
   const [imageUploading, setImageUploading] = useState(false);
+
+  // Keep draft in sync if product prop changes from outside (e.g. index swap)
+  useEffect(() => {
+    setDraft({ ...product, _sizesRaw: sizeToString(product.sizes) });
+  }, [product]);
 
   const saveEdit = () => {
     const price = parseFloat(draft.price) || 0;
@@ -427,6 +433,7 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
       title: '', description: '', price: 0, offerPercent: 0,
       discountPrice: 0, category: '', stockStatus: 'inStock',
       sizes: [], images: [], _errors: ['Missing title', 'Missing category'], _editing: false,
+      _tempId: Math.random().toString(36).substr(2, 9),
     }]);
   };
 
@@ -559,7 +566,7 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
 
               {parsedProducts.map((p, idx) => (
                 <EditableRow
-                  key={idx}
+                  key={p._tempId}
                   product={p}
                   index={idx}
                   onUpdate={handleUpdate}
