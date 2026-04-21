@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight, FiArrowRight } from 'react-icons/fi';
 import { getProduct, getProducts } from '../firebase/products';
+import { calculateDiscountPrice } from '../utils/discountCalc';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { SEO } from '../components/SEO';
@@ -9,6 +10,7 @@ import { getOptimizedUrl } from '../cloudinary/upload';
 import { ShareButton } from '../components/ShareButton';
 import { ImageWithSkeleton } from '../components/ImageWithSkeleton';
 import { ProductCard } from '../components/ProductCard';
+import { ProductSkeleton } from '../components/Skeletons';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -57,7 +59,20 @@ export default function ProductDetail() {
   }, [id]);
 
   if (loading) {
-    return <div className="p-12 text-center text-pk-text-muted animate-pulse">Loading product...</div>;
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="h-10 w-24 bg-pk-bg-secondary rounded-lg mb-8 animate-pulse" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 bg-pk-surface p-6 md:p-8 rounded-3xl border border-pk-bg-secondary">
+          <div className="aspect-square bg-pk-bg-primary rounded-2xl animate-pulse" />
+          <div className="space-y-4">
+            <div className="h-4 w-20 bg-pk-bg-secondary rounded animate-pulse" />
+            <div className="h-10 w-3/4 bg-pk-bg-secondary rounded animate-pulse" />
+            <div className="h-20 w-full bg-pk-bg-secondary rounded animate-pulse opacity-50" />
+            <div className="h-14 w-full bg-pk-bg-secondary rounded-2xl animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {

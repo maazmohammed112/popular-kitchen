@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown, FiFilter } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
@@ -53,15 +53,23 @@ export const Navbar = ({ onOpenCart }) => {
 
             {/* Desktop Search */}
             <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-8 relative">
-              <div className="relative w-full">
-                <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
+              <div className="relative w-full group">
+                <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-pk-accent transition-colors" />
                 <input
                   type="text"
-                  placeholder="Search kitchenware, appliances..."
+                  placeholder="Search products..."
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full bg-white/10 text-white placeholder-white/50 rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/15 text-sm backdrop-blur-sm transition-all focus:bg-white focus:text-pk-text-main focus:placeholder-pk-text-muted"
+                  className="w-full bg-white/10 text-white placeholder-white/50 rounded-xl py-2.5 pl-10 pr-12 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/15 text-sm backdrop-blur-sm transition-all focus:bg-white focus:text-pk-text-main focus:placeholder-pk-text-muted"
                 />
+                <button 
+                  type="button"
+                  onClick={() => navigate(`/search?q=${searchTerm}&showFilters=true`)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white transition-colors"
+                  title="Advanced Filters"
+                >
+                  <FiFilter size={16} />
+                </button>
               </div>
             </form>
 

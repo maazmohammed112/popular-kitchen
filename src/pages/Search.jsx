@@ -45,6 +45,7 @@ export default function Search() {
   const [sortOrder, setSortOrder] = useState(''); // 'low-to-high' | 'high-to-low'
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState([]);
+  const [showFilters, setShowFilters] = useState(searchParams.get('showFilters') === 'true');
 
   useEffect(() => {
     const filterProducts = (allProducts) => {
@@ -145,11 +146,31 @@ export default function Search() {
         <p className="text-sm text-pk-text-muted">Found {loading ? '...' : products.length} items</p>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-8 pb-6 border-b border-pk-bg-secondary">
-        <div className="flex items-center gap-2 text-pk-text-muted text-sm mr-2">
-          <FiFilter /> <span className="font-medium">Filter:</span>
-        </div>
+      <div className="flex gap-2 mb-6">
+        <button 
+          onClick={() => navigate('/')} 
+          className="flex items-center gap-2 px-4 py-2 bg-pk-surface border border-pk-bg-secondary rounded-xl text-sm font-semibold text-pk-text-muted hover:text-pk-text-main transition-all"
+        >
+          Home
+        </button>
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all border ${
+            showFilters || sortOrder || selectedCategory !== 'all'
+            ? 'bg-pk-accent text-white border-pk-accent shadow-lg shadow-pk-accent/20' 
+            : 'bg-pk-surface text-pk-text-main border-pk-bg-secondary hover:bg-pk-bg-secondary'
+          }`}
+        >
+          <FiFilter size={16} /> Filters {(sortOrder || selectedCategory !== 'all') && '•'}
+        </button>
+      </div>
+
+      {/* Filter Bar (Collapsible) */}
+      {showFilters && (
+        <div className="flex flex-wrap items-center gap-3 mb-8 p-6 bg-pk-surface border border-pk-bg-secondary rounded-2xl animate-[slideDown_0.2s_ease-out] shadow-sm">
+          <div className="flex items-center gap-2 text-pk-text-muted text-xs font-bold uppercase tracking-wider mr-2">
+            Sorting & Categories
+          </div>
 
         {/* Sort Select */}
         <div className="relative group">
@@ -184,12 +205,13 @@ export default function Search() {
         {(sortOrder || selectedCategory !== 'all') && (
           <button
             onClick={() => { setSortOrder(''); setSelectedCategory('all'); }}
-            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-pk-error hover:bg-pk-error/10 rounded-xl transition-all border border-pk-error/20"
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-pk-error hover:bg-pk-error/10 rounded-xl transition-all border border-pk-error/20 ml-auto"
           >
-            <FiRefreshCw className="animate-[spin_2s_linear_infinite]" /> Reset Filters
+            <FiRefreshCw className="animate-[spin_2s_linear_infinite]" /> Reset
           </button>
         )}
       </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {loading ? (
