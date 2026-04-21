@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare } from 'react-icons/fi';
+import { SiWhatsapp, SiGmail } from 'react-icons/si';
 import { getOrders, listenToOrders, updateOrderStatus, cancelOrder } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
@@ -71,14 +72,52 @@ export default function ManageOrders() {
     }
   };
 
-  const handleShareWhatsApp = (phone, order) => {
-    const msg = encodeURIComponent(
-      `Hello ${order.customerName}! Your order with Popular Kitchen (Order ID: ${order.id}) has been ${order.status}. Total: Rs. ${order.totalAmount}. Thank you for shopping with us! For queries call +91 88928 36046.`
-    );
-    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${msg}`, '_blank');
+  const isInvoiceReady = (status) => status === 'confirmed' || status === 'delivered';
+
+  const getPredefinedMessage = (order) => {
+    const { id, status, cancelledBy } = order;
+    const shortId = id.slice(0, 8).toUpperCase();
+    
+    if (status === 'pending') {
+      return `We have received your order ${shortId}, please allow some hours for further update thank you. - Popular Kitchen Team`;
+    }
+    if (status === 'confirmed') {
+      return `Your order ${shortId} has been confirmed! We are preparing it now. - Popular Kitchen Team`;
+    }
+    if (status === 'delivered') {
+      return `Your order ${shortId} has been delivered. Enjoy your meal! - Popular Kitchen Team`;
+    }
+    if (status === 'cancelled') {
+      if (cancelledBy === 'user') {
+        return `Your order ${shortId} has been cancelled as per your request. - Popular Kitchen Team`;
+      }
+      return `We regret to inform you that your order ${shortId} has been cancelled. Please contact us for more details. - Popular Kitchen Team`;
+    }
+    return `Update for your order ${shortId}: Status is now ${status}. - Popular Kitchen Team`;
   };
 
-  const isInvoiceReady = (status) => status === 'confirmed' || status === 'delivered';
+  const handleSendWhatsApp = (order) => {
+    const msg = encodeURIComponent(getPredefinedMessage(order));
+    const phone = order.phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
+  };
+
+  const handleSendEmail = (order) => {
+    if (!order.email) {
+      showError("Customer email not found");
+      return;
+    }
+    const subject = encodeURIComponent(`Order Update: ${order.status.toUpperCase()} - ${order.id.slice(0,8).toUpperCase()} - Popular Kitchen`);
+    const body = encodeURIComponent(getPredefinedMessage(order));
+    const adminEmail = 'mohammed@popularkitchen.store';
+    window.location.href = `mailto:${order.email}?cc=${adminEmail}&subject=${subject}&body=${body}`;
+  };
+
+  const handleSendSMS = (order) => {
+    const msg = encodeURIComponent(getPredefinedMessage(order));
+    const phone = order.phone.replace(/\D/g, '');
+    window.location.href = `sms:${phone}?body=${msg}`;
+  };
 
   const filteredOrders = orders.filter(o => 
     o.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,7 +150,7 @@ export default function ManageOrders() {
             
             {/* Auto-fill customer number */}
             <button
-              onClick={() => { handleShareWhatsApp(shareModal.order.phone, shareModal.order); setShareModal(null); }}
+              onClick={() => { handleSendWhatsApp(shareModal.order); setShareModal(null); }}
               className="w-full flex items-center gap-3 px-4 py-3 bg-[#25D366] text-white rounded-xl mb-3 font-medium hover:bg-[#128C7E] transition-colors"
             >
               <FiMessageCircle size={18}/>
@@ -130,7 +169,8 @@ export default function ManageOrders() {
                 onClick={() => {
                   const ph = document.getElementById('custom-phone').value;
                   if (!ph) return;
-                  handleShareWhatsApp(ph, shareModal.order);
+                  const msg = encodeURIComponent(`Hello! Your order with Popular Kitchen is currently ${shareModal.order.status}. Thank you!`);
+                  window.open(`https://wa.me/${ph.replace(/\D/g, '')}?text=${msg}`, '_blank');
                   setShareModal(null);
                 }}
                 className="px-4 py-2 bg-pk-accent text-white rounded-xl text-sm font-medium hover:bg-blue-600 transition-colors flex items-center gap-1"
@@ -163,7 +203,7 @@ export default function ManageOrders() {
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Customer</th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Amount</th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Status</th>
-                  <th className="p-4 font-medium text-pk-text-muted text-sm">Invoice</th>
+                  <th className="p-4 font-medium text-pk-text-muted text-sm">Notify</th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm text-right">Details</th>
                 </tr>
               </thead>
@@ -204,28 +244,40 @@ export default function ManageOrders() {
                           <option value="cancelled" className="bg-pk-bg-primary text-pk-error font-bold">Cancel Order</option>
                         </select>
                       </td>
-                      {/* Invoice column – only shows when confirmed/delivered */}
+                      {/* Notification column */}
                       <td className="p-4">
-                        {isInvoiceReady(order.status) ? (
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleSendWhatsApp(order)}
+                            title="Send WhatsApp"
+                            className="p-2 text-[#25D366] hover:bg-[#25D366]/10 rounded-lg transition-colors"
+                          >
+                            <SiWhatsapp size={16}/>
+                          </button>
+                          <button
+                            onClick={() => handleSendEmail(order)}
+                            title="Send Email"
+                            className="p-2 text-[#EA4335] hover:bg-[#EA4335]/10 rounded-lg transition-colors"
+                          >
+                            <SiGmail size={16}/>
+                          </button>
+                          <button
+                            onClick={() => handleSendSMS(order)}
+                            title="Send SMS"
+                            className="p-2 text-pk-accent hover:bg-pk-accent/10 rounded-lg transition-colors"
+                          >
+                            <FiMessageSquare size={16}/>
+                          </button>
+                          {isInvoiceReady(order.status) && (
                             <button
                               onClick={() => handleDownloadInvoice(order)}
                               title="Download Invoice"
-                              className="flex items-center gap-1 text-xs px-3 py-1.5 bg-pk-accent/10 text-pk-accent hover:bg-pk-accent hover:text-white rounded-lg transition-colors font-medium"
+                              className="p-2 text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-secondary rounded-lg transition-colors"
                             >
-                              <FiDownload size={14}/> PDF
+                              <FiDownload size={16}/>
                             </button>
-                            <button
-                              onClick={() => setShareModal({ order })}
-                              title="Share via WhatsApp"
-                              className="flex items-center gap-1 text-xs px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366] hover:text-white rounded-lg transition-colors font-medium"
-                            >
-                              <FiMessageCircle size={14}/> Share
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-pk-text-muted italic">Set Confirmed</span>
-                        )}
+                          )}
+                        </div>
                       </td>
                       <td className="p-4 text-right">
                         <button
@@ -240,7 +292,7 @@ export default function ManageOrders() {
                     {/* Expanded details row */}
                     {expandedRow === order.id && (
                       <tr className="bg-pk-bg-primary border-b border-pk-bg-secondary">
-                        <td colSpan="6" className="p-6">
+                        <td colSpan="7" className="p-6">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-4 text-sm">
                               <div>
