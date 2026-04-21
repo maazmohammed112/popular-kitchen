@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload, FiCamera } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import Cropper from 'react-easy-crop';
@@ -157,10 +157,10 @@ export default function ManageProducts() {
       // 2. Background Upload
       try {
         const options = {
-          maxSizeMB: 0.2,
+          maxSizeMB: 0.19, // Strictly under 200KB
           maxWidthOrHeight: 1200,
           useWebWorker: true,
-          initialQuality: 0.8
+          initialQuality: 0.85 // Better quality
         };
         
         const compressedFile = await imageCompression(file, options);
@@ -538,6 +538,18 @@ export default function ManageProducts() {
                     );
                   })}
                   
+                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
+                    {uploadingImages ? (
+                      <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
+                    ) : (
+                      <>
+                        <FiCamera size={24} className="group-hover:-translate-y-1 transition-transform" />
+                        <span className="text-[10px] uppercase font-bold mt-2">Camera</span>
+                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
+                      </>
+                    )}
+                  </label>
+
                   <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
                     {uploadingImages ? (
                       <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
