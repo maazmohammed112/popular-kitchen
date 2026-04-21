@@ -6,6 +6,7 @@ import { useToast } from '../contexts/ToastContext';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { generateCustomerInvoice } from '../utils/invoiceGenerator';
+import { sendEmail, getOrderEmailTemplate } from '../utils/emailService';
 
 const STATUS_STYLES = {
   pending:   'bg-amber-100 text-amber-700',
@@ -71,6 +72,17 @@ export default function MyOrders() {
     setCancelling(true);
     try {
       await cancelOrder(cancelTarget);
+      
+      // Send cancellation email
+      const order = orders.find(o => o.id === cancelTarget);
+      if (order && order.email) {
+        sendEmail({
+          to: order.email,
+          subject: `Order Cancelled: #${order.id.slice(0, 8).toUpperCase()} - Popular Kitchen`,
+          htmlContent: getOrderEmailTemplate({ ...order, status: 'cancelled', cancelledBy: 'user' })
+        });
+      }
+
       setOrders(prev => prev.map(o => o.id === cancelTarget ? { ...o, status: 'cancelled' } : o));
       if (isGuest) {
         const stored = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
