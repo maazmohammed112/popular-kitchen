@@ -32,11 +32,11 @@ export const CartProvider = ({ children }) => {
       // Only sync once when user is logged in and local cart is loaded
       if (currentUser && isLoaded && !isRemoteSynced) {
         try {
-          const cartRef = doc(db, 'carts', currentUser.uid);
-          const cartSnap = await getDoc(cartRef);
+          const userRef = doc(db, 'users', currentUser.uid);
+          const userSnap = await getDoc(userRef);
           
-          if (cartSnap.exists()) {
-            const remoteItems = cartSnap.data().items || [];
+          if (userSnap.exists()) {
+            const remoteItems = userSnap.data().cart || [];
             
             setCartItems(prevLocal => {
               // Merge Logic: Local cart + Remote cart
@@ -44,7 +44,7 @@ export const CartProvider = ({ children }) => {
               prevLocal.forEach(localItem => {
                 const existingIdx = merged.findIndex(ri => ri.productId === localItem.productId && ri.size === localItem.size);
                 if (existingIdx > -1) {
-                  // If exists in both, we merge quantities
+                  // If exists in both, keep the one with more quantity
                   merged[existingIdx].quantity = Math.max(merged[existingIdx].quantity, localItem.quantity);
                 } else {
                   merged.push(localItem);
@@ -70,19 +70,18 @@ export const CartProvider = ({ children }) => {
       localStorage.setItem('pk_cart', JSON.stringify(cartItems));
       
       // Only save to Firestore if user is logged in AND we have finished merging remote data
-      // This prevents overwriting remote cart with empty local cart during initial load
       if (currentUser && isRemoteSynced) {
         const timeoutId = setTimeout(async () => {
           try {
-            const cartRef = doc(db, 'carts', currentUser.uid);
-            await setDoc(cartRef, { 
-              items: cartItems, 
-              lastUpdated: new Date() 
+            const userRef = doc(db, 'users', currentUser.uid);
+            await setDoc(userRef, { 
+              cart: cartItems, 
+              cartUpdatedAt: new Date() 
             }, { merge: true });
           } catch (err) {
             console.error("Firestore cart save failed", err);
           }
-        }, 1500); // Debounce saves by 1.5 seconds to reduce DB pressure
+        }, 2000); // 2 second debounce
 
         return () => clearTimeout(timeoutId);
       }
