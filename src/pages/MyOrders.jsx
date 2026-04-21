@@ -15,6 +15,40 @@ const STATUS_STYLES = {
   cancelled: 'bg-red-100 text-red-700',
 };
 
+const OrderItem = ({ item }) => (
+  <div className="flex justify-between text-sm text-pk-text-muted py-1 border-b border-pk-bg-secondary/30 last:border-0">
+    <span className="flex-1 pr-4">
+      {item.title}
+      {item.size && item.size !== 'N/A' ? ` (${item.size})` : ''} × {item.quantity}
+    </span>
+    <span className="font-medium">₹{Number(item.price || 0) * Number(item.quantity || 1)}</span>
+  </div>
+);
+
+const OrderItemsList = ({ items = [] }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const showMore = items.length > 10;
+  const displayItems = isExpanded ? items : items.slice(0, 10);
+
+  return (
+    <div className="space-y-1 mb-4">
+      {displayItems.map((item, i) => <OrderItem key={i} item={item} />)}
+      {showMore && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-xs font-bold text-pk-accent mt-2 hover:underline flex items-center gap-1"
+        >
+          {isExpanded ? (
+            <><FiX size={12} /> Show Less</>
+          ) : (
+            `+ ${items.length - 10} more items`
+          )}
+        </button>
+      )}
+    </div>
+  );
+};
+
 export default function MyOrders() {
   const { currentUser } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -144,9 +178,25 @@ export default function MyOrders() {
 
       {/* Loading state */}
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-pk-surface border border-pk-bg-secondary rounded-2xl h-28 animate-pulse" />
+            <div key={i} className="bg-pk-surface border border-pk-bg-secondary rounded-3xl p-6 shadow-sm">
+              <div className="flex justify-between mb-4">
+                <div className="space-y-2">
+                  <div className="h-4 w-24 bg-pk-bg-secondary rounded-lg animate-pulse" />
+                  <div className="h-3 w-32 bg-pk-bg-secondary rounded-lg animate-pulse opacity-50" />
+                </div>
+                <div className="h-8 w-20 bg-pk-bg-secondary rounded-lg animate-pulse" />
+              </div>
+              <div className="space-y-3 mb-6">
+                <div className="h-4 w-full bg-pk-bg-secondary rounded-lg animate-pulse opacity-30" />
+                <div className="h-4 w-2/3 bg-pk-bg-secondary rounded-lg animate-pulse opacity-30" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-8 w-24 bg-pk-bg-secondary rounded-lg animate-pulse" />
+                <div className="h-8 w-24 bg-pk-bg-secondary rounded-lg animate-pulse" />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -206,17 +256,7 @@ export default function MyOrders() {
               </div>
 
               {/* Items */}
-              <div className="space-y-1 mb-4">
-                {(order.items || []).map((item, i) => (
-                  <div key={i} className="flex justify-between text-sm text-pk-text-muted">
-                    <span>
-                      {item.title}
-                      {item.size && item.size !== 'N/A' ? ` (${item.size})` : ''} × {item.quantity}
-                    </span>
-                    <span>₹{Number(item.price || 0) * Number(item.quantity || 1)}</span>
-                  </div>
-                ))}
-              </div>
+              <OrderItemsList items={order.items} />
 
               {/* Actions */}
               <div className="flex flex-col gap-2 pt-3 border-t border-pk-bg-secondary">

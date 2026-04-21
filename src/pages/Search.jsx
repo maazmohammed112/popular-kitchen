@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiArrowLeft, FiSearch } from 'react-icons/fi';
+import { FiArrowLeft, FiSearch, FiFilter, FiRefreshCw, FiChevronDown } from 'react-icons/fi';
 import { getProducts } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
@@ -42,15 +42,42 @@ export default function Search() {
   const searchParams = new URLSearchParams(location.search);
   const query = searchParams.get('q') || '';
 
+  const [sortOrder, setSortOrder] = useState(''); // 'low-to-high' | 'high-to-low'
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const filterProducts = (allProducts) => {
-      if (!query.trim()) return allProducts;
-      const lowerQuery = query.toLowerCase();
-      return allProducts.filter(p =>
-        (p.title && p.title.toLowerCase().includes(lowerQuery)) ||
-        (p.category && p.category.toLowerCase().includes(lowerQuery)) ||
-        (p.description && p.description.toLowerCase().includes(lowerQuery))
-      );
+      let filtered = allProducts;
+      
+      // 1. Text search
+      if (query.trim()) {
+        const lowerQuery = query.toLowerCase();
+        filtered = filtered.filter(p =>
+          (p.title && p.title.toLowerCase().includes(lowerQuery)) ||
+          (p.category && p.category.toLowerCase().includes(lowerQuery)) ||
+          (p.description && p.description.toLowerCase().includes(lowerQuery))
+        );
+      }
+
+      // 2. Category filter
+      if (selectedCategory !== 'all') {
+        filtered = filtered.filter(p => p.category === selectedCategory);
+      }
+
+      // 3. Sorting
+      if (sortOrder === 'low-to-high') {
+        filtered = [...filtered].sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
+      } else if (sortOrder === 'high-to-low') {
+        filtered = [...filtered].sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+      }
+
+      return filtered;
+    };
+
+    const extractCategories = (allProducts) => {
+      const unique = [...new Set(allProducts.map(p => p.category))].filter(Boolean);
+      setCategories(unique.sort());
     };
 
     const fetchAndFilterProducts = async () => {
@@ -66,6 +93,7 @@ export default function Search() {
       try {
         const allProducts = await getProducts();
         allProductsCache = allProducts;
+        extractCategories(allProducts);
         setProducts(filterProducts(allProducts));
       } catch (error) {
         console.error("Failed to search products", error);
@@ -75,7 +103,7 @@ export default function Search() {
     };
 
     fetchAndFilterProducts();
-  }, [query]);
+  }, [query, sortOrder, selectedCategory]);
 
   // Single notification effect — fires once per unique query per browser session
   useEffect(() => {
@@ -115,6 +143,52 @@ export default function Search() {
           </h1>
         </div>
         <p className="text-sm text-pk-text-muted">Found {loading ? '...' : products.length} items</p>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-8 pb-6 border-b border-pk-bg-secondary">
+        <div className="flex items-center gap-2 text-pk-text-muted text-sm mr-2">
+          <FiFilter /> <span className="font-medium">Filter:</span>
+        </div>
+
+        {/* Sort Select */}
+        <div className="relative group">
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="appearance-none bg-pk-surface border border-pk-bg-secondary text-pk-text-main text-sm rounded-xl px-4 py-2.5 pr-10 outline-none focus:border-pk-accent transition-all cursor-pointer shadow-sm hover:shadow-md"
+          >
+            <option value="">Default Sorting</option>
+            <option value="low-to-high">Price: Low to High</option>
+            <option value="high-to-low">Price: High to Low</option>
+          </select>
+          <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-pk-text-muted pointer-events-none group-hover:text-pk-accent transition-colors" />
+        </div>
+
+        {/* Category Select */}
+        <div className="relative group">
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value)}
+            className="appearance-none bg-pk-surface border border-pk-bg-secondary text-pk-text-main text-sm rounded-xl px-4 py-2.5 pr-10 outline-none focus:border-pk-accent transition-all cursor-pointer shadow-sm hover:shadow-md"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((cat, i) => (
+              <option key={i} value={cat}>{cat}</option>
+            ))}
+          </select>
+          <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-pk-text-muted pointer-events-none group-hover:text-pk-accent transition-colors" />
+        </div>
+
+        {/* Reset Button */}
+        {(sortOrder || selectedCategory !== 'all') && (
+          <button
+            onClick={() => { setSortOrder(''); setSelectedCategory('all'); }}
+            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-pk-error hover:bg-pk-error/10 rounded-xl transition-all border border-pk-error/20"
+          >
+            <FiRefreshCw className="animate-[spin_2s_linear_infinite]" /> Reset Filters
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
