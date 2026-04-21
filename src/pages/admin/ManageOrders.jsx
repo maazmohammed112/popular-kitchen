@@ -4,6 +4,7 @@ import { SiWhatsapp, SiGmail } from 'react-icons/si';
 import { getOrders, listenToOrders, updateOrderStatus, cancelOrder } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
+import { sendEmail, getOrderEmailTemplate } from '../../utils/emailService';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -35,8 +36,18 @@ export default function ManageOrders() {
     if (newStatus === 'cancelled') {
       if (window.confirm("Are you sure you want to cancel this order? This cannot be undone.")) {
         try {
+          const order = orders.find(o => o.id === id);
           await cancelOrder(id, 'admin');
           showSuccess("Order cancelled successfully");
+
+          // Automatic Email Notification
+          if (order && order.email) {
+            sendEmail({
+              to: order.email,
+              subject: `Order Cancelled: #${order.id.slice(0,8).toUpperCase()} - Popular Kitchen`,
+              htmlContent: getOrderEmailTemplate({ ...order, status: 'cancelled', cancelledBy: 'admin' })
+            });
+          }
         } catch (err) {
           console.error(err);
           showError("Failed to cancel order");
@@ -47,6 +58,18 @@ export default function ManageOrders() {
     try {
       await updateOrderStatus(id, newStatus, adminNote);
       showSuccess(`Order status updated to ${newStatus}`);
+      
+      // Automatic Email Notification - ONLY FOR CANCELLED (Saving quota)
+      if (newStatus === 'cancelled') {
+        const order = orders.find(o => o.id === id);
+        if (order && order.email) {
+          sendEmail({
+            to: order.email,
+            subject: `Order Cancelled: #${order.id.slice(0,8).toUpperCase()} - Popular Kitchen`,
+            htmlContent: getOrderEmailTemplate({ ...order, status: 'cancelled', cancelledBy: 'admin' })
+          });
+        }
+      }
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
