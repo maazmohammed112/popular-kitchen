@@ -287,7 +287,7 @@ export default function ProductDetail() {
               <h2 className="text-xl md:text-2xl font-bold text-pk-text-main">You might also like</h2>
             </div>
             <Link
-              to={`/?category=${encodeURIComponent(product.category)}`}
+              to={`/search?category=${encodeURIComponent(product.category)}`}
               className="flex items-center gap-1.5 text-sm font-semibold text-pk-accent hover:text-pk-text-main transition-colors"
             >
               View all <FiArrowRight size={16} />

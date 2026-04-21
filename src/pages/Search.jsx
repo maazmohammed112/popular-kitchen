@@ -43,7 +43,7 @@ export default function Search() {
   const query = searchParams.get('q') || '';
 
   const [sortOrder, setSortOrder] = useState(''); // 'low-to-high' | 'high-to-low'
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [categories, setCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(searchParams.get('showFilters') === 'true');
 
@@ -140,7 +140,8 @@ export default function Search() {
             <FiArrowLeft />
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main flex items-center gap-2">
-            Search Results {query && <span className="text-pk-accent font-medium text-xl">"{query}"</span>}
+            {selectedCategory !== 'all' ? selectedCategory : 'Search Results'} 
+            {query && <span className="text-pk-accent font-medium text-xl">"{query}"</span>}
           </h1>
         </div>
         <p className="text-sm text-pk-text-muted">Found {loading ? '...' : products.length} items</p>
