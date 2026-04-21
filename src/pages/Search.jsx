@@ -46,6 +46,11 @@ export default function Search() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [categories, setCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(searchParams.get('showFilters') === 'true');
+  
+  // Scroll to top when search criteria changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [query, selectedCategory]);
 
   useEffect(() => {
     const filterProducts = (allProducts) => {
