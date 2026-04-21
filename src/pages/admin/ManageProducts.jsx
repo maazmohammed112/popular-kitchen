@@ -13,6 +13,7 @@ import { ImageWithSkeleton } from '../../components/ImageWithSkeleton';
 import { getOptimizedUrl } from '../../cloudinary/upload';
 import imageCompression from 'browser-image-compression';
 import { FiCrop } from 'react-icons/fi';
+import { toTitleCase } from '../../utils/textUtils';
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -256,12 +257,12 @@ export default function ManageProducts() {
       const offerVal = parseFloat(formData.offerPercent) || 0;
       
       const payload = {
-        title: formData.title,
+        title: toTitleCase(formData.title),
         description: formData.description,
         price: priceVal,
         offerPercent: offerVal,
         discountPrice: calculateDiscountPrice(priceVal, offerVal),
-        category: formData.category,
+        category: toTitleCase(formData.category),
         sizes: formData.sizes,
         stockStatus: formData.stockStatus,
         images: formData.images,

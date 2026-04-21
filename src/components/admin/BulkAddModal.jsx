@@ -10,6 +10,7 @@ import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 import { getOptimizedUrl } from '../../cloudinary/upload';
 import { ImageWithSkeleton } from '../ImageWithSkeleton';
+import { toTitleCase } from '../../utils/textUtils';
 
 const createEmptyProduct = () => ({
   title: '',
@@ -172,12 +173,12 @@ export default function BulkAddModal({ existingCategories, onClose, onSuccess })
         const priceVal = parseFloat(p.price) || 0;
         const offerVal = parseFloat(p.offerPercent) || 0;
         return addProduct({
-          title: p.title,
+          title: toTitleCase(p.title),
           description: p.description,
           price: priceVal,
           offerPercent: offerVal,
           discountPrice: calculateDiscountPrice(priceVal, offerVal),
-          category: p.category,
+          category: toTitleCase(p.category),
           sizes: p.sizes,
           stockStatus: p.stockStatus,
           images: p.images,

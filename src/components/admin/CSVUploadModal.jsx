@@ -6,6 +6,7 @@ import { uploadImageToCloudinary, getOptimizedUrl } from '../../cloudinary/uploa
 import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 import { ImageWithSkeleton } from '../ImageWithSkeleton';
+import { toTitleCase } from '../../utils/textUtils';
 
 const SAMPLE_CSV = `title,description,price,offerPercent,category,stockStatus,sizes,image1,image2,image3
 Stainless Steel Pan,Heavy duty 5-litre cooking pan,999,10,Cookware,inStock,Small:250 Medium:450 Large:750,,
@@ -34,12 +35,12 @@ function parseRow(row, headers) {
   const stockOptions = ['inStock', 'limitedStock', 'outOfStock'];
   const stockStatus = stockOptions.includes(obj.stockstatus) ? obj.stockstatus : 'inStock';
   return {
-    title: obj.title || '',
+    title: toTitleCase(obj.title || ''),
     description: obj.description || '',
     price,
     offerPercent,
     discountPrice: calculateDiscountPrice(price, offerPercent),
-    category: obj.category || '',
+    category: toTitleCase(obj.category || ''),
     stockStatus,
     sizes: parseSizes(obj.sizes),
     images,
@@ -213,6 +214,8 @@ function EditableRow({ product, index, onUpdate, onRemove, existingCategories })
     const safeImages = draft.images.filter(u => u && !u.startsWith('blob:'));
     onUpdate(index, {
       ...draft,
+      title: toTitleCase(draft.title),
+      category: toTitleCase(draft.category),
       images: safeImages,
       price,
       offerPercent,
