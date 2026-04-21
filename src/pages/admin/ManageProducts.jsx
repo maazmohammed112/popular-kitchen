@@ -108,6 +108,34 @@ export default function ManageProducts() {
     }
   };
 
+  const handleSanitizeAll = async () => {
+    if (!window.confirm("This will automatically format ALL existing product names and categories to professional Title Case (e.g. 'STAINLESS STEEL' -> 'Stainless Steel'). Proceed?")) return;
+    
+    setLoading(true);
+    let updatedCount = 0;
+    try {
+      for (const p of products) {
+        const newTitle = toTitleCase(p.title);
+        const newCategory = toTitleCase(p.category);
+        
+        if (newTitle !== p.title || newCategory !== p.category) {
+          await updateProduct(p.id, { 
+            title: newTitle, 
+            category: newCategory 
+          });
+          updatedCount++;
+        }
+      }
+      showSuccess(`Cleaned up ${updatedCount} products!`);
+      await fetchProducts();
+    } catch (err) {
+      console.error(err);
+      showError("Failed to sanitize some products");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenModal = (product = null) => {
     if (product) {
       const normalizedSizes = (product.sizes || []).map(s => 
@@ -327,6 +355,14 @@ export default function ManageProducts() {
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary text-sm"
           >
             Manage Categories
+          </button>
+          <button 
+            onClick={handleSanitizeAll}
+            disabled={loading || products.length === 0}
+            className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-pk-bg-secondary text-pk-text-muted hover:text-pk-accent hover:border-pk-accent rounded-xl text-sm font-semibold transition-all disabled:opacity-50 shadow-sm"
+            title="Fix all messy product names and categories"
+          >
+            <FiLayers className="text-pk-accent" /> Sanitize Names
           </button>
           <button 
             onClick={() => setIsCsvModalOpen(true)}
