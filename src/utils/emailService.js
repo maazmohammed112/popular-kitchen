@@ -80,7 +80,9 @@ export const getOrderEmailTemplate = (order) => {
         <!-- Header -->
         <tr>
           <td align="center" style="padding: 40px 0 30px 0; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
-            <img src="https://popularkitchen.store/logo.png" alt="Popular Kitchen" style="width: 64px; height: 64px; margin-bottom: 15px; border-radius: 16px; border: 2px solid rgba(255,255,255,0.2);" onerror="this.src='https://res.cloudinary.com/dxonu07sc/image/upload/v1/logos/pk-logo-white.png'">
+            <div style="display: inline-block; background-color: #ffffff; padding: 10px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); margin-bottom: 15px;">
+              <img src="https://popularkitchen.store/logo.png" alt="Popular Kitchen" style="width: 48px; height: 48px; display: block;" onerror="this.src='https://res.cloudinary.com/dxonu07sc/image/upload/v1/logos/pk-logo-blue.png'">
+            </div>
             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">POPULAR KITCHEN</h1>
           </td>
         </tr>
