@@ -75,35 +75,56 @@ export const getOrderEmailTemplate = (order) => {
   `).join('');
 
   return `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #1f2937; line-height: 1.6;">
-      <div style="background-color: #0F172A; padding: 30px; text-align: center; border-radius: 16px 16px 0 0;">
-        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Popular Kitchen</h1>
-      </div>
-      
-      <div style="padding: 40px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 0 0 16px 16px;">
-        <h2 style="margin-top: 0; color: #111827;">Hello ${customerName},</h2>
-        <p style="font-size: 16px; margin-bottom: 24px;">${statusMessage}</p>
+    <div style="background-color: #f8fafc; padding: 20px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);">
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 40px 0 30px 0; background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+            <img src="https://popularkitchen.store/logo.png" alt="Popular Kitchen" style="width: 64px; height: 64px; margin-bottom: 15px; border-radius: 16px; border: 2px solid rgba(255,255,255,0.2);" onerror="this.src='https://res.cloudinary.com/dxonu07sc/image/upload/v1/logos/pk-logo-white.png'">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">POPULAR KITCHEN</h1>
+          </td>
+        </tr>
         
-        <div style="background-color: ${statusColor}15; border-left: 4px solid ${statusColor}; padding: 16px; margin-bottom: 32px; border-radius: 4px;">
-          <span style="display: block; font-size: 12px; text-transform: uppercase; color: ${statusColor}; font-weight: bold; margin-bottom: 4px;">Current Status</span>
-          <span style="font-size: 18px; font-weight: bold; color: ${statusColor}; text-transform: uppercase;">${status}</span>
-        </div>
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <h2 style="margin: 0 0 15px 0; font-size: 20px; font-weight: 700; color: #0f172a;">Hello ${customerName},</h2>
+            <p style="margin: 0 0 30px 0; font-size: 16px; line-height: 1.6; color: #475569;">${statusMessage}</p>
+            
+            <!-- Status Badge -->
+            <div style="background-color: ${statusColor}10; border: 1px solid ${statusColor}30; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 40px;">
+              <span style="display: block; font-size: 11px; font-weight: 800; color: ${statusColor}; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;">Order Status</span>
+              <span style="font-size: 22px; font-weight: 800; color: ${statusColor}; text-transform: uppercase;">${status}</span>
+            </div>
 
-        <h3 style="border-bottom: 2px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 16px;">Order Details</h3>
-        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-          ${itemsList}
-          <tr>
-            <td style="padding: 20px 0 0; font-weight: bold; font-size: 16px;">Total Amount</td>
-            <td style="padding: 20px 0 0; font-weight: bold; font-size: 18px; text-align: right; color: #111827;">₹${totalAmount}</td>
-          </tr>
-        </table>
+            <!-- Order Table -->
+            <h3 style="margin: 0 0 15px 0; font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Your Order Details</h3>
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+              ${itemsList}
+              <tr>
+                <td style="padding: 25px 0 0 0; border-top: 2px solid #f1f5f9; font-size: 16px; font-weight: 600; color: #64748b;">Total Amount</td>
+                <td align="right" style="padding: 25px 0 0 0; border-top: 2px solid #f1f5f9; font-size: 24px; font-weight: 800; color: #0f172a;">₹${totalAmount}</td>
+              </tr>
+            </table>
 
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #f3f4f6; text-align: center; color: #6b7280; font-size: 12px;">
-          <p>If you have any questions, feel free to reply to this email or contact us on WhatsApp.</p>
-          <p style="margin-top: 10px; font-weight: bold;">Thank you for choosing Popular Kitchen!</p>
-          <p>&copy; ${new Date().getFullYear()} Popular Kitchen Team</p>
-        </div>
-      </div>
+            <!-- Support -->
+            <div style="background-color: #f1f5f9; border-radius: 16px; padding: 20px; text-align: center;">
+              <p style="margin: 0 0 10px 0; font-size: 13px; color: #475569;">Need help with your order?</p>
+              <a href="https://wa.me/919108167067" style="display: inline-block; padding: 10px 20px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 14px;">Chat on WhatsApp</a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="padding: 0 30px 40px 30px; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #94a3b8;">
+              &copy; ${new Date().getFullYear()} Popular Kitchen. All rights reserved.<br>
+              This is an automatic notification regarding your recent order.
+            </p>
+          </td>
+        </tr>
+      </table>
     </div>
   `;
 };
