@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [allOrders, setAllOrders] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { logout, canManageOrders } = useAuth();
+  const { logout, isAdmin, canManageOrders } = useAuth();
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -29,13 +29,16 @@ export default function Dashboard() {
       try {
         const products = await getProducts();
         
-        if (canManageOrders) {
+        // All admins can see order counts, but only full admins see revenue
+        if (isAdmin) {
           unsubscribe = listenToOrders((orders) => {
             setAllOrders(orders);
             
-            const revenue = orders
-              .filter(o => o.status !== 'cancelled')
-              .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+            const revenue = canManageOrders 
+              ? orders
+                .filter(o => o.status !== 'cancelled')
+                .reduce((sum, order) => sum + (order.totalAmount || 0), 0)
+              : 0;
             
             const counts = orders.reduce((acc, order) => {
               const s = order.status || 'pending';
@@ -64,11 +67,13 @@ export default function Dashboard() {
     
     fetchStats();
     return () => unsubscribe();
-  }, [canManageOrders]);
+  }, [isAdmin, canManageOrders]);
 
   const mainStats = [
     { title: 'Inventory', value: stats.products, icon: FiBox, color: 'text-pk-accent', bg: 'bg-pk-accent/10', link: '/admin/products' },
-    { title: 'Revenue', value: `₹${stats.revenue}`, icon: FiDollarSign, color: 'text-pk-success', bg: 'bg-pk-success/10' },
+    ...(canManageOrders ? [
+      { title: 'Revenue', value: `₹${stats.revenue}`, icon: FiDollarSign, color: 'text-pk-success', bg: 'bg-pk-success/10' }
+    ] : []),
   ];
 
   const statusBoxes = [
@@ -185,8 +190,8 @@ export default function Dashboard() {
           {statusBoxes.map((box) => (
             <button
               key={box.id}
-              onClick={() => setSelectedStatus(box.id)}
-              className={`flex flex-col items-center justify-center p-6 bg-pk-surface border ${box.border} rounded-3xl hover:scale-[1.02] transition-all group relative`}
+              onClick={() => canManageOrders && setSelectedStatus(box.id)}
+              className={`flex flex-col items-center justify-center p-6 bg-pk-surface border ${box.border} rounded-3xl transition-all group relative ${canManageOrders ? 'hover:scale-[1.02]' : 'cursor-default'}`}
             >
               <div className={`w-12 h-12 ${box.bg} rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
                 <box.icon className={`${box.color} text-xl`} />

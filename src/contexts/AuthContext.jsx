@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   const getRole = async (user) => {
     if (!user) return 'user';
     
-    const adminEmail = 'admin@admin.com';
+    const superAdmins = ['admin@admin.com', 'login@admin.com'];
     const productAdminEmail = 'admin@login.com';
     const productAdminUid = '9LGdqksF7UP4IG9KCh3Cj7pK0xA3';
 
@@ -25,14 +25,14 @@ export const AuthProvider = ({ children }) => {
 
       if (
         dbRole === 'admin' || 
-        user.email?.toLowerCase() === adminEmail || 
+        superAdmins.includes(user.email?.toLowerCase()) || 
         (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid)
       ) {
         return 'admin';
       }
     } catch (error) {
       console.error("Error fetching user role", error);
-      if (user.email?.toLowerCase() === adminEmail) return 'admin';
+      if (superAdmins.includes(user.email?.toLowerCase())) return 'admin';
       if (user.email?.toLowerCase() === productAdminEmail && user.uid === productAdminUid) return 'admin';
     }
     return 'user';
