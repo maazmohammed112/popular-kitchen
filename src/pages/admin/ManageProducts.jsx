@@ -148,8 +148,8 @@ export default function ManageProducts() {
     }
   };
 
-  const fetchProducts = async () => {
-    setLoading(true);
+  const fetchProducts = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const data = await getProducts();
       setProducts(data);
@@ -157,7 +157,7 @@ export default function ManageProducts() {
       console.error(err);
       showError("Failed to fetch products");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -427,7 +427,7 @@ export default function ManageProducts() {
         showSuccess("Product verified & added");
       }
 
-      fetchProducts(); // Refresh in background to get real IDs/ServerTimestamps
+      fetchProducts(true); // Silent background refresh — no loading spinner, no scroll reset
     } catch (err) {
       console.error(err);
       showError("Sync failed. Rolling back changes.");
