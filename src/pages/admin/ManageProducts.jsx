@@ -25,6 +25,7 @@ export default function ManageProducts() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Bulk mode: null | 'edit' | 'delete'
   const [bulkMode, setBulkMode] = useState(null);
@@ -443,6 +444,14 @@ export default function ManageProducts() {
     setDeleteConfirmId(id);
   };
 
+  const filteredProducts = products.filter(p => 
+    p.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    String(p.price).includes(searchTerm) ||
+    String(p.discountPrice || '').includes(searchTerm) ||
+    p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
@@ -456,7 +465,18 @@ export default function ManageProducts() {
             <FiArrowLeft size={15} /> {returnUrl ? 'Back to Product' : 'Back to Store'}
           </button>
         )}
-        <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
+          <div className="w-full md:w-80 relative">
+            <input
+              type="text"
+              placeholder="Search by name, category, price..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-pk-surface text-pk-text-main border border-pk-bg-secondary rounded-xl py-2 px-4 text-sm focus:outline-none focus:border-pk-accent"
+            />
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {/* Bulk action buttons */}
           {bulkMode === null ? (
@@ -562,7 +582,7 @@ export default function ManageProducts() {
                 </tr>
               </thead>
               <tbody>
-                {products.map(product => (
+                {filteredProducts.map(product => (
                   <tr
                     key={product.id}
                     id={`product-row-${product.id}`}
