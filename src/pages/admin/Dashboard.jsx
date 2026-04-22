@@ -23,6 +23,9 @@ export default function Dashboard() {
   const { logout, isAdmin, canManageOrders } = useAuth();
 
   useEffect(() => {
+    // Mark that admin has visited the dashboard this session
+    sessionStorage.setItem('pk_admin_visited', 'true');
+    
     let unsubscribe = () => {};
 
     const fetchStats = async () => {
@@ -215,6 +218,9 @@ export default function Dashboard() {
       <div className="bg-pk-surface p-6 rounded-3xl border border-pk-bg-secondary">
         <h2 className="text-lg font-bold mb-4">Quick Actions</h2>
         <div className="flex flex-wrap gap-4">
+          <Link to="/" className="flex-1 min-w-[150px] px-6 py-4 bg-pk-accent text-white rounded-2xl hover:brightness-110 transition-all font-bold text-center flex items-center justify-center gap-2">
+             <FiShoppingBag /> View Storefront
+          </Link>
           <Link to="/admin/products" className="flex-1 min-w-[150px] px-6 py-4 bg-pk-accent/10 border border-pk-accent text-pk-accent rounded-2xl hover:bg-pk-accent hover:text-white transition-all font-bold text-center">
              Manage Products
           </Link>

@@ -21,9 +21,10 @@ export default function Home() {
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
-  // Auto-redirect Admin to Dashboard if they land on Home
+  // Auto-redirect Admin to Dashboard ONLY on first landing
   useEffect(() => {
-    if (isAdmin) {
+    const hasVisitedDashboard = sessionStorage.getItem('pk_admin_visited');
+    if (isAdmin && !hasVisitedDashboard) {
       navigate('/admin/dashboard', { replace: true });
     }
   }, [isAdmin, navigate]);
