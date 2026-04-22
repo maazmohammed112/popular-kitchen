@@ -60,27 +60,38 @@ export const sendTelegramMessage = async (message, buttons = null) => {
 /**
  * Generate deep links for customer contact
  */
-const getContactButtons = (orderId, orderData, statusLabel) => {
+/**
+ * Generate deep links for customer contact and invoice
+ */
+const getContactButtons = (orderId, orderData, statusLabel, includeInvoice = false) => {
   const name = orderData.customerName || 'Customer';
   const phone = orderData.phone?.replace(/\D/g, '') || '';
   const email = orderData.email || '';
+  const origin = window.location.origin;
   
   const text = encodeURIComponent(`Hello ${name}, your order #${orderId} has been ${statusLabel}. Thank you for shopping with Popular Kitchen!`);
   const subject = encodeURIComponent(`Order Update - Popular Kitchen #${orderId}`);
 
   const buttons = [];
   
-  // WhatsApp only if phone exists
+  // WhatsApp
   if (phone) {
-    // Ensure numeric characters only for the URL
     const cleanPhone = phone.startsWith('91') ? phone : '91' + phone;
     buttons.push([{ 
-      text: "📱 Message WhatsApp", 
+      text: "📱 WhatsApp Customer", 
       url: `https://wa.me/${cleanPhone}?text=${text}` 
     }]);
   }
 
-  // Email only if email exists (Telegram requires HTTP/HTTPS URLs for buttons)
+  // Invoice Download Button
+  if (includeInvoice) {
+    buttons.push([{ 
+      text: "📄 Download Invoice (Latest)", 
+      url: `${origin}/admin/invoice/${orderId}`
+    }]);
+  }
+
+  // Email
   if (email && email.includes('@')) {
     buttons.push([{ 
       text: "✉️ Send Email", 
@@ -105,7 +116,6 @@ export const notifyNewOrder = async (orderId, orderData) => {
 <b>Order ID:</b> <code>#${escapeHTML(orderId)}</code>
 <b>Customer:</b> ${escapeHTML(orderData.customerName)}
 <b>Phone:</b> ${escapeHTML(orderData.phone)}
-<b>Email:</b> ${escapeHTML(orderData.email || 'Not Provided')}
 <b>Total:</b> ₹${orderData.totalAmount?.toLocaleString('en-IN') || '0'}
 
 <b>Items:</b>
@@ -114,10 +124,11 @@ ${itemsList}
 <b>Address:</b>
 <i>${escapeHTML(orderData.address)}</i>
 
-<a href="${window.location.origin}/admin/orders">View in Admin Dashboard</a>
+🔗 <a href="${window.location.origin}/admin/invoice/${orderId}">Direct Invoice Link</a>
   `;
 
-  const buttons = getContactButtons(orderId, orderData, 'received');
+  // Always include invoice button in new order too for convenience
+  const buttons = getContactButtons(orderId, orderData, 'received', true);
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
@@ -130,25 +141,16 @@ export const notifyStatusUpdate = async (orderId, orderData, oldStatus, newStatu
 
 <b>Order ID:</b> <code>#${escapeHTML(orderId)}</code>
 <b>Customer:</b> ${escapeHTML(orderData.customerName)}
-<b>Phone:</b> ${escapeHTML(orderData.phone)}
-<b>Email:</b> ${escapeHTML(orderData.email || 'Not Provided')}
 
 <b>Status:</b> ${escapeHTML(oldStatus)} ➔ <b>${escapeHTML(newStatus.toUpperCase())}</b>
 ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
 
-<a href="${window.location.origin}/admin/orders">Go to Dashboard</a>
+🔗 <a href="${window.location.origin}/admin/invoice/${orderId}">Direct Invoice Link</a>
   `;
 
-  const buttons = getContactButtons(orderId, orderData, newStatus);
-  
-  // Add Download Invoice button for confirmed orders
-  if (newStatus === 'confirmed') {
-    buttons.push([{ 
-      text: "📄 Download Invoice", 
-      url: `${window.location.origin}/admin/invoice/${orderId}`
-    }]);
-  }
-
+  // Include invoice button for confirmed or delivered orders
+  const showInvoice = newStatus === 'confirmed' || newStatus === 'delivered';
+  const buttons = getContactButtons(orderId, orderData, newStatus, showInvoice);
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
