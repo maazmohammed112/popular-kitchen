@@ -28,6 +28,7 @@ const Support = lazy(() => import('./pages/Support'));
 const Search = lazy(() => import('./pages/Search'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
 const MyOrders = lazy(() => import('./pages/MyOrders'));
+const InvoiceView = lazy(() => import('./pages/admin/InvoiceView'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
 // SEO Location Landing Pages
@@ -156,6 +157,11 @@ const DefaultViews = () => {
             <Route path="orders" element={
               <OrderProtectedRoute>
                 <ManageOrders />
+              </OrderProtectedRoute>
+            } />
+            <Route path="invoice/:id" element={
+              <OrderProtectedRoute>
+                <InvoiceView />
               </OrderProtectedRoute>
             } />
           </Route>

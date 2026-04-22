@@ -140,6 +140,15 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
   `;
 
   const buttons = getContactButtons(orderId, orderData, newStatus);
+  
+  // Add Download Invoice button for confirmed orders
+  if (newStatus === 'confirmed') {
+    buttons.push([{ 
+      text: "📄 Download Invoice", 
+      url: `${window.location.origin}/admin/invoice/${orderId}`
+    }]);
+  }
+
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
