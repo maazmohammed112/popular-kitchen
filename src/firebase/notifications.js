@@ -19,6 +19,37 @@ const escapeHTML = (str) => {
     .replace(/'/g, '&#039;');
 };
 
+/**
+ * Send a push notification to a specific user via Netlify function
+ */
+export const sendPushToUser = async (userId, title, body, data = {}) => {
+  try {
+    const { doc, getDoc } = await import('firebase/firestore');
+    const { db } = await import('./config');
+    
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) return;
+
+    const fcmToken = userDoc.data()?.fcmToken;
+    if (!fcmToken) return;
+
+    const response = await fetch('/.netlify/functions/push-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: fcmToken,
+        title,
+        body,
+        data
+      })
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to send push notification:', error);
+  }
+};
+
 export const sendTelegramMessage = async (message, buttons = null) => {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn("Telegram credentials missing in .env");
@@ -148,6 +179,25 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
 🔗 <a href="${window.location.origin}/admin/invoice/${orderId}">Direct Invoice Link</a>
   `;
 
+  // Send Push Notification to Customer
+  const userId = orderData.userId || orderData.customer?.id;
+  if (userId) {
+    let pushTitle = 'Order Update';
+    let pushBody = `Your order status has been updated.`;
+
+    if (newStatus === 'confirmed') {
+      pushTitle = 'Order Confirmed! ✅';
+      pushBody = `Your order #${orderId.slice(0, 8)} has been confirmed and is being prepared.`;
+    } else if (newStatus === 'delivered') {
+      pushTitle = 'Order Delivered! 🚚';
+      pushBody = `Your order #${orderId.slice(0, 8)} has been delivered. Enjoy!`;
+    } else {
+      pushBody = `Your order status is now: ${newStatus.toUpperCase()}`;
+    }
+
+    sendPushToUser(userId, pushTitle, pushBody, { orderId });
+  }
+
   // Include invoice button for confirmed or delivered orders
   const showInvoice = newStatus === 'confirmed' || newStatus === 'delivered';
   const buttons = getContactButtons(orderId, orderData, newStatus, showInvoice);
@@ -170,6 +220,18 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
 
 <a href="${window.location.origin}/admin/orders">Manage Orders</a>
   `;
+
+  // Send Push Notification to Customer
+  const userId = orderData.userId || orderData.customer?.id;
+  if (userId) {
+    const actor = cancelledBy === 'admin' ? 'the store' : 'you';
+    sendPushToUser(
+      userId, 
+      'Order Cancelled ❌', 
+      `Your order #${orderId.slice(0, 8)} was cancelled by ${actor}.`,
+      { orderId, status: 'cancelled' }
+    );
+  }
 
   const buttons = getContactButtons(orderId, orderData, 'cancelled');
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
