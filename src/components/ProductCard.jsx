@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2, FiPlus, FiMinus } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,7 +19,6 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
   );
 
   const [selectedSize, setSelectedSize] = useState(normalizedSizes.length > 0 ? normalizedSizes[0] : null);
-  const [localQty, setLocalQty] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -55,9 +54,8 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
       price: currentPrice,
       size: selectedSize ? selectedSize.name : null,
       image: getOptimizedUrl(product.images?.[0]),
-      quantity: Number(localQty)
+      quantity: 1
     });
-    setLocalQty(0);
     showSuccess(`${product.title} added to cart`);
   };
 
@@ -210,7 +208,7 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
                 {normalizedSizes.map(size => (
                   <button
                     key={size.name}
-                    onClick={(e) => { e.preventDefault(); setSelectedSize(size); setLocalQty(0); }}
+                    onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
                     className="text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all border text-xs"
                     style={selectedSize?.name === size.name
                       ? { background: 'var(--color-secondary)', color: 'white', borderColor: 'var(--color-secondary)' }
@@ -224,38 +222,36 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
           )}
 
           {/* Action Row */}
-          <div className="flex items-center gap-2">
-            <div className="w-[38%] flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl overflow-hidden h-10 focus-within:border-pk-secondary transition-colors">
-              <input
-                type="number"
-                value={localQty === 0 ? "" : localQty}
-                onChange={(e) => {
-                  const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                  setLocalQty(val >= 0 ? val : 0);
-                }}
-                onFocus={(e) => e.target.select()}
-                placeholder="Qty"
-                className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 px-2 h-full text-center appearance-none placeholder:text-pk-text-muted/50"
-                style={{ color: 'var(--color-primary)' }}
-              />
-            </div>
-
-            <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock || localQty <= 0}
-              className="w-[62%] h-10 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-40"
-              style={{ background: inCart ? 'var(--color-tertiary)' : 'var(--color-primary)' }}
-            >
-              {inCart ? <FiCheck size={14} /> : <FiShoppingCart size={14} />}
-              {inCart ? 'In Cart' : 'Add to Cart'}
-            </button>
+          <div className="flex items-center gap-2 h-10">
+            {!inCart ? (
+              <button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock}
+                className="w-full h-full rounded-xl flex items-center justify-center gap-2 text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--color-primary)' }}
+              >
+                <FiShoppingCart size={14} /> Add to Cart
+              </button>
+            ) : (
+              <div className="w-full h-full flex items-center bg-pk-bg-primary border border-pk-secondary/30 rounded-xl overflow-hidden shadow-sm">
+                <button
+                  onClick={(e) => handleUpdateQty(e, quantity - 1)}
+                  className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
+                >
+                  <FiMinus size={14} />
+                </button>
+                <span className="w-10 text-center font-black text-sm text-pk-text-main">
+                  {quantity}
+                </span>
+                <button
+                  onClick={(e) => handleUpdateQty(e, quantity + 1)}
+                  className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
+                >
+                  <FiPlus size={14} />
+                </button>
+              </div>
+            )}
           </div>
-
-          {inCart && (
-            <p className="text-[10px] text-center font-semibold mt-2" style={{ color: 'var(--color-tertiary)' }}>
-              ✓ {quantity} item{quantity > 1 ? 's' : ''} in cart
-            </p>
-          )}
         </div>
       </div>
 

@@ -16,7 +16,7 @@ import { ProductSkeleton } from '../components/Skeletons';
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, cartItems } = useCart();
+  const { addToCart, cartItems, updateQuantity, removeFromCart } = useCart();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,7 +25,6 @@ export default function ProductDetail() {
   const { showSuccess, showError } = useToast();
   
   const [selectedSize, setSelectedSize] = useState('');
-  const [quantity, setQuantity] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -99,10 +98,6 @@ export default function ProductDetail() {
   const inCart = !!inCartItem;
 
   const handleAction = () => {
-    if (inCart) {
-      window.dispatchEvent(new CustomEvent('open-cart'));
-      return;
-    }
     if (isOutOfStock) return;
     
     addToCart({
@@ -111,10 +106,17 @@ export default function ProductDetail() {
       price: currentPrice,
       size: selectedSize || null,
       image: getOptimizedUrl(product.images?.[0]),
-      quantity: Number(quantity)
+      quantity: 1
     });
-    setQuantity(0);
     showSuccess(`${product.title} added to cart!`);
+  };
+
+  const handleUpdateQty = (newQty) => {
+    if (newQty <= 0) {
+      removeFromCart(product.id, selectedSize || null);
+    } else {
+      updateQuantity(product.id, selectedSize || null, newQty);
+    }
   };
 
   const handleAdminEdit = () => {
@@ -284,10 +286,7 @@ export default function ProductDetail() {
                 {product.sizes.map(size => (
                   <button 
                     key={size.name}
-                    onClick={() => {
-                      setSelectedSize(size.name);
-                      setQuantity(0);
-                    }}
+                    onClick={() => setSelectedSize(size.name)}
                     className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center ${
                       selectedSize === size.name 
                       ? 'bg-pk-accent text-white shadow-[0_0_15px_rgba(30,144,255,0.4)] border-pk-accent' 
@@ -303,28 +302,35 @@ export default function ProductDetail() {
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-[40%] flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-2xl overflow-hidden h-14 focus-within:border-pk-accent transition-all shadow-inner">
-               <input 
-                 type="number"
-                 value={quantity === 0 ? "" : quantity}
-                 onChange={(e) => {
-                   const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                   setQuantity(val >= 0 ? val : 0);
-                 }}
-                 onFocus={(e) => e.target.select()}
-                 placeholder="Qty"
-                 className="flex-1 bg-transparent border-none text-base md:text-lg font-bold text-pk-text-main focus:ring-0 px-2 md:px-4 h-full text-center appearance-none placeholder:text-pk-text-muted/30"
-               />
-            </div>
-            
-            <button 
-              onClick={handleAction}
-              disabled={(!inCart && isOutOfStock) || (!inCart && product.sizes?.length > 0 && !selectedSize) || (!inCart && quantity <= 0)}
-              className="w-[60%] bg-pk-accent text-white h-14 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-blue-600 hover:shadow-[0_8px_25px_rgba(30,144,255,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:shadow-none"
-            >
-              <FiShoppingCart size={22} /> {inCart ? 'Go to Cart' : 'Add to Cart'}
-            </button>
+          <div className="flex items-center gap-4 mb-8 h-14">
+            {!inCart ? (
+              <button 
+                onClick={handleAction}
+                disabled={isOutOfStock || (product.sizes?.length > 0 && !selectedSize)}
+                className="w-full bg-pk-accent text-white h-full rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-blue-600 hover:shadow-[0_8px_25px_rgba(30,144,255,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:shadow-none"
+              >
+                <FiShoppingCart size={22} /> Add to Cart
+              </button>
+            ) : (
+              <div className="w-full h-full flex items-center bg-pk-bg-primary border border-pk-accent/30 rounded-2xl overflow-hidden shadow-inner p-1">
+                <button 
+                  onClick={() => handleUpdateQty(inCartItem.quantity - 1)}
+                  className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
+                >
+                  <FiMinus size={24} />
+                </button>
+                <div className="w-20 text-center flex flex-col">
+                  <span className="text-xl font-black text-pk-text-main">{inCartItem.quantity}</span>
+                  <span className="text-[10px] font-bold text-pk-text-muted uppercase">In Cart</span>
+                </div>
+                <button 
+                  onClick={() => handleUpdateQty(inCartItem.quantity + 1)}
+                  className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
+                >
+                  <FiPlus size={24} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Description */}

@@ -83,22 +83,23 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                     
                     <div className="mt-auto flex justify-between items-center pt-2">
                        <span className="font-bold text-sm">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
-                       <div className="flex items-center gap-2 bg-pk-bg-secondary rounded-lg px-2 py-1 w-24 border border-pk-bg-secondary">
-                          <span className="text-[9px] font-bold text-pk-text-muted uppercase">Qty</span>
-                          <input 
-                            type="number"
-                            value={item.quantity}
-                            onChange={(e) => {
-                              const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                              if (val === 0) {
-                                removeFromCart(item.productId, item.size);
-                              } else {
-                                updateQuantity(item.productId, item.size, val >= 0 ? val : 1);
-                              }
-                            }}
-                            onFocus={(e) => e.target.select()}
-                            className="w-full bg-transparent border-none text-xs font-bold text-pk-text-main focus:ring-0 p-0 text-right appearance-none"
-                          />
+                       <div className="flex items-center gap-1 bg-pk-bg-secondary rounded-lg border border-pk-bg-secondary overflow-hidden">
+                          <button 
+                            onClick={() => updateQuantity(item.productId, item.size, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="p-1.5 hover:bg-pk-bg-primary transition-colors disabled:opacity-30"
+                          >
+                            <FiMinus size={12} className="text-pk-accent" />
+                          </button>
+                          <span className="w-8 text-center text-xs font-bold text-pk-text-main">
+                            {item.quantity}
+                          </span>
+                          <button 
+                            onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
+                            className="p-1.5 hover:bg-pk-bg-primary transition-colors"
+                          >
+                            <FiPlus size={12} className="text-pk-accent" />
+                          </button>
                        </div>
                     </div>
                   </div>
