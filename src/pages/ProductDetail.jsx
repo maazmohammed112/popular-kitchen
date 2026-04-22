@@ -17,7 +17,6 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart, cartItems } = useCart();
-  const { showSuccess } = useToast();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
