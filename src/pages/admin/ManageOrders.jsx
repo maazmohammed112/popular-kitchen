@@ -13,6 +13,7 @@ export default function ManageOrders() {
   const { canManageOrders } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [processingIds, setProcessingIds] = useState(new Set());
   const [expandedRow, setExpandedRow] = useState(null);
   const [shareModal, setShareModal] = useState(null); // { order, phone }
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,8 +36,11 @@ export default function ManageOrders() {
   }, []);
 
   const handleStatusChange = async (id, newStatus, adminNote) => {
+    if (processingIds.has(id)) return; // Block duplicates
+
     if (newStatus === 'cancelled') {
       if (window.confirm("Are you sure you want to cancel this order? This cannot be undone.")) {
+        setProcessingIds(prev => new Set(prev).add(id));
         try {
           const order = orders.find(o => o.id === id);
           await cancelOrder(id, 'admin');
@@ -53,14 +57,23 @@ export default function ManageOrders() {
         } catch (err) {
           console.error(err);
           showError("Failed to cancel order");
+        } finally {
+          setProcessingIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
         }
       }
       return;
     }
+
     if (newStatus === 'delivered') {
       setDeliveryConfirm({ id, status: newStatus });
       return;
     }
+
+    setProcessingIds(prev => new Set(prev).add(id));
     try {
       await updateOrderStatus(id, newStatus, adminNote);
       showSuccess(`Order status updated to ${newStatus}`);
@@ -79,11 +92,19 @@ export default function ManageOrders() {
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
   const confirmDelivery = async () => {
-    if (!deliveryConfirm) return;
+    if (!deliveryConfirm || processingIds.has(deliveryConfirm.id)) return;
+    const id = deliveryConfirm.id;
+    setProcessingIds(prev => new Set(prev).add(id));
     try {
       await updateOrderStatus(deliveryConfirm.id, deliveryConfirm.status, "");
       showSuccess("Order marked as Delivered. Payment confirmed.");
@@ -91,6 +112,12 @@ export default function ManageOrders() {
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
+    } finally {
+      setProcessingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
@@ -269,7 +296,7 @@ export default function ManageOrders() {
                       </td>
                       <td className="p-4">
                         <select
-                          disabled={order.status === 'cancelled'}
+                          disabled={order.status === 'cancelled' || processingIds.has(order.id)}
                           value={order.status}
                           onChange={(e) => handleStatusChange(order.id, e.target.value, order.adminNote || '')}
                           className={`text-xs font-bold uppercase rounded-md px-3 py-1.5 focus:outline-none cursor-pointer border border-transparent hover:border-gray-500 transition-colors disabled:opacity-80 disabled:cursor-not-allowed ${
