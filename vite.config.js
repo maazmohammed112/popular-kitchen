@@ -57,15 +57,6 @@ export default defineConfig({
               cacheableResponse: { statuses: [0, 200] },
             },
           },
-          {
-            urlPattern: /^https:\/\/firestore\.googleapis\.com\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'firebase-data',
-              expiration: { maxEntries: 100, maxAgeSeconds: 24 * 60 * 60 },
-              networkTimeoutSeconds: 5,
-            },
-          },
         ],
         // No navigateFallback — React Router handles all routing client-side
         skipWaiting: true,
