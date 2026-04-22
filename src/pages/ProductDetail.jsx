@@ -312,32 +312,41 @@ export default function ProductDetail() {
                 <FiShoppingCart size={22} /> Add to Cart
               </button>
             ) : (
-              <div className="w-full h-full flex items-center bg-pk-bg-primary border border-pk-accent/30 rounded-2xl overflow-hidden shadow-inner p-1">
-                <button 
-                  onClick={() => handleUpdateQty(inCartItem.quantity - 1)}
-                  className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
-                >
-                  <FiMinus size={24} />
-                </button>
-                <div className="w-20 text-center flex flex-col items-center">
-                  <input
-                    type="number"
-                    value={inCartItem.quantity}
-                    onChange={(e) => {
-                      const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                      handleUpdateQty(val >= 0 ? val : 0);
-                    }}
-                    onFocus={(e) => e.target.select()}
-                    className="w-full bg-transparent border-none text-center text-xl font-black text-pk-text-main focus:ring-0 p-0 appearance-none"
-                    style={{ MozAppearance: 'textfield' }}
-                  />
-                  <span className="text-[10px] font-bold text-pk-text-muted uppercase">In Cart</span>
+              <div className="flex items-center gap-3 w-full h-full">
+                <div className="flex-1 h-full flex items-center bg-pk-bg-primary border border-pk-accent/30 rounded-2xl overflow-hidden shadow-inner p-1">
+                  <button 
+                    onClick={() => handleUpdateQty(inCartItem.quantity - 1)}
+                    className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
+                  >
+                    <FiMinus size={24} />
+                  </button>
+                  <div className="w-20 text-center flex flex-col items-center">
+                    <input
+                      type="number"
+                      value={inCartItem.quantity}
+                      onChange={(e) => {
+                        const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                        handleUpdateQty(val >= 0 ? val : 0);
+                      }}
+                      onFocus={(e) => e.target.select()}
+                      className="w-full bg-transparent border-none text-center text-xl font-black text-pk-text-main focus:ring-0 p-0 appearance-none"
+                      style={{ MozAppearance: 'textfield' }}
+                    />
+                    <span className="text-[10px] font-bold text-pk-text-muted uppercase">In Cart</span>
+                  </div>
+                  <button 
+                    onClick={() => handleUpdateQty(inCartItem.quantity + 1)}
+                    className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
+                  >
+                    <FiPlus size={24} />
+                  </button>
                 </div>
                 <button 
-                  onClick={() => handleUpdateQty(inCartItem.quantity + 1)}
-                  className="flex-1 h-full flex items-center justify-center text-pk-accent hover:bg-pk-accent/10 transition-colors rounded-xl"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-cart'))}
+                  className="w-14 h-full flex items-center justify-center bg-pk-accent text-white rounded-2xl shadow-lg hover:shadow-pk-accent/40 active:scale-95 transition-all"
+                  title="Go to Cart"
                 >
-                  <FiPlus size={24} />
+                  <FiArrowRight size={26} />
                 </button>
               </div>
             )}

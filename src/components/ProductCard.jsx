@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2, FiPlus, FiMinus } from 'react-icons/fi';
+import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2, FiPlus, FiMinus, FiArrowRight } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -233,29 +233,38 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
                 <FiShoppingCart size={14} /> Add to Cart
               </button>
             ) : (
-              <div className="w-full h-full flex items-center bg-pk-bg-primary border border-pk-secondary/30 rounded-xl overflow-hidden shadow-sm">
-                <button
-                  onClick={(e) => handleUpdateQty(e, quantity - 1)}
-                  className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
+              <div className="flex items-center gap-2 w-full h-full">
+                <div className="flex-1 h-full flex items-center bg-pk-bg-primary border border-pk-secondary/30 rounded-xl overflow-hidden shadow-sm">
+                  <button
+                    onClick={(e) => handleUpdateQty(e, quantity - 1)}
+                    className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
+                  >
+                    <FiMinus size={14} />
+                  </button>
+                  <input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                      handleUpdateQty(e, val >= 0 ? val : 0);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-8 bg-transparent border-none text-center font-black text-sm text-pk-text-main focus:ring-0 p-0 appearance-none"
+                    style={{ MozAppearance: 'textfield' }}
+                  />
+                  <button
+                    onClick={(e) => handleUpdateQty(e, quantity + 1)}
+                    className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
+                  >
+                    <FiPlus size={14} />
+                  </button>
+                </div>
+                <button 
+                  onClick={(e) => { e.preventDefault(); window.dispatchEvent(new CustomEvent('open-cart')); }}
+                  className="w-10 h-full flex items-center justify-center bg-pk-secondary text-white rounded-xl shadow-sm hover:brightness-110 active:scale-95 transition-all"
+                  title="Go to Cart"
                 >
-                  <FiMinus size={14} />
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => {
-                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                    handleUpdateQty(e, val >= 0 ? val : 0);
-                  }}
-                  onFocus={(e) => e.target.select()}
-                  className="w-10 bg-transparent border-none text-center font-black text-sm text-pk-text-main focus:ring-0 p-0 appearance-none"
-                  style={{ MozAppearance: 'textfield' }}
-                />
-                <button
-                  onClick={(e) => handleUpdateQty(e, quantity + 1)}
-                  className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
-                >
-                  <FiPlus size={14} />
+                  <FiArrowRight size={16} />
                 </button>
               </div>
             )}
