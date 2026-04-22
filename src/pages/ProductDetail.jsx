@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight, FiArrowRight } from 'react-icons/fi';
-import { getProduct, getProducts } from '../firebase/products';
+import { FiArrowLeft, FiMinus, FiPlus, FiShoppingCart, FiX, FiChevronLeft, FiChevronRight, FiArrowRight, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { getProduct, getProducts, deleteProduct } from '../firebase/products';
+import { useAuth } from '../contexts/AuthContext';
 import { calculateDiscountPrice } from '../utils/discountCalc';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
@@ -21,6 +22,8 @@ export default function ProductDetail() {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const { isAdmin } = useAuth();
+  const { showSuccess, showError } = useToast();
   
   const [selectedSize, setSelectedSize] = useState('');
   const [quantity, setQuantity] = useState(0);
@@ -113,6 +116,46 @@ export default function ProductDetail() {
     });
     setQuantity(0);
     showSuccess(`${product.title} added to cart!`);
+  };
+
+  const handleAdminEdit = () => {
+    // Navigate to admin, passing the current product ID and return URL
+    navigate('/admin/products', { 
+      state: { 
+        editProductId: product.id,
+        returnUrl: location.pathname 
+      } 
+    });
+  };
+
+  const handleAdminDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete "${product.title}"?`)) {
+      showSuccess('Deleting product...');
+      try {
+        await deleteProduct(product.id);
+        showSuccess('Product deleted');
+        navigate('/');
+      } catch {
+        showError('Failed to delete product');
+      }
+    }
+  };
+
+  const handleRelatedEdit = (p) => {
+    navigate('/admin/products', { state: { editProductId: p.id, returnUrl: location.pathname } });
+  };
+
+  const handleRelatedDelete = async (productId) => {
+    const backup = [...relatedProducts];
+    setRelatedProducts(prev => prev.filter(p => p.id !== productId));
+    showSuccess('Deleting...');
+    try {
+      await deleteProduct(productId);
+      showSuccess('Deleted');
+    } catch {
+      showError('Failed');
+      setRelatedProducts(backup);
+    }
   };
 
   return (
@@ -217,6 +260,23 @@ export default function ProductDetail() {
             )}
           </div>
 
+          {isAdmin && (
+            <div className="flex gap-3 mb-6 p-4 bg-pk-accent/5 rounded-2xl border border-pk-accent/20 animate-[slideDown_0.3s_ease-out]">
+              <button 
+                onClick={handleAdminEdit}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-pk-accent text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-all shadow-lg shadow-pk-accent/10"
+              >
+                <FiEdit2 size={14} /> Edit Product
+              </button>
+              <button 
+                onClick={handleAdminDelete}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-pk-error/10 text-pk-error rounded-xl text-sm font-bold hover:bg-pk-error hover:text-white transition-all"
+              >
+                <FiTrash2 size={14} /> Delete Product
+              </button>
+            </div>
+          )}
+
           {/* Sizes */}
           {product.sizes && product.sizes.length > 0 && (
             <div className="mb-6 pb-6 border-b border-pk-bg-secondary">
@@ -295,7 +355,12 @@ export default function ProductDetail() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {relatedProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard 
+                key={p.id} 
+                product={p} 
+                onEdit={isAdmin ? () => handleRelatedEdit(p) : undefined}
+                onDelete={isAdmin ? () => handleRelatedDelete(p.id) : undefined}
+              />
             ))}
           </div>
         </div>

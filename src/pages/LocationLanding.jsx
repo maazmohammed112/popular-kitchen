@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FiSearch } from 'react-icons/fi';
-import { getProducts } from '../firebase/products';
+import { getProducts, deleteProduct } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
 import { SEO } from '../components/SEO';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 /**
  * Shared template for all SEO location landing pages.
@@ -14,6 +16,26 @@ export default function LocationLanding({ config }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const { isAdmin } = useAuth();
+  const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
+
+  const handleAdminEdit = (product) => {
+    navigate('/admin/products', { state: { editProductId: product.id, returnUrl: window.location.pathname } });
+  };
+
+  const handleAdminDelete = async (productId) => {
+    const backup = [...products];
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    showSuccess('Deleting...');
+    try {
+      await deleteProduct(productId);
+      showSuccess('Deleted');
+    } catch {
+      showError('Failed to delete');
+      setProducts(backup);
+    }
+  };
 
   useEffect(() => {
     getProducts()
@@ -95,7 +117,12 @@ export default function LocationLanding({ config }) {
           </div>
         ) : (
           displayedProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard 
+              key={product.id} 
+              product={product} 
+              onEdit={isAdmin ? () => handleAdminEdit(product) : undefined}
+              onDelete={isAdmin ? () => handleAdminDelete(product.id) : undefined}
+            />
           ))
         )}
       </div>

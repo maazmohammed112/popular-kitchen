@@ -45,6 +45,7 @@ export default function ManageProducts() {
   const location = useLocation();
   const navigate = useNavigate();
   const incomingEditId = location.state?.editProductId || null;
+  const returnUrl = location.state?.returnUrl || null;
   // Track the row ref for stay-on-save
   const editingRowRef = useRef(null);
 
@@ -447,12 +448,12 @@ export default function ManageProducts() {
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
         {/* Back button if came from store view */}
-        {incomingEditId && (
+        {(incomingEditId || returnUrl) && (
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(returnUrl || -1)}
             className="flex items-center gap-2 px-4 py-2 bg-pk-bg-secondary text-pk-text-muted hover:text-pk-text-main rounded-xl text-sm font-medium transition-colors border border-pk-bg-secondary"
           >
-            <FiArrowLeft size={15} /> Back to Store
+            <FiArrowLeft size={15} /> {returnUrl ? 'Back to Product' : 'Back to Store'}
           </button>
         )}
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
