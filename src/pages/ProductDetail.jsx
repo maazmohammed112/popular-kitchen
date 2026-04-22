@@ -319,8 +319,18 @@ export default function ProductDetail() {
                 >
                   <FiMinus size={24} />
                 </button>
-                <div className="w-20 text-center flex flex-col">
-                  <span className="text-xl font-black text-pk-text-main">{inCartItem.quantity}</span>
+                <div className="w-20 text-center flex flex-col items-center">
+                  <input
+                    type="number"
+                    value={inCartItem.quantity}
+                    onChange={(e) => {
+                      const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                      handleUpdateQty(val >= 0 ? val : 0);
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className="w-full bg-transparent border-none text-center text-xl font-black text-pk-text-main focus:ring-0 p-0 appearance-none"
+                    style={{ MozAppearance: 'textfield' }}
+                  />
                   <span className="text-[10px] font-bold text-pk-text-muted uppercase">In Cart</span>
                 </div>
                 <button 

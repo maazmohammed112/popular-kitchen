@@ -91,9 +91,21 @@ export const CartDrawer = ({ isOpen, onClose }) => {
                           >
                             <FiMinus size={12} className="text-pk-accent" />
                           </button>
-                          <span className="w-8 text-center text-xs font-bold text-pk-text-main">
-                            {item.quantity}
-                          </span>
+                          <input 
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                              if (val === 0) {
+                                removeFromCart(item.productId, item.size);
+                              } else {
+                                updateQuantity(item.productId, item.size, val >= 0 ? val : 1);
+                              }
+                            }}
+                            onFocus={(e) => e.target.select()}
+                            className="w-8 bg-transparent border-none text-center text-xs font-bold text-pk-text-main focus:ring-0 p-0 appearance-none"
+                            style={{ MozAppearance: 'textfield' }}
+                          />
                           <button 
                             onClick={() => updateQuantity(item.productId, item.size, item.quantity + 1)}
                             className="p-1.5 hover:bg-pk-bg-primary transition-colors"

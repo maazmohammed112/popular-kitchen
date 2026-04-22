@@ -240,9 +240,17 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
                 >
                   <FiMinus size={14} />
                 </button>
-                <span className="w-10 text-center font-black text-sm text-pk-text-main">
-                  {quantity}
-                </span>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                    handleUpdateQty(e, val >= 0 ? val : 0);
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="w-10 bg-transparent border-none text-center font-black text-sm text-pk-text-main focus:ring-0 p-0 appearance-none"
+                  style={{ MozAppearance: 'textfield' }}
+                />
                 <button
                   onClick={(e) => handleUpdateQty(e, quantity + 1)}
                   className="flex-1 h-full flex items-center justify-center text-pk-secondary hover:bg-pk-secondary/10 transition-colors"
