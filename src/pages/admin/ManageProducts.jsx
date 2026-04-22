@@ -397,19 +397,36 @@ export default function ManageProducts() {
         const tempId = `temp-${Date.now()}`;
         setProducts(prev => [{ ...payload, id: tempId }, ...prev]);
       }
-      
+
+      // Save the ID before closing modal so we can scroll back to the row
+      const editedId = formData.id;
+
       setIsModalOpen(false); // Close instantly
-      showSuccess(formData.id ? "Updating product..." : "Adding product...");
+      showSuccess(editedId ? "Updating product..." : "Adding product...");
+
+      // Scroll back to the edited row (stay-on-save behaviour)
+      if (editedId) {
+        setTimeout(() => {
+          const row = document.getElementById(`product-row-${editedId}`);
+          if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Brief highlight flash to confirm save
+            row.style.transition = 'background 0.4s';
+            row.style.background = 'rgba(0,200,150,0.08)';
+            setTimeout(() => { row.style.background = ''; }, 1500);
+          }
+        }, 150);
+      }
 
       // --- Background Backend Call ---
-      if (formData.id) {
-        await updateProduct(formData.id, payload);
+      if (editedId) {
+        await updateProduct(editedId, payload);
         showSuccess("Changes synchronized");
       } else {
         await addProduct(payload);
         showSuccess("Product verified & added");
       }
-      
+
       fetchProducts(); // Refresh in background to get real IDs/ServerTimestamps
     } catch (err) {
       console.error(err);
