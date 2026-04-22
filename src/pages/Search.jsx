@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FiArrowLeft, FiSearch, FiFilter, FiRefreshCw, FiChevronDown } from 'react-icons/fi';
-import { getProducts } from '../firebase/products';
+import { getProducts, deleteProduct } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
 import { useAuth } from '../contexts/AuthContext';
 import { notifyEmptySearch, notifyGuestSearch } from '../firebase/notifications';
+import { useToast } from '../contexts/ToastContext';
 
 // Module-level cache — survives back-navigation within the same session
 let allProductsCache = null;
@@ -34,8 +35,9 @@ const markAsNotified = (key) => {
 export default function Search() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
-  
+  const { currentUser, isAdmin } = useAuth();
+  const { showSuccess, showError } = useToast();
+
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -46,6 +48,24 @@ export default function Search() {
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [categories, setCategories] = useState([]);
   const [showFilters, setShowFilters] = useState(searchParams.get('showFilters') === 'true');
+
+  const handleAdminEdit = (product) => {
+    navigate('/admin/products', { state: { editProductId: product.id } });
+  };
+
+  const handleAdminDelete = async (productId) => {
+    const backup = [...products];
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    if (allProductsCache) allProductsCache = allProductsCache.filter(p => p.id !== productId);
+    showSuccess('Deleting product...');
+    try {
+      await deleteProduct(productId);
+      showSuccess('Product deleted');
+    } catch {
+      showError('Delete failed. Reverting...');
+      setProducts(backup);
+    }
+  };
   
   // Scroll to top when search criteria changes
   useEffect(() => {
@@ -240,7 +260,12 @@ export default function Search() {
           </div>
         ) : (
           products.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={isAdmin ? handleAdminEdit : undefined}
+              onDelete={isAdmin ? handleAdminDelete : undefined}
+            />
           ))
         )}
       </div>

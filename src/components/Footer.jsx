@@ -1,8 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FiMoon, FiSun, FiMapPin, FiPhone, FiMail, FiArrowUpRight } from 'react-icons/fi';
 
 export const Footer = ({ toggleTheme }) => {
   const isDark = document.documentElement.classList.contains('dark');
+  const navigate = useNavigate();
+
+  const handleFooterNav = (to, e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Small delay so scroll starts before navigation
+    setTimeout(() => navigate(to), 80);
+  };
 
   return (
     <footer className="mt-16 border-t border-pk-bg-secondary" style={{ background: 'var(--color-primary)', color: 'white' }}>
@@ -66,7 +74,12 @@ export const Footer = ({ toggleTheme }) => {
                 { to: '/privacy', label: 'Privacy Policy' },
                 { to: '/sitemap.xml', label: 'Sitemap' },
               ].map(link => (
-                <Link key={link.to} to={link.to} className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors group">
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  onClick={(e) => link.to !== '/sitemap.xml' && handleFooterNav(link.to, e)}
+                  className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors group"
+                >
                   <FiArrowUpRight size={13} className="opacity-0 group-hover:opacity-100 -translate-y-0.5 group-hover:translate-y-0 translate-x-0 group-hover:translate-x-0.5 transition-all" />
                   {link.label}
                 </Link>

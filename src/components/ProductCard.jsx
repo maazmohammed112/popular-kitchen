@@ -1,27 +1,46 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiCheck } from 'react-icons/fi';
+import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2 } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
+import { useAuth } from '../contexts/AuthContext';
 import { getOptimizedUrl } from '../cloudinary/upload';
 import { ShareButton } from './ShareButton';
 import { ImageWithSkeleton } from './ImageWithSkeleton';
+import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 
-export const ProductCard = ({ product }) => {
+export const ProductCard = ({ product, onEdit, onDelete }) => {
   const { addToCart, cartItems, updateQuantity, removeFromCart } = useCart();
   const { showSuccess } = useToast();
+  const { isAdmin } = useAuth();
 
-  const normalizedSizes = (product.sizes || []).map(s => 
+  const normalizedSizes = (product.sizes || []).map(s =>
     typeof s === 'string' ? { name: s, price: product.discountPrice || product.price } : s
   );
 
   const [selectedSize, setSelectedSize] = useState(normalizedSizes.length > 0 ? normalizedSizes[0] : null);
   const [localQty, setLocalQty] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const menuRef = useRef(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
   const hasBasePrice = product.price > 0;
   const currentPrice = selectedSize ? selectedSize.price : (product.discountPrice || product.price || 0);
   const showSizeTag = selectedSize && (!hasBasePrice || selectedSize.price !== product.price);
-  
+
   const inCartItem = cartItems.find(i => i.productId === product.id && i.size === (selectedSize ? selectedSize.name : null));
   const inCart = !!inCartItem;
   const quantity = inCartItem ? inCartItem.quantity : 0;
@@ -34,7 +53,7 @@ export const ProductCard = ({ product }) => {
       productId: product.id,
       title: product.title,
       price: currentPrice,
-      size: selectedSize ? selectedSize.name : null, 
+      size: selectedSize ? selectedSize.name : null,
       image: getOptimizedUrl(product.images?.[0]),
       quantity: Number(localQty)
     });
@@ -51,152 +70,204 @@ export const ProductCard = ({ product }) => {
     }
   };
 
-  const hasOffer = product.offerPercent > 0 && !selectedSize; 
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(product.id);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
+  const hasOffer = product.offerPercent > 0 && !selectedSize;
   const isOutOfStock = product.stockStatus === 'outOfStock';
   const rawImg = product.images?.[0];
   const imgUrl = rawImg ? getOptimizedUrl(rawImg) : null;
 
   return (
-    <div className="group relative bg-pk-surface rounded-2xl overflow-hidden border border-pk-bg-secondary shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
-      
-      {/* Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
-        {hasOffer && (
-          <span className="text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"
-            style={{ background: 'var(--color-tertiary)' }}>
-            {product.offerPercent}% OFF
-          </span>
-        )}
-        {product.stockStatus === 'limitedStock' && (
-          <span className="text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"
-            style={{ background: 'var(--color-secondary)' }}>
-            Few Left
-          </span>
-        )}
-      </div>
+    <>
+      <div className="group relative bg-pk-surface rounded-2xl overflow-hidden border border-pk-bg-secondary shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col">
 
-      {/* Share Button */}
-      <div className="absolute top-3 right-3 z-20">
-        <ShareButton product={product} />
-      </div>
-
-      <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
-        {/* Image */}
-        <div className="w-full h-48 overflow-hidden relative bg-pk-bg-primary">
-          {imgUrl ? (
-            <ImageWithSkeleton 
-              src={imgUrl} 
-              alt={product.title} 
-              containerClassName="w-full h-full bg-white"
-              className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
-            />
-          ) : (
-            <div className="w-full h-full bg-pk-bg-secondary flex flex-col items-center justify-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-pk-text-muted opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span className="text-[10px] text-pk-text-muted font-medium uppercase tracking-wide">No Image</span>
-            </div>
+        {/* Badges */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 pointer-events-none">
+          {hasOffer && (
+            <span className="text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"
+              style={{ background: 'var(--color-tertiary)' }}>
+              {product.offerPercent}% OFF
+            </span>
           )}
-          
-          {isOutOfStock && (
-            <div className="absolute inset-x-0 top-20 flex justify-center z-10">
-              <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-lg font-bold tracking-wider text-xs"
-                style={{ color: 'var(--color-primary)' }}>
-                OUT OF STOCK
-              </span>
-            </div>
+          {product.stockStatus === 'limitedStock' && (
+            <span className="text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wide"
+              style={{ background: 'var(--color-secondary)' }}>
+              Few Left
+            </span>
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-4 flex flex-col flex-1 pb-2">
-          <span className="text-xs font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--color-secondary)' }}>
-            {product.category}
-          </span>
-          <h3 className="text-sm font-bold text-pk-text-main line-clamp-2 mb-3 leading-snug">{product.title}</h3>
-          
-          {/* Price */}
-          <div className="flex items-end justify-between mt-auto">
-            <div className="flex flex-col">
-              {hasOffer && !selectedSize ? (
-                <>
-                  <span className="text-xs text-pk-text-muted line-through">₹{product.price}</span>
-                  <span className="text-xl font-bold leading-none" style={{ color: 'var(--color-primary)' }}>
-                    ₹{currentPrice}
-                    {showSizeTag && <span className="text-[10px] font-normal text-pk-text-muted ml-1">({selectedSize.name})</span>}
-                  </span>
-                </>
-              ) : (
-                <span className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>
-                  ₹{currentPrice}
-                  {showSizeTag && <span className="text-xs font-normal text-pk-text-muted ml-1">({selectedSize.name})</span>}
-                </span>
+        {/* Top-right: Share + Admin Menu */}
+        <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+          {/* Admin three-dot menu */}
+          {isAdmin && (onEdit || onDelete) && (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={(e) => { e.preventDefault(); setMenuOpen(prev => !prev); }}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-pk-bg-primary/80 backdrop-blur text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-secondary transition-all shadow"
+                title="Product actions"
+              >
+                <FiMoreVertical size={16} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-9 bg-pk-surface border border-pk-bg-secondary rounded-xl shadow-2xl min-w-[130px] py-1 animate-[slideDown_0.15s_ease-out] z-30">
+                  {onEdit && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); setMenuOpen(false); onEdit(product); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
+                    >
+                      <FiEdit2 size={14} className="text-pk-accent" /> Edit
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      onClick={(e) => { e.preventDefault(); setMenuOpen(false); setShowDeleteConfirm(true); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-pk-error hover:bg-pk-error/10 transition-colors"
+                    >
+                      <FiTrash2 size={14} /> Delete
+                    </button>
+                  )}
+                </div>
               )}
             </div>
-          </div>
+          )}
+          <ShareButton product={product} />
         </div>
-      </Link>
 
-      <div className="px-4 pb-4 bg-pk-surface relative z-20">
-        {/* Size Selection */}
-        {normalizedSizes.length > 0 && (
-          <div className="mb-3">
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 flex-wrap">
-              {normalizedSizes.map(size => (
-                <button
-                  key={size.name}
-                  onClick={(e) => { 
-                    e.preventDefault(); 
-                    setSelectedSize(size);
-                    setLocalQty(0);
-                  }}
-                  className={`text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all border text-xs`}
-                  style={selectedSize?.name === size.name
-                    ? { background: 'var(--color-secondary)', color: 'white', borderColor: 'var(--color-secondary)' }
-                    : { background: 'transparent', color: 'var(--color-secondary)', borderColor: 'var(--color-secondary)' + '40' }}
-                >
-                  {size.name}
-                </button>
-              ))}
+        <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
+          {/* Image */}
+          <div className="w-full h-48 overflow-hidden relative bg-pk-bg-primary">
+            {imgUrl ? (
+              <ImageWithSkeleton
+                src={imgUrl}
+                alt={product.title}
+                containerClassName="w-full h-full bg-white"
+                className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+              />
+            ) : (
+              <div className="w-full h-full bg-pk-bg-secondary flex flex-col items-center justify-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-pk-text-muted opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-[10px] text-pk-text-muted font-medium uppercase tracking-wide">No Image</span>
+              </div>
+            )}
+
+            {isOutOfStock && (
+              <div className="absolute inset-x-0 top-20 flex justify-center z-10">
+                <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-lg font-bold tracking-wider text-xs"
+                  style={{ color: 'var(--color-primary)' }}>
+                  OUT OF STOCK
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="p-4 flex flex-col flex-1 pb-2">
+            <span className="text-xs font-semibold mb-1 uppercase tracking-wider" style={{ color: 'var(--color-secondary)' }}>
+              {product.category}
+            </span>
+            <h3 className="text-sm font-bold text-pk-text-main line-clamp-2 mb-3 leading-snug">{product.title}</h3>
+
+            {/* Price */}
+            <div className="flex items-end justify-between mt-auto">
+              <div className="flex flex-col">
+                {hasOffer && !selectedSize ? (
+                  <>
+                    <span className="text-xs text-pk-text-muted line-through">₹{product.price}</span>
+                    <span className="text-xl font-bold leading-none" style={{ color: 'var(--color-primary)' }}>
+                      ₹{currentPrice}
+                      {showSizeTag && <span className="text-[10px] font-normal text-pk-text-muted ml-1">({selectedSize.name})</span>}
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-xl font-bold" style={{ color: 'var(--color-primary)' }}>
+                    ₹{currentPrice}
+                    {showSizeTag && <span className="text-xs font-normal text-pk-text-muted ml-1">({selectedSize.name})</span>}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        )}
+        </Link>
 
-        {/* Action Row */}
-        <div className="flex items-center gap-2">
-          <div className="w-[38%] flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl overflow-hidden h-10 focus-within:border-pk-secondary transition-colors">
-            <input 
-              type="number"
-              value={localQty === 0 ? "" : localQty}
-              onChange={(e) => {
-                const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                setLocalQty(val >= 0 ? val : 0);
-              }}
-              onFocus={(e) => e.target.select()}
-              placeholder="Qty"
-              className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 px-2 h-full text-center appearance-none placeholder:text-pk-text-muted/50"
-              style={{ color: 'var(--color-primary)' }}
-            />
+        <div className="px-4 pb-4 bg-pk-surface relative z-20">
+          {/* Size Selection */}
+          {normalizedSizes.length > 0 && (
+            <div className="mb-3">
+              <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 flex-wrap">
+                {normalizedSizes.map(size => (
+                  <button
+                    key={size.name}
+                    onClick={(e) => { e.preventDefault(); setSelectedSize(size); setLocalQty(0); }}
+                    className="text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all border text-xs"
+                    style={selectedSize?.name === size.name
+                      ? { background: 'var(--color-secondary)', color: 'white', borderColor: 'var(--color-secondary)' }
+                      : { background: 'transparent', color: 'var(--color-secondary)', borderColor: 'var(--color-secondary)' + '40' }}
+                  >
+                    {size.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Row */}
+          <div className="flex items-center gap-2">
+            <div className="w-[38%] flex items-center bg-pk-bg-primary border border-pk-bg-secondary rounded-xl overflow-hidden h-10 focus-within:border-pk-secondary transition-colors">
+              <input
+                type="number"
+                value={localQty === 0 ? "" : localQty}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                  setLocalQty(val >= 0 ? val : 0);
+                }}
+                onFocus={(e) => e.target.select()}
+                placeholder="Qty"
+                className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 px-2 h-full text-center appearance-none placeholder:text-pk-text-muted/50"
+                style={{ color: 'var(--color-primary)' }}
+              />
+            </div>
+
+            <button
+              onClick={handleAddToCart}
+              disabled={isOutOfStock || localQty <= 0}
+              className="w-[62%] h-10 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-40"
+              style={{ background: inCart ? 'var(--color-tertiary)' : 'var(--color-primary)' }}
+            >
+              {inCart ? <FiCheck size={14} /> : <FiShoppingCart size={14} />}
+              {inCart ? 'In Cart' : 'Add to Cart'}
+            </button>
           </div>
 
-          <button 
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || localQty <= 0}
-            className="w-[62%] h-10 rounded-xl flex items-center justify-center gap-2 text-white font-bold text-sm transition-all active:scale-95 disabled:opacity-40"
-            style={{ background: inCart ? 'var(--color-tertiary)' : 'var(--color-primary)' }}
-          >
-            {inCart ? <FiCheck size={14} /> : <FiShoppingCart size={14} />}
-            {inCart ? 'In Cart' : 'Add to Cart'}
-          </button>
+          {inCart && (
+            <p className="text-[10px] text-center font-semibold mt-2" style={{ color: 'var(--color-tertiary)' }}>
+              ✓ {quantity} item{quantity > 1 ? 's' : ''} in cart
+            </p>
+          )}
         </div>
-        
-        {inCart && (
-          <p className="text-[10px] text-center font-semibold mt-2" style={{ color: 'var(--color-tertiary)' }}>
-            ✓ {quantity} item{quantity > 1 ? 's' : ''} in cart
-          </p>
-        )}
       </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <ConfirmDeleteModal
+          message="This product will be permanently deleted. Are you sure?"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+          isDeleting={isDeleting}
+        />
+      )}
+    </>
   );
 };

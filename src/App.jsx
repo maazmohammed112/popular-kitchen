@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './contexts/ToastContext';
@@ -38,6 +38,15 @@ const RestaurantSuppliesShivajinagar = lazy(() => import('./pages/seo/Restaurant
 const CommercialKitchenEquipmentBangalore = lazy(() => import('./pages/seo/CommercialKitchenEquipmentBangalore'));
 const BarbecueToolsBangalore = lazy(() => import('./pages/seo/BarbecueToolsBangalore'));
 const ShawarmaMachineBangalore = lazy(() => import('./pages/seo/ShawarmaMachineBangalore'));
+
+// Auto-scroll to top on every route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+};
 
 const AdminRoute = ({ children }) => {
   const { currentUser, isAdmin } = useAuth();
@@ -117,6 +126,7 @@ const DefaultViews = () => {
       <ReloadPrompt />
       
       <Suspense fallback={<GlobalLoader />}>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Home /></AppLayout>} />
           <Route path="/search" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Search /></AppLayout>} />

@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { getProducts } from '../firebase/products';
+import { useNavigate } from 'react-router-dom';
+import { getProducts, deleteProduct } from '../firebase/products';
 import { ProductCard } from '../components/ProductCard';
 import { ProductSkeleton } from '../components/Skeletons';
 import { SEO } from '../components/SEO';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
 
 // Module-level cache — survives React re-renders and back-navigation within the same session
 let cachedProducts = null;
@@ -14,6 +17,30 @@ export default function Home() {
   const [loading, setLoading] = useState(!cachedProducts);
   const [categories, setCategories] = useState(cachedCategories || ['All']);
   const [activeCategory, setActiveCategory] = useState('All');
+  const { isAdmin } = useAuth();
+  const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
+
+  const handleAdminEdit = (product) => {
+    // Navigate to admin products, passing the product to pre-open edit modal
+    // The referrer is saved so admin can come back
+    navigate('/admin/products', { state: { editProductId: product.id } });
+  };
+
+  const handleAdminDelete = async (productId) => {
+    const backup = [...products];
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    cachedProducts = products.filter(p => p.id !== productId);
+    showSuccess('Deleting product...');
+    try {
+      await deleteProduct(productId);
+      showSuccess('Product deleted');
+    } catch {
+      showError('Delete failed. Reverting...');
+      setProducts(backup);
+      cachedProducts = backup;
+    }
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -95,7 +122,12 @@ export default function Home() {
           </div>
         ) : (
           filteredProducts.map(product => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={isAdmin ? handleAdminEdit : undefined}
+              onDelete={isAdmin ? handleAdminDelete : undefined}
+            />
           ))
         )}
       </div>

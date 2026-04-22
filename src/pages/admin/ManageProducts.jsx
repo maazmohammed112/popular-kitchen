@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload, FiCamera } from 'react-icons/fi';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload, FiCamera, FiMoreVertical, FiArrowLeft, FiCheckSquare, FiSquare } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import Cropper from 'react-easy-crop';
@@ -9,23 +10,49 @@ import { calculateDiscountPrice } from '../../utils/discountCalc';
 import { useToast } from '../../contexts/ToastContext';
 import BulkAddModal from '../../components/admin/BulkAddModal';
 import CSVUploadModal from '../../components/admin/CSVUploadModal';
+import { BulkEditModal } from '../../components/admin/BulkEditModal';
+import { ConfirmDeleteModal } from '../../components/ConfirmDeleteModal';
 import { ImageWithSkeleton } from '../../components/ImageWithSkeleton';
 import { getOptimizedUrl } from '../../cloudinary/upload';
 import imageCompression from 'browser-image-compression';
 import { FiCrop } from 'react-icons/fi';
 import { toTitleCase } from '../../utils/textUtils';
 
+const MAX_IMAGES = 5;
+
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  // Bulk mode: null | 'edit' | 'delete'
+  const [bulkMode, setBulkMode] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkEditModalOpen, setIsBulkEditModalOpen] = useState(false);
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  // Three-dot row menu
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const menuRef = useRef(null);
+
+  // Single product delete confirmation
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Back-navigation: detect if we came from the store view
+  const location = useLocation();
+  const navigate = useNavigate();
+  const incomingEditId = location.state?.editProductId || null;
+  // Track the row ref for stay-on-save
+  const editingRowRef = useRef(null);
+
   const { showSuccess, showError } = useToast();
 
   const initialForm = {
-    id: '', title: '', description: '', price: '', 
-    offerPercent: '', category: '', sizes: [], 
+    id: '', title: '', description: '', price: '',
+    offerPercent: '', category: '', sizes: [],
     stockStatus: 'inStock', images: []
   };
   const [formData, setFormData] = useState(initialForm);
@@ -40,19 +67,86 @@ export default function ManageProducts() {
     croppedAreaPixels: null,
     editingIndex: null
   });
-  
+
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState({ old: '', new: '' });
   const [isCategorySubmitting, setIsCategorySubmitting] = useState(false);
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
-  const [pendingUploads, setPendingUploads] = useState({}); // Stores status for blob URLs
+  const [pendingUploads, setPendingUploads] = useState({});
 
   const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
 
+  useEffect(() => { fetchProducts(); }, []);
+
+  // If navigated from store view with a product to edit, open modal once products loaded
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (incomingEditId && products.length > 0) {
+      const product = products.find(p => p.id === incomingEditId);
+      if (product) {
+        handleOpenModal(product);
+        // Clear state so refresh doesn't re-open
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [incomingEditId, products]);
+
+  // Close three-dot menu on outside click
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handler = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [openMenuId]);
+
+  // Bulk helpers
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const selectAll = () => setSelectedIds(new Set(products.map(p => p.id)));
+  const clearSelection = () => { setSelectedIds(new Set()); setBulkMode(null); };
+
+  const handleBulkDeleteConfirm = async () => {
+    setIsBulkDeleting(true);
+    const backup = [...products];
+    const ids = [...selectedIds];
+    setProducts(prev => prev.filter(p => !selectedIds.has(p.id)));
+    try {
+      await Promise.all(ids.map(id => deleteProduct(id)));
+      showSuccess(`${ids.length} products deleted`);
+    } catch {
+      showError('Some deletes failed. Reverting...');
+      setProducts(backup);
+    } finally {
+      setIsBulkDeleting(false);
+      setBulkDeleteConfirm(false);
+      clearSelection();
+    }
+  };
+
+  const handleDeleteConfirmed = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
+    const backup = [...products];
+    setProducts(prev => prev.filter(p => p.id !== deleteConfirmId));
+    showSuccess('Deleting product...');
+    try {
+      await deleteProduct(deleteConfirmId);
+      showSuccess('Product removed');
+    } catch {
+      showError('Delete failed. Reverting...');
+      setProducts(backup);
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmId(null);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -175,49 +269,48 @@ export default function ManageProducts() {
   };
 
   const handleImageSelect = async (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
-      const blobUrl = URL.createObjectURL(file);
-      
-      // 1. Optimistic Update: Add to list immediately
-      setFormData(prev => ({ ...prev, images: [...prev.images, blobUrl] }));
-      setPendingUploads(prev => ({ ...prev, [blobUrl]: true }));
-      
-      // 2. Background Upload
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    // Enforce max 5 images
+    const currentCount = formData.images.length;
+    if (currentCount >= MAX_IMAGES) {
+      showError('You can upload up to 5 images only.');
+      e.target.value = '';
+      return;
+    }
+    const remaining = MAX_IMAGES - currentCount;
+    const filesToUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      showError(`You can upload up to 5 images only. Adding first ${remaining}.`);
+    }
+
+    // Optimistic previews for all selected files
+    const blobUrls = filesToUpload.map(f => URL.createObjectURL(f));
+    setFormData(prev => ({ ...prev, images: [...prev.images, ...blobUrls] }));
+    const newPending = {};
+    blobUrls.forEach(url => { newPending[url] = true; });
+    setPendingUploads(prev => ({ ...prev, ...newPending }));
+
+    // Upload each file in background
+    for (let i = 0; i < filesToUpload.length; i++) {
+      const file = filesToUpload[i];
+      const blobUrl = blobUrls[i];
       try {
-        const options = {
-          maxSizeMB: 0.19, // Strictly under 200KB
-          maxWidthOrHeight: 1200,
-          useWebWorker: true,
-          initialQuality: 0.85 // Better quality
-        };
-        
+        const options = { maxSizeMB: 0.19, maxWidthOrHeight: 1200, useWebWorker: true, initialQuality: 0.85 };
         const compressedFile = await imageCompression(file, options);
         const realUrl = await uploadImageToCloudinary(compressedFile);
-        
-        // Replace blobUrl with realUrl
-        setFormData(prev => ({
-          ...prev,
-          images: prev.images.map(img => img === blobUrl ? realUrl : img)
-        }));
-        setPendingUploads(prev => {
-          const newState = { ...prev };
-          delete newState[blobUrl];
-          return newState;
-        });
-        showSuccess("Image joined the gallery");
+        setFormData(prev => ({ ...prev, images: prev.images.map(img => img === blobUrl ? realUrl : img) }));
+        setPendingUploads(prev => { const s = { ...prev }; delete s[blobUrl]; return s; });
+        showSuccess('Image uploaded');
       } catch (err) {
         console.error(err);
-        showError("Upload failed, removing preview...");
-        setFormData(prev => ({
-          ...prev,
-          images: prev.images.filter(img => img !== blobUrl)
-        }));
-      } finally {
-        e.target.value = '';
-        // Note: We don't revoke immediately because it's being used in the preview
+        showError('Upload failed, removing preview...');
+        setFormData(prev => ({ ...prev, images: prev.images.filter(img => img !== blobUrl) }));
+        setPendingUploads(prev => { const s = { ...prev }; delete s[blobUrl]; return s; });
       }
     }
+    e.target.value = '';
   };
 
   const handleOpenCrop = (imgUrl, index) => {
@@ -327,36 +420,77 @@ export default function ManageProducts() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      const backupProducts = [...products];
-      
-      // Optimistic Update
-      setProducts(prev => prev.filter(p => p.id !== id));
-      showSuccess("Deleting product...");
-
-      try {
-        await deleteProduct(id);
-        showSuccess("Product removed from database");
-      } catch (err) {
-        showError("Delete failed. Reverting...");
-        setProducts(backupProducts); // Rollback
-      }
-    }
+  // handleDelete now uses modal — triggers confirmation
+  const handleDelete = (id) => {
+    setDeleteConfirmId(id);
   };
+
 
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
       <div className="flex flex-wrap justify-between items-center mb-8 gap-3">
+        {/* Back button if came from store view */}
+        {incomingEditId && (
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 px-4 py-2 bg-pk-bg-secondary text-pk-text-muted hover:text-pk-text-main rounded-xl text-sm font-medium transition-colors border border-pk-bg-secondary"
+          >
+            <FiArrowLeft size={15} /> Back to Store
+          </button>
+        )}
         <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">Manage Products</h1>
         <div className="flex flex-wrap gap-2 sm:gap-3">
-          <button 
+          {/* Bulk action buttons */}
+          {bulkMode === null ? (
+            <>
+              <button
+                onClick={() => { setBulkMode('delete'); setSelectedIds(new Set()); }}
+                disabled={products.length === 0}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-pk-error/10 text-pk-error border border-pk-error/30 rounded-xl font-medium hover:bg-pk-error/20 transition-colors text-sm disabled:opacity-40"
+              >
+                <FiTrash2 size={15} /> Bulk Delete
+              </button>
+              <button
+                onClick={() => { setBulkMode('edit'); setSelectedIds(new Set()); }}
+                disabled={products.length === 0}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-pk-accent/10 text-pk-accent border border-pk-accent/30 rounded-xl font-medium hover:bg-pk-accent/20 transition-colors text-sm disabled:opacity-40"
+              >
+                <FiEdit2 size={15} /> Bulk Edit
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={clearSelection} className="flex items-center gap-2 px-3 py-2 bg-pk-bg-secondary text-pk-text-muted rounded-xl text-sm font-medium border border-pk-bg-secondary hover:text-pk-text-main transition-colors">
+                <FiX size={15} /> Cancel
+              </button>
+              <button onClick={selectAll} className="flex items-center gap-2 px-3 py-2 bg-pk-bg-secondary text-pk-text-muted rounded-xl text-sm font-medium border border-pk-bg-secondary hover:text-pk-text-main transition-colors">
+                Select All
+              </button>
+              {bulkMode === 'delete' && selectedIds.size > 0 && (
+                <button
+                  onClick={() => setBulkDeleteConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-pk-error text-white rounded-xl text-sm font-bold shadow-lg shadow-red-500/20 hover:bg-red-700 transition-colors"
+                >
+                  <FiTrash2 size={15} /> Delete {selectedIds.size} Selected
+                </button>
+              )}
+              {bulkMode === 'edit' && selectedIds.size > 0 && (
+                <button
+                  onClick={() => setIsBulkEditModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-pk-accent text-white rounded-xl text-sm font-bold shadow-lg shadow-pk-accent/20 hover:bg-blue-600 transition-colors"
+                >
+                  <FiEdit2 size={15} /> Edit {selectedIds.size} Selected
+                </button>
+              )}
+            </>
+          )}
+          <button
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-bg-secondary text-pk-text-main rounded-xl font-medium hover:bg-pk-bg-primary transition-colors border border-pk-bg-secondary text-sm"
           >
             Manage Categories
           </button>
-          <button 
+          <button
             onClick={handleSanitizeAll}
             disabled={loading || products.length === 0}
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-white border border-pk-bg-secondary text-pk-text-muted hover:text-pk-accent hover:border-pk-accent rounded-xl text-sm font-semibold transition-all disabled:opacity-50 shadow-sm"
@@ -364,19 +498,19 @@ export default function ManageProducts() {
           >
             <FiLayers className="text-pk-accent" /> Sanitize Names
           </button>
-          <button 
+          <button
             onClick={() => setIsCsvModalOpen(true)}
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-[#D87333] hover:bg-[#bf652d] text-white rounded-xl font-bold transition-all shadow-lg text-sm shadow-orange-900/10"
           >
             <FiUpload size={16} /> CSV Import
           </button>
-          <button 
+          <button
             onClick={() => setIsBulkModalOpen(true)}
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-secondary text-white rounded-xl font-medium hover:opacity-90 transition-colors shadow-lg text-sm"
           >
             <FiLayers size={16} /> Bulk Add
           </button>
-          <button 
+          <button
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-pk-accent text-white rounded-xl font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20 text-sm"
           >
@@ -392,9 +526,16 @@ export default function ManageProducts() {
           <div className="p-12 text-center text-pk-text-muted">No products found. Add one above.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[800px]">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-pk-bg-secondary bg-[#12233f]">
+                  <th className="p-4 font-medium text-pk-text-muted text-sm w-10">
+                    {bulkMode ? (
+                      <button onClick={() => selectedIds.size === products.length ? setSelectedIds(new Set()) : selectAll()} className="text-pk-accent">
+                        {selectedIds.size === products.length ? <FiCheckSquare size={16} /> : <FiSquare size={16} />}
+                      </button>
+                    ) : null}
+                  </th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Product</th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Category</th>
                   <th className="p-4 font-medium text-pk-text-muted text-sm">Price</th>
@@ -404,16 +545,59 @@ export default function ManageProducts() {
               </thead>
               <tbody>
                 {products.map(product => (
-                  <tr key={product.id} className="border-b border-pk-bg-secondary/50 hover:bg-pk-bg-primary/50 transition-colors">
+                  <tr
+                    key={product.id}
+                    id={`product-row-${product.id}`}
+                    className={`border-b border-pk-bg-secondary/50 hover:bg-pk-bg-primary/50 transition-colors ${
+                      selectedIds.has(product.id) ? 'bg-pk-accent/5' : ''
+                    }`}
+                  >
+                    {/* Checkbox / Three-dot column */}
+                    <td className="p-4 w-10">
+                      {bulkMode ? (
+                        <button
+                          onClick={() => toggleSelect(product.id)}
+                          className={`transition-colors ${selectedIds.has(product.id) ? 'text-pk-accent' : 'text-pk-text-muted hover:text-pk-accent'}`}
+                        >
+                          {selectedIds.has(product.id) ? <FiCheckSquare size={16} /> : <FiSquare size={16} />}
+                        </button>
+                      ) : (
+                        <div className="relative" ref={openMenuId === product.id ? menuRef : null}>
+                          <button
+                            onClick={() => setOpenMenuId(openMenuId === product.id ? null : product.id)}
+                            className="p-1.5 rounded-lg text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
+                            title="Quick actions"
+                          >
+                            <FiMoreVertical size={16} />
+                          </button>
+                          {openMenuId === product.id && (
+                            <div className="absolute left-0 top-8 bg-pk-surface border border-pk-bg-secondary rounded-xl shadow-2xl min-w-[120px] py-1 z-30 animate-[slideDown_0.15s_ease-out]">
+                              <button
+                                onClick={() => { setOpenMenuId(null); handleOpenModal(product); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
+                              >
+                                <FiEdit2 size={13} className="text-pk-accent" /> Edit
+                              </button>
+                              <button
+                                onClick={() => { setOpenMenuId(null); handleDelete(product.id); }}
+                                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-pk-error hover:bg-pk-error/10 transition-colors"
+                              >
+                                <FiTrash2 size={13} /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-pk-bg-primary overflow-hidden flex-shrink-0">
                           {product.images?.[0] ? (
-                            <ImageWithSkeleton 
-                              src={getOptimizedUrl(product.images[0], 100)} 
-                              alt="" 
+                            <ImageWithSkeleton
+                              src={getOptimizedUrl(product.images[0], 100)}
+                              alt=""
                               containerClassName="w-full h-full bg-[#1e2a44]"
-                              className="w-full h-full object-contain" 
+                              className="w-full h-full object-contain"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-[8px] text-pk-text-muted">No Img</div>
@@ -544,7 +728,15 @@ export default function ManageProducts() {
               </div>
 
               <div className="border-t border-pk-bg-secondary pt-6">
-                <label className="block text-xs font-medium text-pk-text-muted mb-2 uppercase tracking-wide">Images</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-pk-text-muted uppercase tracking-wide">Images</label>
+                  <span className={`text-xs font-bold ${formData.images.length >= MAX_IMAGES ? 'text-pk-error' : 'text-pk-text-muted'}`}>
+                    {formData.images.length}/{MAX_IMAGES}
+                  </span>
+                </div>
+                {formData.images.length >= MAX_IMAGES && (
+                  <p className="text-xs text-pk-error mb-2 font-medium">Maximum 5 images reached. Remove one to add more.</p>
+                )}
                 <div className="flex flex-wrap gap-4 mb-4">
                   {formData.images.map((img, idx) => {
                     const isPending = pendingUploads[img];
@@ -575,29 +767,33 @@ export default function ManageProducts() {
                     );
                   })}
                   
-                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
-                    {uploadingImages ? (
-                      <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
-                    ) : (
-                      <>
-                        <FiCamera size={24} className="group-hover:-translate-y-1 transition-transform" />
-                        <span className="text-[10px] uppercase font-bold mt-2">Camera</span>
-                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
-                      </>
-                    )}
-                  </label>
+                  {formData.images.length < MAX_IMAGES && (
+                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
+                      {uploadingImages ? (
+                        <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
+                      ) : (
+                        <>
+                          <FiCamera size={24} className="group-hover:-translate-y-1 transition-transform" />
+                          <span className="text-[10px] uppercase font-bold mt-2">Camera</span>
+                          <input type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
+                        </>
+                      )}
+                    </label>
+                  )}
 
-                  <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
-                    {uploadingImages ? (
-                      <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
-                    ) : (
-                      <>
-                        <FiImage size={24} className="group-hover:-translate-y-1 transition-transform" />
-                        <span className="text-[10px] uppercase font-bold mt-2">Add file</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
-                      </>
-                    )}
-                  </label>
+                  {formData.images.length < MAX_IMAGES && (
+                    <label className="w-24 h-24 rounded-xl border-2 border-dashed border-pk-bg-secondary hover:border-pk-accent bg-pk-bg-primary flex flex-col items-center justify-center cursor-pointer transition-colors text-pk-text-muted hover:text-pk-accent group">
+                      {uploadingImages ? (
+                        <span className="animate-pulse text-[10px] uppercase font-bold mt-2">Uploading</span>
+                      ) : (
+                        <>
+                          <FiImage size={24} className="group-hover:-translate-y-1 transition-transform" />
+                          <span className="text-[10px] uppercase font-bold mt-2">Add files</span>
+                          <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageSelect} disabled={uploadingImages} />
+                        </>
+                      )}
+                    </label>
+                  )}
                 </div>
               </div>
 
@@ -716,6 +912,35 @@ export default function ManageProducts() {
           existingCategories={existingCategories}
           onClose={() => setIsCsvModalOpen(false)}
           onSuccess={fetchProducts}
+        />
+      )}
+
+      {/* Bulk Edit Modal */}
+      {isBulkEditModalOpen && (
+        <BulkEditModal
+          products={products.filter(p => selectedIds.has(p.id))}
+          onClose={() => setIsBulkEditModalOpen(false)}
+          onSuccess={() => { fetchProducts(); clearSelection(); }}
+        />
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {bulkDeleteConfirm && (
+        <ConfirmDeleteModal
+          message={`These ${selectedIds.size} products will be permanently deleted. Are you sure?`}
+          onConfirm={handleBulkDeleteConfirm}
+          onCancel={() => setBulkDeleteConfirm(false)}
+          isDeleting={isBulkDeleting}
+        />
+      )}
+
+      {/* Single Product Delete Confirmation */}
+      {deleteConfirmId && (
+        <ConfirmDeleteModal
+          message="This product will be permanently deleted. Are you sure?"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setDeleteConfirmId(null)}
+          isDeleting={isDeleting}
         />
       )}
     </div>
