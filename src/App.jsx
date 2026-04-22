@@ -12,7 +12,7 @@ import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { ReloadPrompt } from './components/ReloadPrompt';
 import { FiMessageCircle } from 'react-icons/fi';
-import { usePushNotifications } from './hooks/usePushNotifications';
+
 
 // Lazy Loaded Pages for "Lightning" Performance
 const Home = lazy(() => import('./pages/Home'));
@@ -64,7 +64,7 @@ const OrderProtectedRoute = ({ children }) => {
 };
 
 const AppLayout = ({ children, setIsCartOpen, toggleTheme }) => {
-  usePushNotifications();
+
   return (
     <div className="flex flex-col min-h-screen bg-pk-bg-primary text-pk-text-main transition-colors duration-200">
       <Navbar onOpenCart={() => setIsCartOpen(true)} />
