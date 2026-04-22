@@ -21,6 +21,13 @@ export default function Home() {
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
 
+  // Auto-redirect Admin to Dashboard if they land on Home
+  useEffect(() => {
+    if (isAdmin) {
+      navigate('/admin/dashboard', { replace: true });
+    }
+  }, [isAdmin, navigate]);
+
   const handleAdminEdit = (product) => {
     // Navigate to admin products, passing the product to pre-open edit modal
     // The referrer is saved so admin can come back
