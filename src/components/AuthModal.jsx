@@ -61,7 +61,7 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
       if (isNew) await migrateGuestDataToFirebase(result.user);
       
       // Check for admin redirect
-      const adminEmails = ['login@admin.com', 'admin@admin.com'];
+      const adminEmails = ['admin@login.com', 'admin@admin.com'];
       const isEmailAdmin = adminEmails.includes(result.user.email.toLowerCase());
 
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
@@ -97,7 +97,7 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
       if (isNew) await migrateGuestDataToFirebase(result.user);
       
       // Check for admin redirect
-      const adminEmails = ['login@admin.com', 'admin@admin.com'];
+      const adminEmails = ['admin@login.com', 'admin@admin.com'];
       const isEmailAdmin = adminEmails.includes(result.user.email?.toLowerCase());
 
       const userDoc = await getDoc(doc(db, 'users', result.user.uid));
