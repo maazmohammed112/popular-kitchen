@@ -52,6 +52,9 @@ const drawHeader = (doc, logoBase64, isAdmin) => {
  * CUSTOMER invoice — red "PAYMENT NOT PAID" banner, purchase request style
  */
 export const generateCustomerInvoice = async (order) => {
+  if (order.status === 'delivered') {
+    return generateAdminInvoice(order);
+  }
   const doc = new jsPDF();
   const logo = await getLogoBase64();
 
@@ -130,14 +133,22 @@ export const generateCustomerInvoice = async (order) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(185, 28, 28);
-  doc.text(
-    `AMOUNT DUE: Rs. ${Number(order.totalAmount || 0).toLocaleString('en-IN')} — Payment Pending`,
-    105, y + 8, { align: 'center' }
-  );
+  
+  const finalTotal = order.customTotal || order.totalAmount || 0;
+  const amountText = `AMOUNT DUE: Rs. ${Number(finalTotal).toLocaleString('en-IN')} — Payment Pending`;
+  
+  doc.text(amountText, 105, y + 8, { align: 'center' });
+  
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(120);
-  doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + 18, { align: 'center' });
+  
+  if (order.discountAmount && order.discountAmount > 0) {
+    doc.text(`(Includes special discount of Rs. ${Number(order.discountAmount).toLocaleString('en-IN')})`, 105, y + 13, { align: 'center' });
+    doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + 19, { align: 'center' });
+  } else {
+    doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + 18, { align: 'center' });
+  }
 
   // Footer
   doc.setFontSize(7.5);
@@ -215,31 +226,42 @@ export const generateAdminInvoice = async (order) => {
     columnStyles: { 4: { halign: 'right' } },
   });
 
-  const y = doc.lastAutoTable.finalY + 8;
+  let currentY = doc.lastAutoTable.finalY + 8;
 
   // Totals
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(100);
-  doc.text('Subtotal:', 148, y);
-  doc.text(`Rs. ${Number(order.totalAmount || 0).toLocaleString('en-IN')}`, 196, y, { align: 'right' });
-  doc.text('Delivery Charges:', 148, y + 6);
-  doc.text('FREE', 196, y + 6, { align: 'right' });
+  doc.text('Subtotal:', 148, currentY);
+  doc.text(`Rs. ${Number(order.totalAmount || 0).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
+  
+  if (order.discountAmount && order.discountAmount > 0) {
+    currentY += 6;
+    doc.setTextColor(220, 38, 38);
+    doc.text('Special Discount:', 148, currentY);
+    doc.text(`- Rs. ${Number(order.discountAmount).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
+    doc.setTextColor(100);
+  }
+
+  currentY += 6;
+  doc.text('Delivery Charges:', 148, currentY);
+  doc.text('FREE', 196, currentY, { align: 'right' });
 
   doc.setDrawColor(210);
-  doc.line(140, y + 9, 196, y + 9);
+  doc.line(140, currentY + 3, 196, currentY + 3);
 
+  currentY += 10;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(0);
-  doc.text('Grand Total:', 140, y + 17);
-  doc.text(`Rs. ${Number(order.totalAmount || 0).toLocaleString('en-IN')}`, 196, y + 17, { align: 'right' });
+  doc.text('Grand Total:', 140, currentY);
+  doc.text(`Rs. ${Number(order.customTotal || order.totalAmount || 0).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
 
   // Thank you
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(120);
-  doc.text('Thank you for shopping with Popular Kitchen!', 105, y + 28, { align: 'center' });
+  doc.text('Thank you for shopping with Popular Kitchen!', 105, currentY + 12, { align: 'center' });
 
   // Footer
   doc.setFontSize(7.5);
@@ -247,7 +269,8 @@ export const generateAdminInvoice = async (order) => {
   doc.setTextColor(160);
   doc.text(`${BUSINESS.name}  |  ${BUSINESS.address.replace(/\n/g, ', ')}  |  ${BUSINESS.phone}`, 105, 286, { align: 'center' });
 
-  doc.save(`invoice-${order.id.slice(0, 8)}.pdf`);
+  const fileName = order.status === 'delivered' ? `tax-invoice-${order.id.slice(0, 8)}.pdf` : `invoice-${order.id.slice(0, 8)}.pdf`;
+  doc.save(fileName);
 };
 
 // Backwards-compat alias

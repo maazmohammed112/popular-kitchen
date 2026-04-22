@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare, FiTag, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import { SiWhatsapp, SiGmail } from 'react-icons/si';
-import { getOrders, listenToOrders, updateOrderStatus, cancelOrder } from '../../firebase/orders';
+import { getOrders, listenToOrders, updateOrderStatus, cancelOrder, updateOrderTotal } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 import { sendEmail, getOrderEmailTemplate } from '../../utils/emailService';
@@ -16,6 +16,8 @@ export default function ManageOrders() {
   const [expandedRow, setExpandedRow] = useState(null);
   const [shareModal, setShareModal] = useState(null); // { order, phone }
   const [searchTerm, setSearchTerm] = useState('');
+  const [discountModal, setDiscountModal] = useState(null); // { id, total }
+  const [deliveryConfirm, setDeliveryConfirm] = useState(null); // { id, status }
   
   const { showSuccess, showError } = useToast();
 
@@ -55,6 +57,10 @@ export default function ManageOrders() {
       }
       return;
     }
+    if (newStatus === 'delivered') {
+      setDeliveryConfirm({ id, status: newStatus });
+      return;
+    }
     try {
       await updateOrderStatus(id, newStatus, adminNote);
       showSuccess(`Order status updated to ${newStatus}`);
@@ -70,6 +76,18 @@ export default function ManageOrders() {
           });
         }
       }
+    } catch (err) {
+      console.error(err);
+      showError("Failed to update status");
+    }
+  };
+
+  const confirmDelivery = async () => {
+    if (!deliveryConfirm) return;
+    try {
+      await updateOrderStatus(deliveryConfirm.id, deliveryConfirm.status, "");
+      showSuccess("Order marked as Delivered. Payment confirmed.");
+      setDeliveryConfirm(null);
     } catch (err) {
       console.error(err);
       showError("Failed to update status");
@@ -292,13 +310,22 @@ export default function ManageOrders() {
                             <FiMessageSquare size={16}/>
                           </button>
                           {isInvoiceReady(order.status) && (
-                            <button
-                              onClick={() => handleDownloadInvoice(order)}
-                              title="Download Invoice"
-                              className="p-2 text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-secondary rounded-lg transition-colors"
-                            >
-                              <FiDownload size={16}/>
-                            </button>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleDownloadInvoice(order)}
+                                title="Download Invoice"
+                                className="p-2 text-pk-text-muted hover:text-pk-text-main hover:bg-pk-bg-secondary rounded-lg transition-colors"
+                              >
+                                <FiDownload size={16}/>
+                              </button>
+                              <button
+                                onClick={() => setDiscountModal({ id: order.id, total: order.totalAmount, custom: order.customTotal })}
+                                title="Adjust Price / Add Discount"
+                                className="p-2 text-pk-tertiary hover:bg-pk-tertiary/10 rounded-lg transition-colors"
+                              >
+                                <FiTag size={16}/>
+                              </button>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -366,7 +393,107 @@ export default function ManageOrders() {
             </table>
           </div>
         )}
-      </div>
+      {/* Delivery Confirmation Modal */}
+      {deliveryConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-pk-surface rounded-2xl p-8 w-full max-w-sm border border-pk-bg-secondary shadow-2xl animate-[slideUp_0.2s_ease-out]">
+            <div className="w-16 h-16 bg-pk-warning/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiAlertCircle size={32} className="text-pk-warning" />
+            </div>
+            <h3 className="text-xl font-bold text-pk-text-main text-center mb-2">Confirm Payment?</h3>
+            <p className="text-sm text-pk-text-muted text-center mb-8">
+              Are you sure the payment has been received for this order? This will mark the order as <strong className="text-pk-success">Delivered</strong>.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeliveryConfirm(null)}
+                className="flex-1 py-3 rounded-xl border border-pk-bg-secondary text-pk-text-muted font-bold hover:bg-pk-bg-primary transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelivery}
+                className="flex-1 py-3 rounded-xl bg-pk-success text-white font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-success/20"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Adjust Price Modal */}
+      {discountModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-pk-surface rounded-2xl p-8 w-full max-w-sm border border-pk-bg-secondary shadow-2xl animate-[slideUp_0.2s_ease-out]">
+            <div className="flex items-center gap-2 mb-6">
+              <FiTag className="text-pk-tertiary" size={20} />
+              <h3 className="text-lg font-bold text-pk-text-main">Special Discount</h3>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-pk-text-muted uppercase mb-2">Original Total</label>
+                <div className="p-3 bg-pk-bg-primary rounded-xl font-bold text-pk-text-main border border-pk-bg-secondary">
+                  ₹{discountModal.total}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-pk-text-muted uppercase mb-2">Custom Price</label>
+                <input
+                  type="number"
+                  defaultValue={discountModal.custom || discountModal.total}
+                  id="custom-total-input"
+                  placeholder="Enter final amount..."
+                  className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 font-bold focus:border-pk-accent outline-none transition-all"
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0;
+                    const diff = discountModal.total - val;
+                    const msgEl = document.getElementById('discount-msg');
+                    if (diff > 0) {
+                      msgEl.textContent = `₹${diff} rupees is less (Discount)`;
+                      msgEl.className = "text-xs font-bold text-pk-error mt-2 block animate-pulse";
+                    } else if (diff < 0) {
+                      msgEl.textContent = `₹${Math.abs(diff)} rupees is more (Extra)`;
+                      msgEl.className = "text-xs font-bold text-pk-success mt-2 block";
+                    } else {
+                      msgEl.textContent = "";
+                    }
+                  }}
+                />
+                <span id="discount-msg"></span>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setDiscountModal(null)}
+                  className="flex-1 py-3 rounded-xl border border-pk-bg-secondary text-pk-text-muted font-bold hover:bg-pk-bg-primary transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    const customVal = parseFloat(document.getElementById('custom-total-input').value);
+                    if (isNaN(customVal)) return;
+                    const discount = discountModal.total - customVal;
+                    try {
+                      await updateOrderTotal(discountModal.id, customVal, discount);
+                      showSuccess("Special discount applied successfully!");
+                      setDiscountModal(null);
+                    } catch (err) {
+                      showError("Failed to update price.");
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-pk-accent text-white font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-accent/20"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
