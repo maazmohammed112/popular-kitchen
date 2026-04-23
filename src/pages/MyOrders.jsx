@@ -15,6 +15,28 @@ const STATUS_STYLES = {
   cancelled: 'bg-red-100 text-red-700',
 };
 
+const SmokeEffect = () => (
+  <div className="absolute -left-6 top-2 flex flex-col gap-1">
+    <style>{`
+      @keyframes smoke-puff {
+        0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
+        20% { opacity: 0.5; }
+        100% { transform: translate(-25px, -10px) scale(2.5); opacity: 0; }
+      }
+      .smoke-particle {
+        animation: smoke-puff 1.2s infinite ease-out;
+      }
+    `}</style>
+    {[1, 2, 3].map(i => (
+      <div 
+        key={i}
+        className="smoke-particle w-1.5 h-1.5 bg-gray-400/40 rounded-full"
+        style={{ animationDelay: `${i * 0.4}s` }}
+      />
+    ))}
+  </div>
+);
+
 const OrderItem = ({ item }) => (
   <div className="flex justify-between text-sm text-pk-text-muted py-1 border-b border-pk-bg-secondary/30 last:border-0">
     <span className="flex-1 pr-4">
@@ -268,7 +290,8 @@ export default function MyOrders() {
                         className="absolute -top-[14px] -translate-x-1/2 transition-all duration-1000 z-10"
                         style={{ left: `${progress}%` }}
                       >
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center relative">
+                          {order.status === 'confirmed' && <SmokeEffect />}
                           <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-4 ring-pk-surface w-14 h-8 flex items-center justify-center overflow-hidden">
                             <img 
                               src="/truck.png" 
