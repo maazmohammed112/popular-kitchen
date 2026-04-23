@@ -165,12 +165,6 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <button 
-            onClick={() => setGlobalFilters({ period: 'all', product: 'all' })}
-            className="text-xs font-bold text-pk-accent hover:underline px-2 py-1"
-          >
-            Reset Filters
-          </button>
-          <button 
             onClick={logout}
             className="flex items-center gap-2 px-4 py-2 bg-pk-surface border border-pk-error/30 text-pk-error rounded-xl hover:bg-pk-error hover:text-white transition-colors text-sm font-medium"
           >
@@ -263,6 +257,13 @@ export default function Dashboard() {
                 <option key={p} value={p}>{p}</option>
               ))}
             </select>
+
+            <button 
+              onClick={() => setGlobalFilters({ period: 'all', product: 'all' })}
+              className="text-xs font-bold text-pk-error hover:underline px-2 py-1 ml-auto"
+            >
+              Reset Filters
+            </button>
           </div>
           <PowerBIDashboard filters={globalFilters} />
         </div>
