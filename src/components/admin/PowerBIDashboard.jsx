@@ -71,6 +71,7 @@ const PowerBIDashboard = (props) => {
     };
     const updated = { ...config, charts: [...config.charts, newChart] };
     setConfig(updated);
+    saveConfig(updated); // Auto-save on add
     setIsAdding(false);
   };
 
@@ -81,12 +82,15 @@ const PowerBIDashboard = (props) => {
   const confirmRemoveChart = (id) => {
     const updated = { ...config, charts: config.charts.filter(c => c.id !== id) };
     setConfig(updated);
+    saveConfig(updated); // Auto-save on delete
     setConfirmDelete(null);
   };
 
   const updateChart = (id, updates) => {
     const updatedCharts = config.charts.map(c => c.id === id ? { ...c, ...updates } : c);
-    setConfig({ ...config, charts: updatedCharts });
+    const updatedConfig = { ...config, charts: updatedCharts };
+    setConfig(updatedConfig);
+    if (updates.metric) saveConfig(updatedConfig); // Auto-save metric changes
   };
 
   const clearDashboard = async () => {
