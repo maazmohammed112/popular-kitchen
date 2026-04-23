@@ -250,33 +250,49 @@ export default function MyOrders() {
               return (
               <div
                 key={order.id}
-                className="bg-pk-surface border border-pk-bg-secondary rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all border-l-4"
+                className="bg-pk-surface border border-pk-bg-secondary rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all border-l-[3px]"
                 style={{ borderLeftColor: order.status === 'delivered' ? '#10b981' : order.status === 'cancelled' ? '#ef4444' : '#f59e0b' }}
               >
                 {/* Status Tracker (Truck) */}
                 {order.status !== 'cancelled' && (
-                  <div className="px-6 pt-6 pb-2">
-                    <div className="relative h-1.5 bg-pk-bg-primary rounded-full mb-8">
+                  <div className="px-8 pt-10 pb-4 border-b border-pk-bg-secondary/50 bg-pk-bg-primary/10">
+                    <div className="relative h-[2px] bg-pk-bg-primary rounded-full mx-2">
+                      {/* Background Progress */}
                       <div 
                         className="absolute top-0 left-0 h-full bg-pk-accent rounded-full transition-all duration-1000"
                         style={{ width: `${progress}%` }}
                       />
-                      {/* Truck Icon */}
+                      
+                      {/* Truck Tracker */}
                       <div 
-                        className="absolute -top-6 -translate-x-1/2 transition-all duration-1000"
+                        className="absolute -top-[14px] -translate-x-1/2 transition-all duration-1000 z-10"
                         style={{ left: `${progress}%` }}
                       >
                         <div className="flex flex-col items-center">
-                          <div className="bg-pk-surface p-1.5 rounded-full border border-pk-bg-secondary shadow-sm">
-                            <FiTruck className="text-pk-accent" size={18} />
+                          <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-4 ring-pk-surface w-10 h-6 flex items-center justify-center overflow-hidden">
+                            <img 
+                              src="/truck.png" 
+                              alt="Truck" 
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'block';
+                              }}
+                            />
+                            <FiTruck className="text-pk-accent hidden" size={14} />
                           </div>
                         </div>
                       </div>
                       
                       {/* Milestones */}
-                      <div className="absolute top-4 left-0 -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Pending</div>
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Confirmed</div>
-                      <div className="absolute top-4 left-[100%] -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Delivered</div>
+                      <div className="absolute -top-7 left-0 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Pending</div>
+                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Confirmed</div>
+                      <div className="absolute -top-7 left-[100%] -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Delivered</div>
+                      
+                      {/* Milestone Dots */}
+                      <div className="absolute -top-[3px] left-0 w-2 h-2 rounded-full bg-pk-bg-primary border-2 border-pk-surface shadow-sm"></div>
+                      <div className="absolute -top-[3px] left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-pk-bg-primary border-2 border-pk-surface shadow-sm"></div>
+                      <div className="absolute -top-[3px] left-[100%] -translate-x-1/2 w-2 h-2 rounded-full bg-pk-bg-primary border-2 border-pk-surface shadow-sm"></div>
                     </div>
                   </div>
                 )}
