@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { FiPlus, FiTrash2, FiSave, FiSettings, FiPieChart, FiBarChart2, FiActivity, FiX } from 'react-icons/fi';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { adminDb } from '../../firebase/config';
+import { db, adminDb } from '../../firebase/config';
 import { listenToOrders } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -23,7 +23,7 @@ const PowerBIDashboard = (props) => {
     // Load config from Firestore
     const fetchConfig = async () => {
       try {
-        const docRef = doc(adminDb, 'admin_configs', 'dashboard_main');
+        const docRef = doc(db, 'admin_configs', 'dashboard_main');
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           setConfig(snap.data());
@@ -49,7 +49,7 @@ const PowerBIDashboard = (props) => {
 
   const saveConfig = async (newConfig) => {
     try {
-      await setDoc(doc(adminDb, 'admin_configs', 'dashboard_main'), newConfig);
+      await setDoc(doc(db, 'admin_configs', 'dashboard_main'), newConfig);
       showSuccess("Dashboard layout saved!");
     } catch (err) {
       showError("Failed to save layout");
@@ -99,7 +99,7 @@ const PowerBIDashboard = (props) => {
 
   const confirmClearDashboard = async () => {
     try {
-      await deleteDoc(doc(adminDb, 'admin_configs', 'dashboard_main'));
+      await deleteDoc(doc(db, 'admin_configs', 'dashboard_main'));
       setConfig({ id: 'dashboard_main', charts: [] });
       showSuccess("Dashboard deleted");
     } catch (err) {
