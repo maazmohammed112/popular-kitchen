@@ -16,22 +16,23 @@ const STATUS_STYLES = {
 };
 
 const SmokeEffect = () => (
-  <div className="absolute -left-5 top-2 flex flex-col gap-1">
+  <div className="absolute left-1 top-5 flex flex-col gap-1 z-0">
     <style>{`
       @keyframes smoke-puff {
-        0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
-        20% { opacity: 0.5; }
-        100% { transform: translate(-20px, -8px) scale(2.2); opacity: 0; }
+        0% { transform: translate(0, 0) scale(0.2); opacity: 0; }
+        10% { opacity: 0.4; }
+        100% { transform: translate(-30px, -5px) scale(3); opacity: 0; }
       }
       .smoke-particle {
-        animation: smoke-puff 1.2s infinite ease-out;
+        animation: smoke-puff 1.4s infinite ease-out;
+        filter: blur(1px);
       }
     `}</style>
-    {[1, 2, 3].map(i => (
+    {[1, 2, 3, 4].map(i => (
       <div 
         key={i}
-        className="smoke-particle w-1 h-1 bg-gray-400/40 rounded-full"
-        style={{ animationDelay: `${i * 0.4}s` }}
+        className="smoke-particle w-1 h-1 bg-gray-400/30 rounded-full"
+        style={{ animationDelay: `${i * 0.35}s` }}
       />
     ))}
   </div>
