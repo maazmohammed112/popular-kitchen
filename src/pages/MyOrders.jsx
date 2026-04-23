@@ -269,17 +269,23 @@ export default function MyOrders() {
                         style={{ left: `${progress}%` }}
                       >
                         <div className="flex flex-col items-center">
-                          <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-4 ring-pk-surface w-10 h-6 flex items-center justify-center overflow-hidden">
+                          <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-4 ring-pk-surface w-14 h-8 flex items-center justify-center overflow-hidden">
                             <img 
                               src="/truck.png" 
                               alt="Truck" 
                               className="w-full h-full object-contain"
                               onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'block';
+                                // Try relative if absolute fails
+                                if (!e.target.src.includes('processed')) {
+                                  e.target.src = 'truck.png?v=1';
+                                  e.target.classList.add('processed');
+                                } else {
+                                  e.target.style.display = 'none';
+                                  if (e.target.nextSibling) e.target.nextSibling.style.display = 'block';
+                                }
                               }}
                             />
-                            <FiTruck className="text-pk-accent hidden" size={14} />
+                            <FiTruck className="text-pk-accent hidden" size={16} />
                           </div>
                         </div>
                       </div>

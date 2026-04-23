@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png', 'offline.html'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png', 'offline.html', 'truck.png'],
       manifest: {
         name: 'Popular Kitchen',
         short_name: 'PopKitchen',
