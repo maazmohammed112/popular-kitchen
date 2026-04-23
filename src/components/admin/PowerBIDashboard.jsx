@@ -5,7 +5,7 @@ import {
 } from 'recharts';
 import { FiPlus, FiTrash2, FiSave, FiSettings, FiPieChart, FiBarChart2, FiActivity, FiX } from 'react-icons/fi';
 import { doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
-import { db, adminDb } from '../../firebase/config';
+import { adminDb } from '../../firebase/config';
 import { listenToOrders } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 
@@ -24,7 +24,7 @@ const PowerBIDashboard = (props) => {
     // Load config from Firestore
     const fetchConfig = async () => {
       try {
-        const docRef = doc(db, 'admin_configs', 'dashboard_main');
+        const docRef = doc(adminDb, 'admin_configs', 'dashboard_main');
         const snap = await getDoc(docRef);
         if (snap.exists()) {
           setConfig(snap.data());
@@ -50,7 +50,7 @@ const PowerBIDashboard = (props) => {
 
   const saveConfig = async (newConfig) => {
     try {
-      await setDoc(doc(db, 'admin_configs', 'dashboard_main'), newConfig);
+      await setDoc(doc(adminDb, 'admin_configs', 'dashboard_main'), newConfig);
       showSuccess("Dashboard layout saved!");
     } catch (err) {
       showError("Failed to save layout");
@@ -100,7 +100,7 @@ const PowerBIDashboard = (props) => {
 
   const confirmClearDashboard = async () => {
     try {
-      await deleteDoc(doc(db, 'admin_configs', 'dashboard_main'));
+      await deleteDoc(doc(adminDb, 'admin_configs', 'dashboard_main'));
       setConfig({ id: 'dashboard_main', charts: [] });
       showSuccess("Dashboard deleted");
     } catch (err) {
@@ -386,7 +386,7 @@ const PowerBIDashboard = (props) => {
                   <p className="text-sm font-medium">No matching data for current filters</p>
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="99%" height={300}>
                   {chart.type === 'bar' ? (
                     <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" opacity={0.5} />
