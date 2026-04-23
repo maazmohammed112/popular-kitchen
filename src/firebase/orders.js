@@ -1,5 +1,5 @@
 import { collection, doc, getDocs, addDoc, updateDoc, serverTimestamp, query, orderBy, where, onSnapshot, getDoc } from "firebase/firestore";
-import { db } from "./config";
+import { adminDb as db } from "./config";
 import { notifyNewOrder, notifyStatusUpdate, notifyOrderCancelled } from "./notifications";
 
 const ORDERS_COLLECTION = "orders";
@@ -26,7 +26,10 @@ export const listenToOrders = (callback) => {
   const q = query(collection(db, ORDERS_COLLECTION), orderBy('createdAt', 'desc'));
   return onSnapshot(q, (snapshot) => {
     const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log("ListenToOrders Update:", orders.length, "orders found");
     callback(orders);
+  }, (error) => {
+    console.error("ListenToOrders Error:", error);
   });
 };
 

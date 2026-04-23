@@ -3,7 +3,7 @@ import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, 
 import { useAuth } from '../contexts/AuthContext';
 import { listenToUserOrders, cancelOrder } from '../firebase/orders';
 import { useToast } from '../contexts/ToastContext';
-import { db } from '../firebase/config';
+import { adminDb as db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { generateCustomerInvoice } from '../utils/invoiceGenerator';
 import { sendEmail, getOrderEmailTemplate } from '../utils/emailService';

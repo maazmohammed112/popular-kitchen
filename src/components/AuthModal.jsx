@@ -16,12 +16,14 @@ import { useAuth } from '../contexts/AuthContext';
 // After sign-up, migrate any guest cart/orders from localStorage to Firestore
 const migrateGuestDataToFirebase = async (user) => {
   try {
-    // Migrate guest orders
+    const { db, adminDb } = await import('../firebase/config');
+    
+    // Migrate guest orders (stored in secondary database)
     const guestOrders = JSON.parse(localStorage.getItem('pk_guest_orders') || '[]');
     for (const order of guestOrders) {
       if (order.id) {
-        // Update existing Firestore order to link to user
-        await setDoc(doc(db, 'orders', order.id), { userId: user.uid }, { merge: true });
+        // Update existing Firestore order to link to user in the NEW database
+        await setDoc(doc(adminDb, 'orders', order.id), { userId: user.uid }, { merge: true });
       }
     }
 
@@ -75,10 +77,11 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         navigate('/admin/dashboard');
         onClose();
       } else {
-        showSuccess(`Welcome, ${result.user.displayName}!`);
-        onClose();
+        showSuccess(`Welcome, ${result.user.displayName || 'User'}!`);
+        window.location.href = '/';
       }
     } catch (err) {
+      console.error("Auth Error:", err);
       if (err.code === 'auth/account-exists-with-different-credential') {
         showError('Email already linked to another sign-in method. Please use your original provider.');
       } else if (err.code !== 'auth/popup-closed-by-user') {
@@ -94,7 +97,9 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
     try {
       const result = await signInWithPopup(auth, facebookProvider);
       const isNew = result._tokenResponse?.isNewUser;
-      if (isNew) await migrateGuestDataToFirebase(result.user);
+      if (isNew) {
+        await migrateGuestDataToFirebase(result.user).catch(e => console.error("Migration failed:", e));
+      }
       
       // Check for admin redirect
       const adminEmails = ['admin@login.com', 'admin@admin.com'];
@@ -111,10 +116,11 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         navigate('/admin/dashboard');
         onClose();
       } else {
-        showSuccess(`Welcome, ${result.user.displayName}!`);
-        onClose();
+        showSuccess(`Welcome, ${result.user.displayName || 'User'}!`);
+        window.location.href = '/';
       }
     } catch (err) {
+      console.error("Auth Error:", err);
       if (err.code === 'auth/account-exists-with-different-credential') {
         showError('Email already linked to another sign-in method. Please use your original provider.');
       } else if (err.code !== 'auth/popup-closed-by-user') {
@@ -130,7 +136,6 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
     setLoading(true);
     try {
       if (tab === 'signup') {
-        // Prevent users from using "admin" in their name or email
         const lowerName = form.name.toLowerCase();
         const lowerEmail = form.email.toLowerCase();
         
@@ -142,21 +147,21 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
 
         const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
         await updateProfile(cred.user, { displayName: form.name });
-        await migrateGuestDataToFirebase(cred.user);
+        console.log("Migrating guest data...");
+        await migrateGuestDataToFirebase(cred.user).catch(e => console.error("Migration failed:", e));
         showSuccess('Account created! Welcome to Popular Kitchen 🎉');
-        onClose();
+        window.location.href = '/';
       } else {
         const { role } = await login(form.email, form.password);
         
         if (role === 'admin') {
           setRedirectingToAdmin(true);
-          // Special delay for visual polish
           await new Promise(r => setTimeout(r, 2000));
           navigate('/admin/dashboard');
           onClose();
         } else {
           showSuccess('Signed in successfully!');
-          onClose();
+          window.location.href = '/';
         }
       }
     } catch (err) {

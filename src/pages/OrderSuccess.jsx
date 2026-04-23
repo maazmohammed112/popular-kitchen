@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiCheckCircle, FiDownload, FiChevronLeft, FiCopy, FiMessageCircle } from 'react-icons/fi';
-import { db } from '../firebase/config';
+import { adminDb as db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { generateInvoice } from '../utils/invoiceGenerator';
 import { useToast } from '../contexts/ToastContext';

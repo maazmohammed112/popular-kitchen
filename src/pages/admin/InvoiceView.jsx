@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
-import { db } from '../../firebase/config';
+import { adminDb as db } from '../../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 import { useAuth } from '../../contexts/AuthContext';

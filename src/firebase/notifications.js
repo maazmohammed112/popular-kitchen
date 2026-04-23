@@ -6,6 +6,8 @@
 const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
 const CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
+import { sendEmail, getOrderEmailTemplate } from '../utils/emailService';
+
 /**
  * Escape HTML characters for Telegram's HTML parse_mode
  */
@@ -56,8 +58,14 @@ export const sendTelegramMessage = async (message, buttons = null) => {
     return;
   }
 
-  // Split comma-separated IDs and send to all in parallel (one event, one notification per admin)
-  const ids = CHAT_ID.toString().split(',').map(id => id.trim()).filter(Boolean);
+  // Split comma-separated IDs and send to all in parallel
+  const rawIds = CHAT_ID?.toString() || '';
+  const ids = rawIds.split(',').map(id => id.trim()).filter(Boolean);
+
+  if (ids.length === 0) {
+    console.warn("No valid Telegram Chat IDs found");
+    return;
+  }
 
   const sendToOne = async (id) => {
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
@@ -160,6 +168,13 @@ ${itemsList}
 
   // Always include invoice button in new order too for convenience
   const buttons = getContactButtons(orderId, orderData, 'received', true);
+  
+  // Send Email to Customer
+  if (orderData.email) {
+    const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'pending', ...orderData });
+    sendEmail({ to: orderData.email, subject: `Order Received - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
+  }
+
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
@@ -201,6 +216,13 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
   // Include invoice button for confirmed or delivered orders
   const showInvoice = newStatus === 'confirmed' || newStatus === 'delivered';
   const buttons = getContactButtons(orderId, orderData, newStatus, showInvoice);
+
+  // Send Email to Customer
+  if (orderData.email) {
+    const emailHtml = getOrderEmailTemplate({ id: orderId, status: newStatus, adminNote, ...orderData });
+    sendEmail({ to: orderData.email, subject: `Order Update - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
+  }
+
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
@@ -231,6 +253,12 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
       `Your order #${orderId.slice(0, 8)} was cancelled by ${actor}.`,
       { orderId, status: 'cancelled' }
     );
+  }
+
+  // Send Email to Customer
+  if (orderData.email) {
+    const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'cancelled', cancelledBy, ...orderData });
+    sendEmail({ to: orderData.email, subject: `Order Cancelled - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
   }
 
   const buttons = getContactButtons(orderId, orderData, 'cancelled');

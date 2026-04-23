@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { 
   FiBox, FiShoppingBag, FiDollarSign, FiLogOut, 
   FiClock, FiCheckCircle, FiPackage, FiXCircle,
-  FiArrowLeft, FiChevronRight, FiPhone, FiMapPin
+  FiArrowLeft, FiChevronRight, FiPhone, FiMapPin,
+  FiFilter, FiActivity
 } from 'react-icons/fi';
 import { getProducts } from '../../firebase/products';
 import { listenToOrders } from '../../firebase/orders';
 import { useAuth } from '../../contexts/AuthContext';
+import TopMetrics from '../../components/admin/TopMetrics';
+import PowerBIDashboard from '../../components/admin/PowerBIDashboard';
+import { useToast } from '../../contexts/ToastContext';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, revenue: 0 });
@@ -20,7 +24,12 @@ export default function Dashboard() {
   const [allOrders, setAllOrders] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [globalFilters, setGlobalFilters] = useState({
+    period: 'all', // all, today, week, month, year
+    product: 'all'
+  });
   const { logout, isAdmin, canManageOrders } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   useEffect(() => {
     // Mark that admin has visited the dashboard this session
@@ -35,6 +44,7 @@ export default function Dashboard() {
         // All admins can see order counts, but only full admins see revenue
         if (isAdmin) {
           unsubscribe = listenToOrders((orders) => {
+            console.log("Dashboard received orders:", orders.length);
             setAllOrders(orders);
             
             const revenue = canManageOrders 
@@ -148,19 +158,26 @@ export default function Dashboard() {
   return (
     <div className="animate-[slideUp_0.4s_ease-out]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main mb-1">Admin Dashboard</h1>
           <p className="text-pk-text-muted">Real-time store management.</p>
         </div>
-        <button 
-          onClick={logout}
-          className="flex items-center gap-2 px-4 py-2 bg-pk-surface border border-pk-error/30 text-pk-error rounded-xl hover:bg-pk-error hover:text-white transition-colors text-sm font-medium"
-        >
-          <FiLogOut /> Logout
-        </button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={() => setGlobalFilters({ period: 'all', product: 'all' })}
+            className="text-xs font-bold text-pk-accent hover:underline px-2 py-1"
+          >
+            Reset Filters
+          </button>
+          <button 
+            onClick={logout}
+            className="flex items-center gap-2 px-4 py-2 bg-pk-surface border border-pk-error/30 text-pk-error rounded-xl hover:bg-pk-error hover:text-white transition-colors text-sm font-medium"
+          >
+            <FiLogOut /> Logout
+          </button>
+        </div>
       </div>
-
       {/* Main Stats (Inventory/Revenue) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {mainStats.map((card, idx) => (
@@ -213,6 +230,43 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {/* Analytics & PowerBI Sections */}
+      {isAdmin && (
+        <div className="space-y-8 mb-8">
+          <TopMetrics filters={globalFilters} />
+
+          {/* Global Filters Bar */}
+          <div className="bg-pk-surface p-4 rounded-3xl border border-pk-bg-secondary flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2 text-sm font-bold text-pk-text-main">
+              <FiFilter className="text-pk-accent" /> Dashboard Filters:
+            </div>
+            <select 
+              value={globalFilters.period}
+              onChange={(e) => setGlobalFilters({...globalFilters, period: e.target.value})}
+              className="bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-pk-accent"
+            >
+              <option value="all">All Time</option>
+              <option value="today">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+              <option value="year">This Year</option>
+            </select>
+
+            <select 
+              value={globalFilters.product}
+              onChange={(e) => setGlobalFilters({...globalFilters, product: e.target.value})}
+              className="bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-pk-accent max-w-[200px]"
+            >
+              <option value="all">All Products</option>
+              {[...new Set(allOrders.flatMap(o => o.items?.map(i => i.title) || []))].sort().map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+          <PowerBIDashboard filters={globalFilters} />
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-pk-surface p-6 rounded-3xl border border-pk-bg-secondary">
