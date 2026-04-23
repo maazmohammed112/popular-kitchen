@@ -6,6 +6,7 @@ const TopMetrics = ({ filters }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAllCustomers, setShowAllCustomers] = useState(false);
 
   useEffect(() => {
     const unsubscribe = listenToOrders((data) => {
@@ -176,7 +177,7 @@ const TopMetrics = ({ filters }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-pk-bg-secondary/50">
-                {analytics.topCustomers.map((c, i) => (
+                {(showAllCustomers ? analytics.topCustomers : analytics.topCustomers.slice(0, 10)).map((c, i) => (
                   <tr key={i} className="hover:bg-pk-bg-primary/30 transition-colors group">
                     <td className="px-5 py-3">
                       <div className="flex flex-col">
@@ -195,6 +196,16 @@ const TopMetrics = ({ filters }) => {
               </tbody>
             </table>
           </div>
+          {analytics.topCustomers.length > 10 && (
+            <div className="p-3 border-t border-pk-bg-secondary text-center">
+              <button 
+                onClick={() => setShowAllCustomers(!showAllCustomers)}
+                className="text-xs font-bold text-pk-accent hover:underline px-4 py-1"
+              >
+                {showAllCustomers ? 'Show Less' : `Show All (${analytics.topCustomers.length})`}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

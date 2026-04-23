@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiDownload } from 'react-icons/fi';
+import { FiPackage, FiAlertTriangle, FiX, FiCopy, FiMessageCircle, FiRefreshCw, FiDownload, FiTruck, FiChevronDown, FiChevronUp, FiSearch } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { listenToUserOrders, cancelOrder } from '../firebase/orders';
 import { useToast } from '../contexts/ToastContext';
@@ -57,6 +57,17 @@ export default function MyOrders() {
   const [fetchError, setFetchError] = useState(null);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [expandedOrders, setExpandedOrders] = useState(new Set());
+
+  const toggleExpand = (id) => {
+    setExpandedOrders(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const isGuest = !currentUser;
 
@@ -127,14 +138,26 @@ export default function MyOrders() {
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">My Orders</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-pk-text-main">My Orders</h1>
+          <p className="text-pk-text-muted text-sm">
+            {isGuest
+              ? 'Browsing as Guest — orders saved on this device.'
+              : `Signed in as ${currentUser.displayName || currentUser.email}`}
+          </p>
+        </div>
+        <div className="relative flex-1 max-w-xs">
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-pk-text-muted" />
+          <input 
+            type="text" 
+            placeholder="Search Order ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-pk-surface border border-pk-bg-secondary rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-pk-accent transition-all"
+          />
+        </div>
       </div>
-      <p className="text-pk-text-muted text-sm mb-8">
-        {isGuest
-          ? 'Browsing as Guest — orders saved on this device.'
-          : `Signed in as ${currentUser.displayName || currentUser.email}`}
-      </p>
 
       {/* Cancel Confirmation Dialog */}
       {cancelTarget && (
@@ -218,35 +241,83 @@ export default function MyOrders() {
       {/* Orders list */}
       {!loading && !fetchError && orders.length > 0 && (
         <div className="space-y-4">
-          {orders.map(order => (
-            <div
-              key={order.id}
-              className="bg-pk-surface border border-pk-bg-secondary rounded-2xl p-5 shadow-sm hover:border-pk-accent/30 transition-colors"
-            >
-              {/* Order header */}
-              <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-mono text-xs text-pk-accent bg-pk-accent/10 px-2 py-0.5 rounded">
-                      {order.id.slice(0, 8).toUpperCase()}
-                    </span>
-                    <span className={`text-xs font-bold uppercase px-2.5 py-0.5 rounded-full ${STATUS_STYLES[order.status] || STATUS_STYLES.pending}`}>
-                      {order.status || 'pending'}
+          {orders
+            .filter(o => o.id.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map(order => {
+              const isExpanded = expandedOrders.has(order.id);
+              const progress = order.status === 'delivered' ? 100 : order.status === 'confirmed' ? 50 : 0;
+              
+              return (
+              <div
+                key={order.id}
+                className="bg-pk-surface border border-pk-bg-secondary rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all border-l-4"
+                style={{ borderLeftColor: order.status === 'delivered' ? '#10b981' : order.status === 'cancelled' ? '#ef4444' : '#f59e0b' }}
+              >
+                {/* Status Tracker (Truck) */}
+                {order.status !== 'cancelled' && (
+                  <div className="px-6 pt-6 pb-2">
+                    <div className="relative h-1.5 bg-pk-bg-primary rounded-full mb-8">
+                      <div 
+                        className="absolute top-0 left-0 h-full bg-pk-accent rounded-full transition-all duration-1000"
+                        style={{ width: `${progress}%` }}
+                      />
+                      {/* Truck Icon */}
+                      <div 
+                        className="absolute -top-6 -translate-x-1/2 transition-all duration-1000"
+                        style={{ left: `${progress}%` }}
+                      >
+                        <div className="flex flex-col items-center">
+                          <div className="bg-pk-surface p-1.5 rounded-full border border-pk-bg-secondary shadow-sm">
+                            <FiTruck className="text-pk-accent" size={18} />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Milestones */}
+                      <div className="absolute top-4 left-0 -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Pending</div>
+                      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Confirmed</div>
+                      <div className="absolute top-4 left-[100%] -translate-x-1/2 text-[10px] font-bold text-pk-text-muted uppercase">Delivered</div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-6">
+                  {/* Order header */}
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div onClick={() => toggleExpand(order.id)} className="cursor-pointer p-2 hover:bg-pk-bg-primary rounded-xl transition-colors">
+                        {isExpanded ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-sm font-bold text-pk-accent">
+                            #{order.id.slice(0, 8).toUpperCase()}
+                          </span>
+                          <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${STATUS_STYLES[order.status] || STATUS_STYLES.pending}`}>
+                            {order.status || 'pending'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-pk-text-muted">
+                          {order.createdAt?.toMillis
+                            ? new Date(order.createdAt.toMillis()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : 'Recent order'}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xl font-bold text-pk-text-main">
+                      ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
                     </span>
                   </div>
-                  <p className="text-xs text-pk-text-muted">
-                    {order.createdAt?.toMillis
-                      ? new Date(order.createdAt.toMillis()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                      : 'Recent order'}
-                  </p>
-                </div>
-                <span className="text-xl font-bold text-pk-text-main">
-                  ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
-                </span>
-              </div>
 
-              {/* Items */}
-              <OrderItemsList items={order.items} />
+                  {/* Expandable Items */}
+                  {isExpanded && (
+                    <div className="mb-6 animate-[slideDown_0.2s_ease-out]">
+                      <h4 className="text-xs font-bold text-pk-text-muted uppercase mb-3 px-1">Order Items</h4>
+                      <div className="bg-pk-bg-primary/30 rounded-2xl p-4">
+                        <OrderItemsList items={order.items} />
+                      </div>
+                    </div>
+                  )}
 
               {/* Actions */}
               <div className="flex flex-col gap-2 pt-3 border-t border-pk-bg-secondary">
@@ -306,8 +377,8 @@ export default function MyOrders() {
                   )}
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
