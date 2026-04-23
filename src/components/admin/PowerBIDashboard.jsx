@@ -17,6 +17,7 @@ const PowerBIDashboard = (props) => {
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(null); // { type: 'chart'|'dashboard', id?: number }
+  const [showLegendId, setShowLegendId] = useState(null);
   const { showSuccess, showError } = useToast();
 
   useEffect(() => {
@@ -340,15 +341,45 @@ const PowerBIDashboard = (props) => {
                   </select>
                 </div>
               </div>
-              <button 
-                onClick={() => removeChart(chart.id)}
-                className="p-2 text-pk-text-muted hover:text-pk-error bg-pk-bg-primary rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <FiTrash2 size={16} />
-              </button>
+              <div className="flex items-center gap-1">
+                {chart.type === 'pie' && (
+                  <button 
+                    onClick={() => setShowLegendId(showLegendId === chart.id ? null : chart.id)}
+                    className={`p-2 rounded-lg transition-colors ${showLegendId === chart.id ? 'bg-pk-accent text-white' : 'text-pk-text-muted hover:bg-pk-bg-primary'}`}
+                    title="Show Details"
+                  >
+                    <FiPieChart size={16} />
+                  </button>
+                )}
+                <button 
+                  onClick={() => removeChart(chart.id)}
+                  className="p-2 text-pk-text-muted hover:text-pk-error bg-pk-bg-primary rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 w-full min-h-[250px] relative">
+              {showLegendId === chart.id && chart.type === 'pie' && (
+                <div className="absolute inset-x-0 bottom-0 z-20 bg-pk-surface/95 backdrop-blur-md p-4 border-t border-pk-bg-secondary animate-[slideUp_0.2s_ease-out] max-h-[200px] overflow-y-auto rounded-b-3xl">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="text-[10px] font-black uppercase text-pk-text-muted tracking-widest">Product Details</h4>
+                    <button onClick={() => setShowLegendId(null)} className="text-pk-text-muted hover:text-pk-text-main"><FiX size={14} /></button>
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {chartData.map((entry, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 truncate pr-4">
+                          <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                          <span className="text-pk-text-main truncate font-medium">{entry.name}</span>
+                        </div>
+                        <span className="font-bold text-pk-accent shrink-0">{entry.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {!hasData ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-pk-text-muted">
                   <FiActivity className="opacity-20 mb-2" size={32} />
@@ -395,7 +426,6 @@ const PowerBIDashboard = (props) => {
                       ))}
                     </Pie>
                     <Tooltip contentStyle={{ backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                    <Legend verticalAlign="bottom" height={36} />
                   </PieChart>
                 )}
                 </ResponsiveContainer>
