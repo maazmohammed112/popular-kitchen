@@ -16,12 +16,12 @@ const STATUS_STYLES = {
 };
 
 const SmokeEffect = () => (
-  <div className="absolute -left-6 top-2 flex flex-col gap-1">
+  <div className="absolute -left-5 top-2 flex flex-col gap-1">
     <style>{`
       @keyframes smoke-puff {
         0% { transform: translate(0, 0) scale(0.3); opacity: 0; }
         20% { opacity: 0.5; }
-        100% { transform: translate(-25px, -10px) scale(2.5); opacity: 0; }
+        100% { transform: translate(-20px, -8px) scale(2.2); opacity: 0; }
       }
       .smoke-particle {
         animation: smoke-puff 1.2s infinite ease-out;
@@ -30,7 +30,7 @@ const SmokeEffect = () => (
     {[1, 2, 3].map(i => (
       <div 
         key={i}
-        className="smoke-particle w-1.5 h-1.5 bg-gray-400/40 rounded-full"
+        className="smoke-particle w-1 h-1 bg-gray-400/40 rounded-full"
         style={{ animationDelay: `${i * 0.4}s` }}
       />
     ))}
@@ -292,7 +292,7 @@ export default function MyOrders() {
                       >
                         <div className="flex flex-col items-center relative">
                           {order.status === 'confirmed' && <SmokeEffect />}
-                          <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-4 ring-pk-surface w-14 h-8 flex items-center justify-center overflow-hidden">
+                          <div className="bg-pk-surface p-1 rounded-lg border border-pk-accent/20 shadow-lg ring-2 ring-pk-surface w-12 h-7 flex items-center justify-center overflow-hidden">
                             <img 
                               src="/truck.png" 
                               alt="Truck" 
@@ -314,9 +314,9 @@ export default function MyOrders() {
                       </div>
                       
                       {/* Milestones */}
-                      <div className="absolute top-4 left-0 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Pending</div>
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Confirmed</div>
-                      <div className="absolute top-4 left-[100%] -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Delivered</div>
+                      <div className="absolute top-6 left-0 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Pending</div>
+                      <div className="absolute top-6 left-1/2 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Confirmed</div>
+                      <div className="absolute top-6 left-[100%] -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Delivered</div>
                       
                       {/* Milestone Dots */}
                       <div className="absolute -top-[3px] left-0 w-2 h-2 rounded-full bg-pk-bg-primary border-2 border-pk-surface shadow-sm"></div>
