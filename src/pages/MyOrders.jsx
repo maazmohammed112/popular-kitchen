@@ -255,7 +255,7 @@ export default function MyOrders() {
               >
                 {/* Status Tracker (Truck) */}
                 {order.status !== 'cancelled' && (
-                  <div className="px-8 pt-10 pb-4 border-b border-pk-bg-secondary/50 bg-pk-bg-primary/10">
+                  <div className="px-8 pt-8 pb-10 border-b border-pk-bg-secondary/50 bg-pk-bg-primary/10">
                     <div className="relative h-[2px] bg-pk-bg-primary rounded-full mx-2">
                       {/* Background Progress */}
                       <div 
@@ -285,9 +285,9 @@ export default function MyOrders() {
                       </div>
                       
                       {/* Milestones */}
-                      <div className="absolute -top-7 left-0 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Pending</div>
-                      <div className="absolute -top-7 left-1/2 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Confirmed</div>
-                      <div className="absolute -top-7 left-[100%] -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Delivered</div>
+                      <div className="absolute top-4 left-0 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Pending</div>
+                      <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Confirmed</div>
+                      <div className="absolute top-4 left-[100%] -translate-x-1/2 text-[9px] font-black text-pk-text-muted uppercase tracking-tighter">Delivered</div>
                       
                       {/* Milestone Dots */}
                       <div className="absolute -top-[3px] left-0 w-2 h-2 rounded-full bg-pk-bg-primary border-2 border-pk-surface shadow-sm"></div>
