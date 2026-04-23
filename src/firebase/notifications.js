@@ -172,7 +172,7 @@ ${itemsList}
   // Send Email to Customer
   if (orderData.email) {
     const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'pending', ...orderData });
-    sendEmail({ to: orderData.email, subject: `Order Received - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
+    sendEmail({ to: orderData.email, subject: `Order Received: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, htmlContent: emailHtml });
   }
 
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
@@ -217,12 +217,6 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
   const showInvoice = newStatus === 'confirmed' || newStatus === 'delivered';
   const buttons = getContactButtons(orderId, orderData, newStatus, showInvoice);
 
-  // Send Email to Customer
-  if (orderData.email) {
-    const emailHtml = getOrderEmailTemplate({ id: orderId, status: newStatus, adminNote, ...orderData });
-    sendEmail({ to: orderData.email, subject: `Order Update - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
-  }
-
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 
@@ -258,7 +252,7 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
   // Send Email to Customer
   if (orderData.email) {
     const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'cancelled', cancelledBy, ...orderData });
-    sendEmail({ to: orderData.email, subject: `Order Cancelled - #${orderId.slice(0, 8)}`, htmlContent: emailHtml });
+    sendEmail({ to: orderData.email, subject: `Order Cancelled: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, htmlContent: emailHtml });
   }
 
   const buttons = getContactButtons(orderId, orderData, 'cancelled');

@@ -10,7 +10,6 @@ import { createOrder } from '../firebase/orders';
 import { SignUpPromptModal } from '../components/SignUpPromptModal';
 import { AuthModal } from '../components/AuthModal';
 import { ConfirmOrderModal } from '../components/ConfirmOrderModal';
-import { sendEmail, getOrderEmailTemplate } from '../utils/emailService';
 
 export default function Checkout() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -119,15 +118,6 @@ export default function Checkout() {
 
       const orderId = await createOrder(orderData);
       
-      // Send automatic email confirmation
-      if (formData.email) {
-        sendEmail({
-          to: formData.email,
-          subject: `Order Received: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`,
-          htmlContent: getOrderEmailTemplate({ ...orderData, id: orderId })
-        });
-      }
-
       // Save details for next time
       const userRef = doc(db, 'users', currentUser.uid);
       await setDoc(userRef, { shippingDetails: formData }, { merge: true });
