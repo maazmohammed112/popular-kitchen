@@ -23,11 +23,11 @@ export const handler = async (event) => {
         "content-type": "application/json"
       },
       body: JSON.stringify({
-        sender: { name: senderName, email: "mohammed@popularkitchen.store" },
+        sender: { name: senderName, email: "info@primkart.app" },
         to: [{ email: to }],
         subject: subject,
         htmlContent: htmlContent,
-        replyTo: { email: "mohammed@popularkitchen.store" }
+        replyTo: { email: "info@primkart.app" }
       })
     });
 
