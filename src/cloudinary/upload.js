@@ -1,5 +1,5 @@
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || "dxonu07sc";
-const UPLOAD_PRESET = "popular_kitchen";
+const UPLOAD_PRESET = "primkart_kitchenware";
 
 export const uploadImageToCloudinary = async (file) => {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;

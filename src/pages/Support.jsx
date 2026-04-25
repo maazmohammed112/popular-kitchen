@@ -55,7 +55,7 @@ export default function Support() {
 
         {/* WhatsApp */}
         <a
-          href="https://wa.me/919108167067?text=Hello%20Popular%20Kitchen!%20I%20need%20support."
+          href="https://wa.me/919108167067?text=Hello%20Primkart%20Kitchenware!%20I%20need%20support."
           target="_blank"
           rel="noopener noreferrer"
           className="bg-pk-surface border border-pk-bg-secondary rounded-3xl p-6 flex gap-4 hover:border-[#25D366]/50 transition-colors group"

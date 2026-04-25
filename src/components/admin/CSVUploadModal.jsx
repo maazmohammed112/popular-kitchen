@@ -407,7 +407,7 @@ export default function CSVUploadModal({ existingCategories = [], onClose, onSuc
   const downloadSample = () => {
     const blob = new Blob([SAMPLE_CSV], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'popular_kitchen_sample.csv'; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = 'primkart_kitchenware_sample.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 

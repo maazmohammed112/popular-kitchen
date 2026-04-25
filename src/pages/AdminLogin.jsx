@@ -61,7 +61,7 @@ export default function AdminLogin() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 focus:outline-none focus:border-pk-accent"
-              placeholder="admin@popularkitchen.com"
+              placeholder="admin@primkart.app"
               required
             />
           </div>
