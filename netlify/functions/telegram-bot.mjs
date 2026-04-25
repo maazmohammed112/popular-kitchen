@@ -175,7 +175,7 @@ async function handleOrderLookup(chatId, orderId) {
 <b>Total Amount:</b> ₹${data.totalAmount.toLocaleString('en-IN')}
 <b>Status:</b> <b>${data.status.toUpperCase()}</b>
 
-<a href="https://popularkitchen.store/admin/orders">View in Dashboard</a>
+<a href="https://primkart.app/admin/orders">View in Dashboard</a>
     `;
     await sendMessage(chatId, message);
   } catch (error) {
@@ -205,7 +205,7 @@ async function handlePendingOrders(chatId) {
 
 ${list}
 
-<a href="https://popularkitchen.store/admin/orders">Go to Orders Management</a>
+<a href="https://primkart.app/admin/orders">Go to Orders Management</a>
     `;
     await sendMessage(chatId, message);
   } catch (error) {
