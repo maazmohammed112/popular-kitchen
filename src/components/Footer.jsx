@@ -91,7 +91,7 @@ export const Footer = ({ toggleTheme }) => {
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
           <p className="text-xs text-white/40">
-            © 2026 Primkart Kitchenware. Built by{' '}
+            © 2026 Primkart Kitchenware | primkart.app. All rights reserved. Built by{' '}
             <a 
               href="https://www.maazportfolio.site/" 
               target="_blank" 
