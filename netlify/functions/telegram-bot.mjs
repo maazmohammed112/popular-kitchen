@@ -37,8 +37,9 @@ export const handler = async (event) => {
     const chatId = message.chat.id.toString();
     const text = message.text.trim();
 
-    // Security Check
-    if (chatId !== ADMIN_CHAT_ID) {
+    // Security Check - Support comma-separated IDs
+    const adminIds = ADMIN_CHAT_ID?.toString().split(',').map(id => id.trim()).filter(Boolean) || [];
+    if (!adminIds.includes(chatId)) {
       console.warn(`Unauthorized access attempt from Chat ID: ${chatId}`);
       return { statusCode: 200, body: 'OK' }; // Don't respond to unauthorized users
     }

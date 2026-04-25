@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2, FiPlus, FiMinus, FiArrowRight } from 'react-icons/fi';
+import { FiShoppingCart, FiCheck, FiMoreVertical, FiEdit2, FiTrash2, FiPlus, FiMinus, FiArrowRight, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,11 +18,60 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
     typeof s === 'string' ? { name: s, price: product.discountPrice || product.price } : s
   );
 
+  const sizeImages = normalizedSizes.map(s => s.image).filter(Boolean);
+  const allImages = [...new Set([...(product.images || []), ...sizeImages])];
+  const [activeImage, setActiveImage] = useState(0);
+
   const [selectedSize, setSelectedSize] = useState(normalizedSizes.length > 0 ? normalizedSizes[0] : null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const menuRef = useRef(null);
+
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const handleImageChange = (e, newIdx) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setActiveImage(newIdx);
+    const currentImg = allImages[newIdx];
+    const sizeObj = normalizedSizes.find(s => s.image === currentImg);
+    if (sizeObj) setSelectedSize(sizeObj);
+  };
+
+  const handleSizeSelect = (e, sizeObj) => {
+    e.preventDefault();
+    setSelectedSize(sizeObj);
+    if (sizeObj && sizeObj.image) {
+      const imgIdx = allImages.indexOf(sizeObj.image);
+      if (imgIdx !== -1) setActiveImage(imgIdx);
+    }
+  };
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEndHandler = (e) => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && activeImage < allImages.length - 1) {
+      handleImageChange(e, activeImage + 1);
+    }
+    if (isRightSwipe && activeImage > 0) {
+      handleImageChange(e, activeImage - 1);
+    }
+  };
 
   // Close menu on outside click
   useEffect(() => {
@@ -81,8 +130,7 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
 
   const hasOffer = product.offerPercent > 0 && !selectedSize;
   const isOutOfStock = product.stockStatus === 'outOfStock';
-  const rawImg = product.images?.[0];
-  const imgUrl = rawImg ? getOptimizedUrl(rawImg) : null;
+  const imgUrl = allImages.length > 0 ? getOptimizedUrl(allImages[activeImage]) : null;
 
   return (
     <>
@@ -144,13 +192,18 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
 
         <Link to={`/product/${product.id}`} className="flex flex-col flex-1">
           {/* Image */}
-          <div className="w-full h-48 overflow-hidden relative bg-pk-bg-primary">
+          <div 
+            className="w-full h-48 overflow-hidden relative bg-pk-bg-primary select-none group/img"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEndHandler}
+          >
             {imgUrl ? (
               <ImageWithSkeleton
                 src={imgUrl}
                 alt={product.title}
-                containerClassName="w-full h-full bg-white"
-                className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
+                containerClassName="w-full h-full bg-white pointer-events-none"
+                className={`w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 pointer-events-none ${isOutOfStock ? 'opacity-50 grayscale' : ''}`}
               />
             ) : (
               <div className="w-full h-full bg-pk-bg-secondary flex flex-col items-center justify-center gap-2">
@@ -162,12 +215,39 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
             )}
 
             {isOutOfStock && (
-              <div className="absolute inset-x-0 top-20 flex justify-center z-10">
+              <div className="absolute inset-x-0 top-20 flex justify-center z-10 pointer-events-none">
                 <span className="bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-lg font-bold tracking-wider text-xs"
                   style={{ color: 'var(--color-primary)' }}>
                   OUT OF STOCK
                 </span>
               </div>
+            )}
+            
+            {/* Desktop Navigation Overlays */}
+            {allImages.length > 1 && (
+              <>
+                <div 
+                  className="absolute inset-y-0 left-0 w-1/3 z-20 cursor-pointer hidden md:flex items-center justify-start px-2 opacity-0 group-hover/img:opacity-100 transition-opacity"
+                  onClick={(e) => handleImageChange(e, activeImage > 0 ? activeImage - 1 : allImages.length - 1)}
+                  title="Previous image"
+                >
+                  <div className="w-8 h-8 rounded-full bg-black/20 backdrop-blur text-white flex items-center justify-center pointer-events-none shadow-sm"><FiChevronLeft size={20}/></div>
+                </div>
+                <div 
+                  className="absolute inset-y-0 right-0 w-1/3 z-20 cursor-pointer hidden md:flex items-center justify-end px-2 opacity-0 group-hover/img:opacity-100 transition-opacity"
+                  onClick={(e) => handleImageChange(e, activeImage < allImages.length - 1 ? activeImage + 1 : 0)}
+                  title="Next image"
+                >
+                  <div className="w-8 h-8 rounded-full bg-black/20 backdrop-blur text-white flex items-center justify-center pointer-events-none shadow-sm"><FiChevronRight size={20}/></div>
+                </div>
+                
+                {/* Dots indicator */}
+                <div className="absolute bottom-2 inset-x-0 flex justify-center gap-1.5 z-10 pointer-events-none">
+                  {allImages.map((_, i) => (
+                    <div key={i} className={`h-1.5 rounded-full transition-all ${activeImage === i ? 'w-4 bg-pk-accent' : 'w-1.5 bg-pk-bg-secondary/80'}`} />
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
@@ -205,10 +285,10 @@ export const ProductCard = ({ product, onEdit, onDelete }) => {
           {normalizedSizes.length > 0 && (
             <div className="mb-3">
               <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 flex-wrap">
-                {normalizedSizes.map(size => (
+                {normalizedSizes.map((size, idx) => (
                   <button
-                    key={size.name}
-                    onClick={(e) => { e.preventDefault(); setSelectedSize(size); }}
+                    key={`${size.name}-${idx}`}
+                    onClick={(e) => handleSizeSelect(e, size)}
                     className="text-[10px] uppercase font-bold px-2.5 py-1 rounded-lg whitespace-nowrap transition-all border text-xs"
                     style={selectedSize?.name === size.name
                       ? { background: 'var(--color-secondary)', color: 'white', borderColor: 'var(--color-secondary)' }

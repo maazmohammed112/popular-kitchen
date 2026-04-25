@@ -3,8 +3,15 @@ export const createImage = (url) =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
-    image.src = url;
+    
+    // Add crossOrigin for external URLs
+    if (!url.startsWith('data:') && !url.startsWith('blob:')) {
+      image.setAttribute('crossOrigin', 'anonymous');
+      // Bypass cache to avoid CORS errors from cached images missing headers
+      image.src = url + (url.includes('?') ? '&' : '?') + 'not-from-cache=' + Date.now();
+    } else {
+      image.src = url;
+    }
   });
 
 export function getRadianAngle(degreeValue) {
@@ -90,8 +97,16 @@ export default async function getCroppedImg(
 
   // As a blob
   return new Promise((resolve, reject) => {
-    croppedCanvas.toBlob((file) => {
-      resolve(file);
-    }, 'image/jpeg');
+    try {
+      croppedCanvas.toBlob((file) => {
+        if (file) {
+          resolve(file);
+        } else {
+          reject(new Error('Canvas is empty'));
+        }
+      }, 'image/jpeg');
+    } catch (err) {
+      reject(err);
+    }
   });
 }

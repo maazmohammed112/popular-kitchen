@@ -77,7 +77,9 @@ export const getOrderEmailTemplate = (order) => {
     </tr>
   `).join('');
 
-  const finalTotal = order.customTotal || totalAmount || 0;
+  const baseTotal = order.customTotal || totalAmount || 0;
+  const delivery = order.deliveryCharge || 0;
+  const finalTotal = baseTotal + delivery;
 
   return `
     <div style="background-color: #F0F4F8; padding: 50px 20px; font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;">
@@ -102,13 +104,19 @@ export const getOrderEmailTemplate = (order) => {
               <span style="display: block; font-size: 11px; font-weight: 800; color: ${statusColor}; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 8px;">Order Reference: #${shortId}</span>
               <span style="font-size: 28px; font-weight: 900; color: ${statusColor}; text-transform: uppercase;">${status}</span>
             </div>
-
+ 
             <!-- Order Table -->
             <div style="margin-bottom: 10px; border-bottom: 2px solid #1A354A; padding-bottom: 10px;">
                <h3 style="margin: 0; font-size: 14px; font-weight: 900; color: #1A354A; text-transform: uppercase; letter-spacing: 0.1em;">Order Summary</h3>
             </div>
             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 40px;">
               ${itemsList}
+              ${delivery > 0 ? `
+              <tr>
+                <td style="padding: 15px 0 0 0; font-size: 14px; color: #435E91;">Delivery Charges</td>
+                <td align="right" style="padding: 15px 0 0 0; font-size: 14px; color: #1A354A;">₹${Number(delivery).toLocaleString('en-IN')}</td>
+              </tr>
+              ` : ''}
               <tr>
                 <td style="padding: 25px 0 0 0; font-size: 16px; font-weight: 700; color: #435E91;">Total Payable</td>
                 <td align="right" style="padding: 25px 0 0 0; font-size: 32px; font-weight: 900; color: #1A354A;">₹${Number(finalTotal).toLocaleString('en-IN')}</td>
@@ -116,7 +124,7 @@ export const getOrderEmailTemplate = (order) => {
               ${order.discountAmount > 0 ? `
               <tr>
                 <td colspan="2" align="right" style="padding-top: 5px; font-size: 13px; font-weight: 700; color: #10B981;">
-                  ✓ Special Admin Discount Applied
+                  ✓ Special Discount Applied
                 </td>
               </tr>
               ` : ''}

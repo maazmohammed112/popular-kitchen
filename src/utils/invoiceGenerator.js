@@ -134,8 +134,11 @@ export const generateCustomerInvoice = async (order) => {
   doc.setFontSize(11);
   doc.setTextColor(185, 28, 28);
   
-  const finalTotal = order.customTotal || order.totalAmount || 0;
-  const amountText = `AMOUNT DUE: Rs. ${Number(finalTotal).toLocaleString('en-IN')} — Payment Pending`;
+  const baseTotal = order.customTotal || order.totalAmount || 0;
+  const delivery = order.deliveryCharge || 0;
+  const grandTotal = baseTotal + delivery;
+  
+  const amountText = `TOTAL PAYABLE: Rs. ${Number(grandTotal).toLocaleString('en-IN')} — Payment Pending`;
   
   doc.text(amountText, 105, y + 8, { align: 'center' });
   
@@ -143,11 +146,23 @@ export const generateCustomerInvoice = async (order) => {
   doc.setFontSize(8.5);
   doc.setTextColor(120);
   
+  let offset = 13;
   if (order.discountAmount && order.discountAmount > 0) {
-    doc.text(`(Includes special discount of Rs. ${Number(order.discountAmount).toLocaleString('en-IN')})`, 105, y + 13, { align: 'center' });
-    doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + 19, { align: 'center' });
-  } else {
-    doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + 18, { align: 'center' });
+    doc.text(`(Includes special discount of Rs. ${Number(order.discountAmount).toLocaleString('en-IN')})`, 105, y + offset, { align: 'center' });
+    offset += 5;
+  }
+  
+  if (delivery > 0) {
+    doc.text(`+ Delivery Charges: Rs. ${Number(delivery).toLocaleString('en-IN')}`, 105, y + offset, { align: 'center' });
+    offset += 5;
+  }
+  
+  doc.text(`Contact us: ${BUSINESS.whatsapp} or ${BUSINESS.email}`, 105, y + offset, { align: 'center' });
+
+  if (order.status === 'pending' || order.status === 'confirmed') {
+    doc.setFontSize(8);
+    doc.setTextColor(220, 38, 38);
+    doc.text('* Free delivery upto 15km in Bangalore. If more than 15km, delivery charges applied.', 105, y + 25, { align: 'center' });
   }
 
   // Footer
@@ -243,9 +258,11 @@ export const generateAdminInvoice = async (order) => {
     doc.setTextColor(100);
   }
 
-  currentY += 6;
-  doc.text('Delivery Charges:', 148, currentY);
-  doc.text('FREE', 196, currentY, { align: 'right' });
+  if (order.deliveryCharge && order.deliveryCharge > 0) {
+    currentY += 6;
+    doc.text('Delivery Charges:', 148, currentY);
+    doc.text(`Rs. ${Number(order.deliveryCharge).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
+  }
 
   doc.setDrawColor(210);
   doc.line(140, currentY + 3, 196, currentY + 3);
@@ -254,14 +271,21 @@ export const generateAdminInvoice = async (order) => {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(0);
-  doc.text('Grand Total:', 140, currentY);
-  doc.text(`Rs. ${Number(order.customTotal || order.totalAmount || 0).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
+  doc.text('Grand Total (Payable):', 140, currentY);
+  const payableAmount = (order.customTotal || order.totalAmount || 0) + (order.deliveryCharge || 0);
+  doc.text(`Rs. ${Number(payableAmount).toLocaleString('en-IN')}`, 196, currentY, { align: 'right' });
 
   // Thank you
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(120);
   doc.text('Thank you for shopping with Popular Kitchen!', 105, currentY + 12, { align: 'center' });
+
+  if (order.status === 'pending' || order.status === 'confirmed') {
+    doc.setFontSize(8);
+    doc.setTextColor(220, 38, 38);
+    doc.text('* Free delivery upto 15km in Bangalore. If more than 15km, delivery charges applied.', 105, currentY + 18, { align: 'center' });
+  }
 
   // Footer
   doc.setFontSize(7.5);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare, FiTag, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare, FiTag, FiAlertCircle, FiCheckCircle, FiTruck, FiLoader } from 'react-icons/fi';
 import { SiWhatsapp, SiGmail } from 'react-icons/si';
-import { getOrders, listenToOrders, updateOrderStatus, cancelOrder, updateOrderTotal } from '../../firebase/orders';
+import { getOrders, listenToOrders, updateOrderStatus, cancelOrder, updateOrderTotal, updateOrderDeliveryCharge } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
 import { generateAdminInvoice } from '../../utils/invoiceGenerator';
 
@@ -18,6 +18,7 @@ export default function ManageOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [discountModal, setDiscountModal] = useState(null); // { id, total }
   const [deliveryConfirm, setDeliveryConfirm] = useState(null); // { id, status }
+  const [deliveryChargeModal, setDeliveryChargeModal] = useState(null); // { id, currentCharge }
   
   const { showSuccess, showError } = useToast();
 
@@ -237,7 +238,10 @@ export default function ManageOrders() {
 
       <div className="bg-pk-surface rounded-3xl border border-pk-bg-secondary overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-pk-text-muted animate-pulse">Loading orders...</div>
+          <div className="p-20 text-center flex flex-col items-center gap-3">
+            <FiLoader className="animate-spin text-pk-accent" size={30} />
+            <p className="text-pk-text-muted font-medium">Loading orders, please wait...</p>
+          </div>
         ) : orders.length === 0 ? (
           <div className="p-12 text-center text-pk-text-muted">No orders found.</div>
         ) : (
@@ -329,6 +333,13 @@ export default function ManageOrders() {
                                 className="p-2 text-pk-tertiary hover:bg-pk-tertiary/10 rounded-lg transition-colors"
                               >
                                 <FiTag size={16}/>
+                              </button>
+                              <button
+                                onClick={() => setDeliveryChargeModal({ id: order.id, currentCharge: order.deliveryCharge || 0 })}
+                                title="Add Delivery Charge"
+                                className="p-2 text-pk-accent hover:bg-pk-accent/10 rounded-lg transition-colors"
+                              >
+                                <FiTruck size={16}/>
                               </button>
                             </div>
                           )}
@@ -489,6 +500,55 @@ export default function ManageOrders() {
                       setDiscountModal(null);
                     } catch (err) {
                       showError("Failed to update price.");
+                    }
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-pk-accent text-white font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-accent/20"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delivery Charge Modal */}
+      {deliveryChargeModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-pk-surface rounded-2xl p-8 w-full max-w-sm border border-pk-bg-secondary shadow-2xl animate-[slideUp_0.2s_ease-out]">
+            <div className="flex items-center gap-2 mb-6">
+              <FiTruck className="text-pk-accent" size={20} />
+              <h3 className="text-lg font-bold text-pk-text-main">Set Delivery Charge</h3>
+            </div>
+            
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-pk-text-muted uppercase mb-2">Delivery Charge (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  defaultValue={deliveryChargeModal.currentCharge}
+                  id="delivery-charge-input"
+                  placeholder="e.g. 100"
+                  className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-3 font-bold focus:border-pk-accent outline-none transition-all"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setDeliveryChargeModal(null)}
+                  className="flex-1 py-3 rounded-xl border border-pk-bg-secondary text-pk-text-muted font-bold hover:bg-pk-bg-primary transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    const chargeVal = parseFloat(document.getElementById('delivery-charge-input').value) || 0;
+                    try {
+                      await updateOrderDeliveryCharge(deliveryChargeModal.id, chargeVal);
+                      showSuccess("Delivery charge applied successfully!");
+                      setDeliveryChargeModal(null);
+                    } catch (err) {
+                      showError("Failed to update delivery charge.");
                     }
                   }}
                   className="flex-1 py-3 rounded-xl bg-pk-accent text-white font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-accent/20"

@@ -47,11 +47,11 @@ export const getOptimizedUrl = (url, width = 400) => {
 
   // 2. If it's already a Cloudinary URL — use fast WebP transformation
   if (finalUrl.includes("cloudinary.com")) {
-    // Strip any existing transformation to avoid double-transform
     const parts = finalUrl.split("upload/");
     if (parts.length === 2) {
-      // Remove any existing transformation segment (starts with f_, q_, w_, etc.)
-      const afterUpload = parts[1].replace(/^([a-z_,0-9:]+\/)+/, '');
+      // ONLY strip actual transformation segments (those containing underscores like w_400)
+      // DO NOT strip the version segment (e.g., v1714074213/) which starts with 'v' and digits
+      const afterUpload = parts[1].replace(/^((?![v]\d+\/)[a-z_,0-9:]+\/)+/, '');
       return `${parts[0]}upload/f_webp,q_auto:eco,w_${width},c_limit/${afterUpload}`;
     }
     return finalUrl;

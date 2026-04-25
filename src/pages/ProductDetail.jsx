@@ -28,6 +28,70 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const sizeImages = (product?.sizes || []).map(s => s.image).filter(Boolean);
+  const allImages = product ? [...new Set([...(product.images || []), ...sizeImages])] : [];
+
+  const handleImageChange = (newIdx) => {
+    setActiveImage(newIdx);
+    const currentImg = allImages[newIdx];
+    const sizeObj = product?.sizes?.find(s => s.image === currentImg);
+    if (sizeObj) setSelectedSize(sizeObj.name);
+  };
+
+  const handleSizeSelect = (sizeName) => {
+    setSelectedSize(sizeName);
+    const sizeObj = product?.sizes?.find(s => s.name === sizeName);
+    if (sizeObj && sizeObj.image) {
+      const imgIdx = allImages.indexOf(sizeObj.image);
+      if (imgIdx !== -1) setActiveImage(imgIdx);
+    }
+  };
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && activeImage < allImages.length - 1) {
+      handleImageChange(activeImage + 1);
+    }
+    if (isRightSwipe && activeImage > 0) {
+      handleImageChange(activeImage - 1);
+    }
+  };
+
+  const handleImageClick = (e) => {
+    if (window.innerWidth < 768) {
+      if (allImages.length > 0) setIsLightboxOpen(true);
+      return;
+    }
+    if (allImages.length <= 1) {
+      if (allImages.length > 0) setIsLightboxOpen(true);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    if (x < rect.width / 2) {
+      if (activeImage > 0) handleImageChange(activeImage - 1);
+      else handleImageChange(allImages.length - 1);
+    } else {
+      if (activeImage < allImages.length - 1) handleImageChange(activeImage + 1);
+      else handleImageChange(0);
+    }
+  };
+
   // Scroll to top whenever the product id changes (related product click)
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -199,28 +263,43 @@ export default function ProductDetail() {
         {/* Images */}
         <div className="flex flex-col gap-4">
           <div 
-            className="w-full aspect-square bg-pk-bg-primary rounded-2xl overflow-hidden relative cursor-pointer group"
-            onClick={() => product.images?.length > 0 && setIsLightboxOpen(true)}
+            className="w-full aspect-square bg-pk-bg-primary rounded-2xl overflow-hidden relative cursor-pointer group select-none"
+            onClick={handleImageClick}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEndHandler}
           >
             <ImageWithSkeleton 
-              src={getOptimizedUrl(product.images?.[activeImage], 1200)} 
+              src={getOptimizedUrl(allImages[activeImage], 1200)} 
               alt={product.title} 
-              containerClassName="w-full h-full"
-              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+              containerClassName="w-full h-full pointer-events-none"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105 pointer-events-none"
             />
             {hasOffer && (
               <span className="absolute top-4 left-4 bg-pk-error text-white font-bold px-3 py-1 rounded-lg uppercase text-xs shadow-lg">
                 {product.offerPercent}% OFF
               </span>
             )}
+            
+            {/* Desktop Navigation Indicators */}
+            {allImages.length > 1 && (
+              <>
+                <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-start px-4 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex">
+                  <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur text-white flex items-center justify-center pointer-events-none"><FiChevronLeft size={24}/></div>
+                </div>
+                <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-end px-4 opacity-0 group-hover:opacity-100 transition-opacity hidden md:flex">
+                  <div className="w-10 h-10 rounded-full bg-black/20 backdrop-blur text-white flex items-center justify-center pointer-events-none"><FiChevronRight size={24}/></div>
+                </div>
+              </>
+            )}
           </div>
           
-          {product.images && product.images.length > 1 && (
+          {allImages.length > 1 && (
             <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
-              {product.images.map((img, idx) => (
+              {allImages.map((img, idx) => (
                 <button 
                   key={idx} 
-                  onClick={() => setActiveImage(idx)}
+                  onClick={() => handleImageChange(idx)}
                   className={`w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors ${activeImage === idx ? 'border-pk-accent' : 'border-transparent'}`}
                 >
                   <img src={getOptimizedUrl(img, 200)} alt="" className="w-full h-full object-cover" />
@@ -283,10 +362,10 @@ export default function ProductDetail() {
             <div className="mb-6 pb-6 border-b border-pk-bg-secondary">
               <h3 className="text-sm font-medium text-pk-text-muted mb-3">Select Size</h3>
               <div className="flex flex-wrap gap-3">
-                {product.sizes.map(size => (
+                {product.sizes.map((size, idx) => (
                   <button 
-                    key={size.name}
-                    onClick={() => setSelectedSize(size.name)}
+                    key={`${size.name}-${idx}`}
+                    onClick={() => handleSizeSelect(size.name)}
                     className={`px-5 py-2 rounded-xl text-sm font-medium transition-all flex flex-col items-center ${
                       selectedSize === size.name 
                       ? 'bg-pk-accent text-white shadow-[0_0_15px_rgba(30,144,255,0.4)] border-pk-accent' 
@@ -391,7 +470,7 @@ export default function ProductDetail() {
       )}
 
       {/* Lightbox Modal */}
-      {isLightboxOpen && product.images?.length > 0 && (
+      {isLightboxOpen && allImages.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center">
           <button 
             onClick={() => setIsLightboxOpen(false)}
@@ -401,9 +480,9 @@ export default function ProductDetail() {
           </button>
           
           <div className="relative w-full max-w-5xl h-full max-h-[80vh] flex items-center justify-center px-4">
-            {product.images.length > 1 && (
+            {allImages.length > 1 && (
               <button 
-                onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === 0 ? product.images.length - 1 : prev - 1); }}
+                onClick={(e) => { e.stopPropagation(); handleImageChange(activeImage === 0 ? allImages.length - 1 : activeImage - 1); }}
                 className="absolute left-4 md:left-8 text-white/50 hover:text-white p-3 z-50 bg-black/20 hover:bg-black/40 rounded-full transition-all"
               >
                 <FiChevronLeft size={40} />
@@ -411,15 +490,15 @@ export default function ProductDetail() {
             )}
             
             <ImageWithSkeleton 
-              src={getOptimizedUrl(product.images[activeImage], 2000)} 
+              src={getOptimizedUrl(allImages[activeImage], 2000)} 
               alt={product.title}
               containerClassName="max-w-full max-h-full"
               className="max-w-full max-h-full object-contain"
             />
             
-            {product.images.length > 1 && (
+            {allImages.length > 1 && (
               <button 
-                onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === product.images.length - 1 ? 0 : prev + 1); }}
+                onClick={(e) => { e.stopPropagation(); handleImageChange(activeImage === allImages.length - 1 ? 0 : activeImage + 1); }}
                 className="absolute right-4 md:right-8 text-white/50 hover:text-white p-3 z-50 bg-black/20 hover:bg-black/40 rounded-full transition-all"
               >
                 <FiChevronRight size={40} />
@@ -427,12 +506,12 @@ export default function ProductDetail() {
             )}
           </div>
           
-          {product.images.length > 1 && (
+          {allImages.length > 1 && (
             <div className="absolute bottom-6 flex gap-3 overflow-x-auto max-w-full px-4 scrollbar-hide">
-              {product.images.map((img, idx) => (
+              {allImages.map((img, idx) => (
                 <button 
                   key={idx}
-                  onClick={() => setActiveImage(idx)}
+                  onClick={() => handleImageChange(idx)}
                   className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-pk-accent scale-110 opacity-100' : 'border-transparent opacity-50 hover:opacity-100'}`}
                 >
                   <img src={getOptimizedUrl(img, 200)} alt="" className="w-full h-full object-cover" />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload, FiCamera, FiMoreVertical, FiArrowLeft, FiCheckSquare, FiSquare } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiImage, FiX, FiLayers, FiUpload, FiCamera, FiMoreVertical, FiArrowLeft, FiCheckSquare, FiSquare, FiLoader } from 'react-icons/fi';
 import { getProducts, addProduct, updateProduct, deleteProduct } from '../../firebase/products';
 import { uploadImageToCloudinary } from '../../cloudinary/upload';
 import Cropper from 'react-easy-crop';
@@ -67,7 +67,8 @@ export default function ManageProducts() {
     zoom: 1,
     rotation: 0,
     croppedAreaPixels: null,
-    editingIndex: null
+    editingIndex: null,
+    editingSize: null
   });
 
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -77,7 +78,7 @@ export default function ManageProducts() {
   const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
   const [pendingUploads, setPendingUploads] = useState({});
 
-  const existingCategories = [...new Set(products.map(p => p.category))].filter(Boolean);
+  const existingCategories = [...new Set(products.map(p => p.category?.trim()))].filter(Boolean);
 
   useEffect(() => { fetchProducts(); }, []);
 
@@ -250,11 +251,53 @@ export default function ManageProducts() {
       if (!formData.sizes.find(s => s.name === name)) {
         setFormData(prev => ({ 
           ...prev, 
-          sizes: [...prev.sizes, { name, price: parseFloat(newSizePrice) || parseFloat(formData.discountPrice || formData.price) || 0 }] 
+          sizes: [...prev.sizes, { name, price: parseFloat(newSizePrice) || parseFloat(formData.discountPrice || formData.price) || 0, image: null }] 
         }));
         setNewSizeName('');
         setNewSizePrice('');
       }
+    }
+  };
+
+  const handleSizePriceChange = (name, newPrice) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.map(s => s.name === name ? { ...s, price: parseFloat(newPrice) || 0 } : s)
+    }));
+  };
+
+  const handleSizeImageUpload = async (e, sizeName) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImages(true);
+    try {
+      const options = { maxSizeMB: 0.19, maxWidthOrHeight: 1200, useWebWorker: true, initialQuality: 0.85 };
+      const compressedFile = await imageCompression(file, options);
+      const realUrl = await uploadImageToCloudinary(compressedFile);
+      setFormData(prev => ({
+        ...prev,
+        sizes: prev.sizes.map(s => s.name === sizeName ? { ...s, image: realUrl } : s)
+      }));
+      showSuccess('Size image uploaded');
+    } catch (err) {
+      console.error(err);
+      showError('Failed to upload size image');
+    } finally {
+      setUploadingImages(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleRemoveSizeImage = (sizeName) => {
+    setFormData(prev => ({
+      ...prev,
+      sizes: prev.sizes.map(s => s.name === sizeName ? { ...s, image: null } : s)
+    }));
+  };
+
+  const confirmRemoveSize = (sizeName) => {
+    if (window.confirm(`Are you sure you want to delete the ${sizeName} variant?`)) {
+      handleRemoveSize(sizeName);
     }
   };
 
@@ -316,13 +359,34 @@ export default function ManageProducts() {
   };
 
   const handleOpenCrop = (imgUrl, index) => {
+    // Add timestamp to ensure cropper gets the latest version if URL is reused
+    const cacheBuster = imgUrl.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+    const freshUrl = (imgUrl.startsWith('data:') || imgUrl.startsWith('blob:')) ? imgUrl : (imgUrl + cacheBuster);
+
     setCropState({
-      imageSrc: imgUrl,
+      imageSrc: freshUrl,
       crop: { x: 0, y: 0 },
       zoom: 1,
       rotation: 0,
       croppedAreaPixels: null,
-      editingIndex: index
+      editingIndex: index,
+      editingSize: null
+    });
+  };
+
+  const handleOpenSizeCrop = (imgUrl, sizeName) => {
+    // Add timestamp to ensure cropper gets the latest version if URL is reused
+    const cacheBuster = imgUrl.includes('?') ? `&t=${Date.now()}` : `?t=${Date.now()}`;
+    const freshUrl = (imgUrl.startsWith('data:') || imgUrl.startsWith('blob:')) ? imgUrl : (imgUrl + cacheBuster);
+
+    setCropState({
+      imageSrc: freshUrl,
+      crop: { x: 0, y: 0 },
+      zoom: 1,
+      rotation: 0,
+      croppedAreaPixels: null,
+      editingIndex: null,
+      editingSize: sizeName
     });
   };
 
@@ -344,7 +408,12 @@ export default function ManageProducts() {
       
       const url = await uploadImageToCloudinary(file);
       
-      if (cropState.editingIndex !== null) {
+      if (cropState.editingSize !== null) {
+        setFormData(prev => ({
+          ...prev,
+          sizes: prev.sizes.map(s => s.name === cropState.editingSize ? { ...s, image: url } : s)
+        }));
+      } else if (cropState.editingIndex !== null) {
         setFormData(prev => {
           const newImages = [...prev.images];
           newImages[cropState.editingIndex] = url;
@@ -559,7 +628,10 @@ export default function ManageProducts() {
 
       <div className="bg-pk-surface rounded-3xl border border-pk-bg-secondary overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-pk-text-muted animate-pulse">Loading products...</div>
+          <div className="p-20 text-center flex flex-col items-center gap-3">
+            <FiLoader className="animate-spin text-pk-accent" size={30} />
+            <p className="text-pk-text-muted font-medium">Loading products, please wait...</p>
+          </div>
         ) : products.length === 0 ? (
           <div className="p-12 text-center text-pk-text-muted">No products found. Add one above.</div>
         ) : (
@@ -751,13 +823,49 @@ export default function ManageProducts() {
                     <input type="number" min="0" value={newSizePrice} onChange={e => setNewSizePrice(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSize())} className="w-24 bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-xl px-4 py-2 text-sm focus:border-pk-accent outline-none" placeholder="Price ₹" />
                     <button type="button" onClick={handleAddSize} className="px-4 py-2 bg-pk-bg-secondary hover:bg-pk-accent rounded-xl transition-colors text-white text-sm font-medium">Add</button>
                   </div>
-                  <div className="flex flex-col gap-2 max-h-32 overflow-y-auto">
-                    {formData.sizes.map(size => (
-                      <div key={size.name} className="flex justify-between items-center bg-pk-bg-secondary px-3 py-1.5 rounded-lg text-xs font-bold text-pk-text-main">
-                        <span className="uppercase">{size.name}</span>
+                  <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-2">
+                    {formData.sizes.map((size, idx) => (
+                      <div key={`${size.name}-${idx}`} className="flex flex-col gap-2 bg-pk-bg-secondary p-3 rounded-xl border border-pk-bg-secondary">
+                        <div className="flex justify-between items-center">
+                          <span className="uppercase font-bold text-sm text-pk-text-main">{size.name}</span>
+                          <button type="button" onClick={() => confirmRemoveSize(size.name)} className="p-1.5 text-pk-text-muted hover:text-white hover:bg-pk-error rounded-lg transition-colors"><FiTrash2 size={14}/></button>
+                        </div>
                         <div className="flex items-center gap-3">
-                          <span className="text-pk-accent">₹{size.price}</span>
-                          <button type="button" onClick={() => handleRemoveSize(size.name)} className="text-pk-text-muted hover:text-pk-error"><FiX size={14}/></button>
+                          {/* Image Thumbnail / Upload */}
+                          <div className="w-14 h-14 rounded-lg bg-pk-bg-primary overflow-hidden relative group shrink-0 border border-pk-bg-secondary">
+                            {size.image ? (
+                              <>
+                                <ImageWithSkeleton src={getOptimizedUrl(size.image, 100)} alt="" containerClassName="w-full h-full" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button type="button" onClick={() => handleOpenSizeCrop(size.image, size.name)} className="text-white hover:text-pk-accent transition-colors" title="Crop"><FiCrop size={14}/></button>
+                                  <button type="button" onClick={() => handleRemoveSizeImage(size.name)} className="text-white hover:text-pk-error transition-colors" title="Remove"><FiX size={14}/></button>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center gap-2 px-1">
+                                <label className="flex-1 h-full flex items-center justify-center cursor-pointer hover:bg-pk-bg-secondary transition-colors text-pk-text-muted hover:text-pk-accent" title="Camera">
+                                  <FiCamera size={14} />
+                                  <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleSizeImageUpload(e, size.name)} disabled={uploadingImages} />
+                                </label>
+                                <label className="flex-1 h-full flex items-center justify-center cursor-pointer hover:bg-pk-bg-secondary transition-colors text-pk-text-muted hover:text-pk-accent" title="Gallery">
+                                  <FiImage size={14} />
+                                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleSizeImageUpload(e, size.name)} disabled={uploadingImages} />
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Price Input */}
+                          <div className="flex-1">
+                            <label className="text-[10px] uppercase font-bold text-pk-text-muted mb-1 block">Price (₹)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={size.price} 
+                              onChange={e => handleSizePriceChange(size.name, e.target.value)}
+                              className="w-full bg-pk-bg-primary text-pk-text-main border border-pk-bg-secondary rounded-lg px-3 py-2 text-sm focus:border-pk-accent outline-none" 
+                            />
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -911,8 +1019,8 @@ export default function ManageProducts() {
              </div>
              <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-2">
                {existingCategories.length === 0 && <p className="text-pk-text-muted text-sm text-center py-4 border border-dashed border-pk-bg-secondary rounded-xl uppercase tracking-wider">No Categories Found.</p>}
-               {existingCategories.map(cat => (
-                 <div key={cat} className="flex flex-col gap-2 p-4 bg-pk-bg-primary border border-pk-bg-secondary rounded-xl hover:border-pk-accent transition-colors group">
+               {existingCategories.map((cat, idx) => (
+                 <div key={`${cat}-${idx}`} className="flex flex-col gap-2 p-4 bg-pk-bg-primary border border-pk-bg-secondary rounded-xl hover:border-pk-accent transition-colors group">
                    {editingCategory.old === cat ? (
                      <div className="flex gap-2 items-center">
                        <input autoFocus type="text" value={editingCategory.new} onChange={e => setEditingCategory({...editingCategory, new: e.target.value})} onKeyDown={e => e.key === 'Enter' && handleEditCategory()} className="flex-1 bg-pk-surface border border-pk-bg-secondary px-3 py-2 rounded-lg text-sm font-semibold text-pk-text-main outline-none focus:border-pk-accent" />

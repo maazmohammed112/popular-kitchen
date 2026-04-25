@@ -197,6 +197,9 @@ export default function Checkout() {
 
               <div>
                 <label className="block text-sm font-medium text-pk-text-muted mb-2">Delivery Address</label>
+                <div className="mb-2 text-[10px] font-bold text-pk-error uppercase tracking-wider bg-pk-error/10 p-2 rounded-lg border border-pk-error/20">
+                  * Free delivery upto 15km in Bangalore. If more than 15km, delivery charges applied.
+                </div>
                 <textarea 
                   value={formData.address}
                   onChange={e => setFormData({...formData, address: e.target.value})}

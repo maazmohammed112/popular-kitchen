@@ -87,6 +87,11 @@ export const updateOrderTotal = async (id, customTotal, discountAmount) => {
   await updateDoc(docRef, { customTotal, discountAmount });
 };
 
+export const updateOrderDeliveryCharge = async (id, deliveryCharge) => {
+  const docRef = doc(db, ORDERS_COLLECTION, id);
+  await updateDoc(docRef, { deliveryCharge });
+};
+
 export const cancelOrder = async (id, cancelledBy = 'user') => {
   const docRef = doc(db, ORDERS_COLLECTION, id);
   const snap = await getDoc(docRef);

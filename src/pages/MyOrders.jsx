@@ -350,9 +350,12 @@ export default function MyOrders() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-xl font-bold text-pk-text-main">
-                      ₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xl font-bold text-pk-text-main">
+                        ₹{Number((order.customTotal || order.totalAmount || 0) + (order.deliveryCharge || 0)).toLocaleString('en-IN')}
+                      </span>
+                      <span className="text-[10px] text-pk-text-muted font-bold uppercase tracking-tight">Total Payable</span>
+                    </div>
                   </div>
 
                   {/* Expandable Items */}
@@ -361,6 +364,28 @@ export default function MyOrders() {
                       <h4 className="text-xs font-bold text-pk-text-muted uppercase mb-3 px-1">Order Items</h4>
                       <div className="bg-pk-bg-primary/30 rounded-2xl p-4">
                         <OrderItemsList items={order.items} />
+                        
+                        {/* Price Breakdown */}
+                        <div className="mt-4 pt-4 border-t border-pk-bg-secondary/50 space-y-2">
+                          <div className="flex justify-between text-xs text-pk-text-muted">
+                            <span>Items Subtotal</span>
+                            <span>₹{Number(order.totalAmount || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          {order.discountAmount > 0 && (
+                            <div className="flex justify-between text-xs text-pk-success font-medium">
+                              <span>Special Discount</span>
+                              <span>-₹{Number(order.discountAmount).toLocaleString('en-IN')}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between text-xs text-pk-text-muted">
+                            <span>Delivery Charges</span>
+                            <span>₹{Number(order.deliveryCharge || 0).toLocaleString('en-IN')}</span>
+                          </div>
+                          <div className="flex justify-between text-sm font-bold text-pk-text-main pt-2 border-t border-pk-bg-secondary/30">
+                            <span>Total Payable</span>
+                            <span>₹{Number((order.customTotal || order.totalAmount || 0) + (order.deliveryCharge || 0)).toLocaleString('en-IN')}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}

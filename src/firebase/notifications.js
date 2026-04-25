@@ -217,6 +217,19 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
   const showInvoice = newStatus === 'confirmed' || newStatus === 'delivered';
   const buttons = getContactButtons(orderId, orderData, newStatus, showInvoice);
 
+  // Send Email to Customer for status updates
+  if (orderData.email) {
+    const emailHtml = getOrderEmailTemplate({ id: orderId, status: newStatus, adminNote, ...orderData });
+    const subjectPrefix = newStatus === 'confirmed' ? 'Order Confirmed' : 
+                          newStatus === 'delivered' ? 'Order Delivered' : 
+                          'Order Update';
+    sendEmail({ 
+      to: orderData.email, 
+      subject: `${subjectPrefix}: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, 
+      htmlContent: emailHtml 
+    });
+  }
+
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
 };
 

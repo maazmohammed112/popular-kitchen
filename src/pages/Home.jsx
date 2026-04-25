@@ -56,7 +56,7 @@ export default function Home() {
         const data = await getProducts();
         setProducts(data);
         cachedProducts = data;
-        const uniqueCategories = ['All', ...new Set(data.map(p => p.category).filter(Boolean))];
+        const uniqueCategories = ['All', ...new Set(data.map(p => p.category?.trim()).filter(Boolean))];
         setCategories(uniqueCategories);
         cachedCategories = uniqueCategories;
       } catch (err) {
@@ -92,7 +92,7 @@ export default function Home() {
           alt="Popular Kitchenware Bangalore – Premium kitchen tools and restaurant equipment in Shivajinagar"
           className="w-full h-auto block"
           loading="eager"
-          fetchpriority="high"
+          fetchPriority="high"
         />
       </div>
 
