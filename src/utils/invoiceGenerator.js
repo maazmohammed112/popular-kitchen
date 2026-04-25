@@ -9,6 +9,18 @@ const BUSINESS = {
   whatsapp: '+91 9108167067',
 };
 
+const drawWatermark = (doc) => {
+  doc.saveGraphicsState();
+  doc.setTextColor(245, 245, 245);
+  doc.setFontSize(48);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PRIMKART KITCHENWARE', 105, 150, {
+    align: 'center',
+    angle: 45
+  });
+  doc.restoreGraphicsState();
+};
+
 /** Load logo as base64 so jsPDF can embed it synchronously */
 const getLogoBase64 = async () => {
   try {
@@ -56,6 +68,7 @@ export const generateCustomerInvoice = async (order) => {
     return generateAdminInvoice(order);
   }
   const doc = new jsPDF();
+  drawWatermark(doc);
   const logo = await getLogoBase64();
 
   drawHeader(doc, logo, false);
@@ -178,6 +191,7 @@ export const generateCustomerInvoice = async (order) => {
  */
 export const generateAdminInvoice = async (order) => {
   const doc = new jsPDF();
+  drawWatermark(doc);
   const logo = await getLogoBase64();
 
   drawHeader(doc, logo, true);
