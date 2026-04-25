@@ -45,11 +45,11 @@ export const Footer = ({ toggleTheme }) => {
                 </div>
                 +91 88928 36046
               </a>
-              <a href="mailto:mohammed@primkart.app" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
+              <a href="mailto:info@primkart.app" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15 group-hover:border-white/30 transition-colors" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <FiMail size={13} />
                 </div>
-                mohammed@primkart.app
+                info@primkart.app
               </a>
               <div className="flex items-start gap-3 text-sm text-white/60">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -91,7 +91,7 @@ export const Footer = ({ toggleTheme }) => {
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Primkart Kitchenware. Built by{' '}
+            © 2026 Primkart Kitchenware. Built by{' '}
             <a 
               href="https://www.maazportfolio.site/" 
               target="_blank" 

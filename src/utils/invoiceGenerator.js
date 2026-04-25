@@ -5,7 +5,7 @@ const BUSINESS = {
   name: 'Primkart Kitchenware',
   address: '363/3, Jumma Masjid Road, Cross, OPH Road,\nopposite Sana Creation, Shivaji Nagar,\nBengaluru, Karnataka 560001',
   phone: '+91 88928 36046',
-  email: 'primkart.app@gmail.com',
+  email: 'info@primkart.app',
   whatsapp: '+91 9108167067',
 };
 

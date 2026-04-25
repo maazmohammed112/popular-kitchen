@@ -154,8 +154,8 @@ export default function AboutUs() {
                 </div>
                 <div>
                   <p className="font-bold text-pk-text-main text-sm">Email</p>
-                  <a href="mailto:mohammed@primkart.app" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
-                    mohammed@primkart.app
+                  <a href="mailto:info@primkart.app" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
+                    info@primkart.app
                   </a>
                 </div>
               </div>

@@ -156,7 +156,7 @@ export default function ManageOrders() {
     }
     const subject = encodeURIComponent(`Order Update: ${order.status.toUpperCase()} - ${order.id.slice(0,8).toUpperCase()} - Primkart Kitchenware`);
     const body = encodeURIComponent(getPredefinedMessage(order));
-    const adminEmail = 'mohammed@primkart.app';
+    const adminEmail = 'info@primkart.app';
     window.location.href = `mailto:${order.email}?cc=${adminEmail}&subject=${subject}&body=${body}`;
   };
 
