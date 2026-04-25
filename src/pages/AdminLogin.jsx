@@ -44,7 +44,7 @@ export default function AdminLogin() {
         
         <div className="text-center mb-8 relative z-10">
           <div className="flex items-center justify-center mb-6">
-            <img src="/logo.png" alt="Popular Kitchen" className="h-12 w-auto object-contain" />
+            <img src="/logo.png" alt="Primkart Kitchenware" className="h-12 w-auto object-contain" />
           </div>
           <div className="w-16 h-16 bg-pk-bg-secondary rounded-full flex items-center justify-center mx-auto mb-4 border border-pk-accent/30">
             <FiLock className="text-pk-accent" size={24} />

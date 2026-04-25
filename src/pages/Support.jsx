@@ -40,7 +40,7 @@ export default function Support() {
 
         {/* Email */}
         <a
-          href="mailto:mohammed@popularkitchen.store"
+          href="mailto:mohammed@primkart.app"
           className="bg-pk-surface border border-pk-bg-secondary rounded-3xl p-6 flex gap-4 hover:border-pk-accent/50 transition-colors group"
         >
           <div className="w-12 h-12 rounded-2xl bg-pk-warning/10 flex items-center justify-center text-pk-warning shrink-0 group-hover:scale-110 transition-transform">
@@ -48,7 +48,7 @@ export default function Support() {
           </div>
           <div>
             <h3 className="font-bold text-pk-text-main mb-1">Email Us</h3>
-            <p className="text-sm text-pk-text-muted">mohammed@popularkitchen.store</p>
+            <p className="text-sm text-pk-text-muted">mohammed@primkart.app</p>
             <p className="text-xs text-pk-text-muted mt-1">We typically reply within 24 hours</p>
           </div>
         </a>
@@ -74,7 +74,7 @@ export default function Support() {
       {/* Map embed placeholder */}
       <div className="bg-pk-surface border border-pk-bg-secondary rounded-3xl overflow-hidden">
         <iframe
-          title="Popular Kitchen Location"
+          title="Primkart Kitchenware Location"
           src="https://maps.google.com/maps?q=363%2F3+Jumma+Masjid+Road+Shivaji+Nagar+Bengaluru&output=embed"
           width="100%"
           height="300"

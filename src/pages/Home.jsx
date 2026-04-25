@@ -75,12 +75,12 @@ export default function Home() {
   return (
     <div className="flex flex-col animate-[slideUp_0.4s_ease-out]">
       <SEO 
-        title="Popular Kitchenware Bangalore | Kitchen Items in Shivajinagar"
+        title="Primkart Kitchenware Bangalore | Kitchen Items in Shivajinagar"
         description="Buy premium kitchen tools, restaurant equipment, and cookware in Bangalore. Trusted kitchenware supplier in Shivajinagar. Fast delivery across Bangalore."
-        url="https://popularkitchen.store/"
+        url="https://primkart.app/"
       />
       
-      <h1 className="sr-only">Kitchenware Store in Bangalore – Popular Kitchenware Shivajinagar</h1>
+      <h1 className="sr-only">Kitchenware Store in Bangalore – Primkart Kitchenware Shivajinagar</h1>
       
       {/* Hero Banner Image */}
       <div
@@ -89,7 +89,7 @@ export default function Home() {
       >
         <img
           src="/hero-banner.png"
-          alt="Popular Kitchenware Bangalore – Premium kitchen tools and restaurant equipment in Shivajinagar"
+          alt="Primkart Kitchenware Bangalore – Premium kitchen tools and restaurant equipment in Shivajinagar"
           className="w-full h-auto block"
           loading="eager"
           fetchPriority="high"
@@ -99,7 +99,7 @@ export default function Home() {
       {/* SEO Content Paragraph */}
       <div className="bg-pk-surface rounded-2xl p-5 mb-6 border border-pk-bg-secondary">
         <p className="text-sm text-pk-text-muted leading-relaxed">
-          <strong className="text-pk-text-main">Popular Kitchenware</strong> is a trusted kitchen equipment supplier in Shivajinagar, Bangalore, offering a wide range of kitchen tools, restaurant equipment, and commercial cooking essentials. From induction stoves, hand blenders, and gas lighters to barbecue tools and shawarma machines, we serve homes, hotels, and restaurants across Bangalore.
+          <strong className="text-pk-text-main">Primkart Kitchenware</strong> is a trusted kitchen equipment supplier in Shivajinagar, Bangalore, offering a wide range of kitchen tools, restaurant equipment, and commercial cooking essentials. From induction stoves, hand blenders, and gas lighters to barbecue tools and shawarma machines, we serve homes, hotels, and restaurants across Bangalore.
         </p>
       </div>
       {!loading && categories.length > 1 && (

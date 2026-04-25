@@ -126,21 +126,21 @@ export default function ManageOrders() {
     const shortId = id.slice(0, 8).toUpperCase();
     
     if (status === 'pending') {
-      return `We have received your order ${shortId}, please allow some hours for further update thank you. - Popular Kitchen Team`;
+      return `We have received your order ${shortId}, please allow some hours for further update thank you. - Primkart Kitchenware Team`;
     }
     if (status === 'confirmed') {
-      return `Your order ${shortId} has been confirmed! We are preparing it now. - Popular Kitchen Team`;
+      return `Your order ${shortId} has been confirmed! We are preparing it now. - Primkart Kitchenware Team`;
     }
     if (status === 'delivered') {
-      return `Your order ${shortId} has been delivered. Enjoy your meal! - Popular Kitchen Team`;
+      return `Your order ${shortId} has been delivered. Enjoy your meal! - Primkart Kitchenware Team`;
     }
     if (status === 'cancelled') {
       if (cancelledBy === 'user') {
-        return `Your order ${shortId} has been cancelled as per your request. - Popular Kitchen Team`;
+        return `Your order ${shortId} has been cancelled as per your request. - Primkart Kitchenware Team`;
       }
-      return `We regret to inform you that your order ${shortId} has been cancelled. Please contact us for more details. - Popular Kitchen Team`;
+      return `We regret to inform you that your order ${shortId} has been cancelled. Please contact us for more details. - Primkart Kitchenware Team`;
     }
-    return `Update for your order ${shortId}: Status is now ${status}. - Popular Kitchen Team`;
+    return `Update for your order ${shortId}: Status is now ${status}. - Primkart Kitchenware Team`;
   };
 
   const handleSendWhatsApp = (order) => {
@@ -154,9 +154,9 @@ export default function ManageOrders() {
       showError("Customer email not found");
       return;
     }
-    const subject = encodeURIComponent(`Order Update: ${order.status.toUpperCase()} - ${order.id.slice(0,8).toUpperCase()} - Popular Kitchen`);
+    const subject = encodeURIComponent(`Order Update: ${order.status.toUpperCase()} - ${order.id.slice(0,8).toUpperCase()} - Primkart Kitchenware`);
     const body = encodeURIComponent(getPredefinedMessage(order));
-    const adminEmail = 'mohammed@popularkitchen.store';
+    const adminEmail = 'mohammed@primkart.app';
     window.location.href = `mailto:${order.email}?cc=${adminEmail}&subject=${subject}&body=${body}`;
   };
 
@@ -216,7 +216,7 @@ export default function ManageOrders() {
                 onClick={() => {
                   const ph = document.getElementById('custom-phone').value;
                   if (!ph) return;
-                  const msg = encodeURIComponent(`Hello! Your order with Popular Kitchen is currently ${shareModal.order.status}. Thank you!`);
+                  const msg = encodeURIComponent(`Hello! Your order with Primkart Kitchenware is currently ${shareModal.order.status}. Thank you!`);
                   window.open(`https://wa.me/${ph.replace(/\D/g, '')}?text=${msg}`, '_blank');
                   setShareModal(null);
                 }}

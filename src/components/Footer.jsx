@@ -21,9 +21,9 @@ export const Footer = ({ toggleTheme }) => {
           <div>
             <Link to="/" className="flex items-center gap-2.5 mb-4 group">
               <div className="bg-white p-1.5 rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
-                <img src="/logo.png" alt="Popular Kitchen Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
+                <img src="/logo.png" alt="Primkart Kitchenware Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
               </div>
-              <span className="font-bold text-base text-white tracking-tight">Popular Kitchen</span>
+              <span className="font-bold text-base text-white tracking-tight">Primkart Kitchenware</span>
             </Link>
             <p className="text-sm text-white/60 leading-relaxed">
               Premium kitchenware for your culinary journey.<br />
@@ -45,11 +45,11 @@ export const Footer = ({ toggleTheme }) => {
                 </div>
                 +91 88928 36046
               </a>
-              <a href="mailto:mohammed@popularkitchen.store" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
+              <a href="mailto:mohammed@primkart.app" className="flex items-center gap-3 text-sm text-white/60 hover:text-white transition-colors group">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15 group-hover:border-white/30 transition-colors" style={{ background: 'rgba(255,255,255,0.08)' }}>
                   <FiMail size={13} />
                 </div>
-                mohammed@popularkitchen.store
+                mohammed@primkart.app
               </a>
               <div className="flex items-start gap-3 text-sm text-white/60">
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border border-white/15" style={{ background: 'rgba(255,255,255,0.08)' }}>
@@ -91,7 +91,7 @@ export const Footer = ({ toggleTheme }) => {
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Popular Kitchen. Built by{' '}
+            © {new Date().getFullYear()} Primkart Kitchenware. Built by{' '}
             <a 
               href="https://www.maazportfolio.site/" 
               target="_blank" 

@@ -91,7 +91,7 @@ export default function OrderSuccess() {
         </button>
         
         <a 
-          href={`https://wa.me/9108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I have placed an order (Order ID: ${order.id}). I would like to get further updates and handle payment details. Thank you!`)}`}
+          href={`https://wa.me/9108167067?text=${encodeURIComponent(`Hello Primkart Kitchenware! I have placed an order (Order ID: ${order.id}). I would like to get further updates and handle payment details. Thank you!`)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 px-6 py-3 bg-[#25D366] text-white rounded-full font-medium hover:bg-[#128C7E] transition-all shadow-[0_0_15px_rgba(37,211,102,0.3)] text-sm"

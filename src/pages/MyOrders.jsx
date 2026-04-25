@@ -394,7 +394,7 @@ export default function MyOrders() {
               <div className="flex flex-col gap-2 pt-3 border-t border-pk-bg-secondary">
                 {order.status === 'cancelled' && order.cancelledBy === 'admin' && (
                   <div className="bg-red-50 text-red-600 text-xs p-2 rounded-lg mb-1 border border-red-100 flex items-center justify-between">
-                    <span>Cancelled by Popular Kitchen team. Contact us on WhatsApp for details.</span>
+                    <span>Cancelled by Primkart Kitchenware team. Contact us on WhatsApp for details.</span>
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2">
@@ -430,8 +430,8 @@ export default function MyOrders() {
 
                   <a
                     href={order.status === 'cancelled' ? 
-                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen, my order (Order ID: #${order.id}) was cancelled. Can you tell me the reason?`)}` :
-                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Popular Kitchen! I'm checking on my order (ID: #${order.id}). Status: ${order.status || 'pending'}. Total: ₹${order.totalAmount}.`)}`}
+                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Primkart Kitchenware, my order (Order ID: #${order.id}) was cancelled. Can you tell me the reason?`)}` :
+                      `https://wa.me/919108167067?text=${encodeURIComponent(`Hello Primkart Kitchenware! I'm checking on my order (ID: #${order.id}). Status: ${order.status || 'pending'}. Total: ₹${order.totalAmount}.`)}`}
                     target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs px-3 py-1.5 bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 rounded-lg hover:bg-[#25D366] hover:text-white transition-colors"
                   >

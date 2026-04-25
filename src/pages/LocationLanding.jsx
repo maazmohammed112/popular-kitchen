@@ -66,7 +66,7 @@ export default function LocationLanding({ config }) {
       <SEO
         title={config.title}
         description={config.description}
-        url={`https://popularkitchen.store${config.path}`}
+        url={`https://primkart.app${config.path}`}
       />
 
       {/* Hero Section */}
@@ -130,7 +130,7 @@ export default function LocationLanding({ config }) {
       {/* SEO Footer Text */}
       <div className="mt-12 p-6 bg-pk-surface rounded-3xl border border-pk-bg-secondary">
         <h2 className="text-lg font-bold text-pk-text-main mb-3">
-          {config.footerH2 || `About Popular Kitchenware – ${config.breadcrumb}`}
+          {config.footerH2 || `About Primkart Kitchenware – ${config.breadcrumb}`}
         </h2>
         <p className="text-sm text-pk-text-muted leading-relaxed">
           {config.footerParagraph || config.paragraph}

@@ -108,8 +108,8 @@ const getContactButtons = (orderId, orderData, statusLabel, includeInvoice = fal
   const email = orderData.email || '';
   const origin = window.location.origin;
   
-  const text = encodeURIComponent(`Hello ${name}, your order #${orderId} has been ${statusLabel}. Thank you for shopping with Popular Kitchen!`);
-  const subject = encodeURIComponent(`Order Update - Popular Kitchen #${orderId}`);
+  const text = encodeURIComponent(`Hello ${name}, your order #${orderId} has been ${statusLabel}. Thank you for shopping with Primkart Kitchenware!`);
+  const subject = encodeURIComponent(`Order Update - Primkart Kitchenware #${orderId}`);
 
   const buttons = [];
   
@@ -172,7 +172,7 @@ ${itemsList}
   // Send Email to Customer
   if (orderData.email) {
     const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'pending', ...orderData });
-    sendEmail({ to: orderData.email, subject: `Order Received: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, htmlContent: emailHtml });
+    sendEmail({ to: orderData.email, subject: `Order Received: #${orderId.slice(0, 8).toUpperCase()} - Primkart Kitchenware`, htmlContent: emailHtml });
   }
 
   return sendTelegramMessage(message, buttons.length > 0 ? buttons : null);
@@ -225,7 +225,7 @@ ${adminNote ? `<b>Note:</b> ${escapeHTML(adminNote)}` : ''}
                           'Order Update';
     sendEmail({ 
       to: orderData.email, 
-      subject: `${subjectPrefix}: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, 
+      subject: `${subjectPrefix}: #${orderId.slice(0, 8).toUpperCase()} - Primkart Kitchenware`, 
       htmlContent: emailHtml 
     });
   }
@@ -265,7 +265,7 @@ export const notifyOrderCancelled = async (orderId, orderData, cancelledBy) => {
   // Send Email to Customer
   if (orderData.email) {
     const emailHtml = getOrderEmailTemplate({ id: orderId, status: 'cancelled', cancelledBy, ...orderData });
-    sendEmail({ to: orderData.email, subject: `Order Cancelled: #${orderId.slice(0, 8).toUpperCase()} - Popular Kitchen`, htmlContent: emailHtml });
+    sendEmail({ to: orderData.email, subject: `Order Cancelled: #${orderId.slice(0, 8).toUpperCase()} - Primkart Kitchenware`, htmlContent: emailHtml });
   }
 
   const buttons = getContactButtons(orderId, orderData, 'cancelled');

@@ -248,7 +248,7 @@ ${list}
 
 async function sendHelp(chatId) {
   const message = `
-<b>🤖 POPULAR KITCHEN ADMIN BOT</b>
+<b>🤖 PRIMKART KITCHENWARE ADMIN BOT</b>
 
 Use these commands to manage your orders:
 

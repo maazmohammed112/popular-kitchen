@@ -14,7 +14,7 @@ export default function NotFound() {
       <div className="mb-8 p-4 bg-pk-surface rounded-3xl shadow-xl border border-pk-bg-secondary">
         <img 
           src="/logo.png" 
-          alt="Popular Kitchen Logo" 
+          alt="Primkart Kitchenware Logo" 
           className="h-20 w-20 object-contain mx-auto"
           onError={e => e.target.style.display='none'}
         />

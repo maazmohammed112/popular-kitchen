@@ -3,7 +3,7 @@ export const handler = async (event) => {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
-  const { to, subject, htmlContent, senderName = "Popular Kitchen" } = JSON.parse(event.body);
+  const { to, subject, htmlContent, senderName = "Primkart Kitchenware" } = JSON.parse(event.body);
 
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
 

@@ -46,9 +46,9 @@ export const Navbar = ({ onOpenCart }) => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
               <div className="bg-white p-1.5 rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
-                <img src="/logo.png" alt="Popular Kitchen Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
+                <img src="/logo.png" alt="Primkart Kitchenware Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
               </div>
-              <span className="font-bold text-base hidden sm:block text-white tracking-tight">Popular Kitchen</span>
+              <span className="font-bold text-base hidden sm:block text-white tracking-tight">Primkart Kitchenware</span>
             </Link>
 
             {/* Desktop Search */}

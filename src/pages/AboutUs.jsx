@@ -26,9 +26,9 @@ export default function AboutUs() {
   return (
     <div className="animate-[slideUp_0.4s_ease-out] max-w-5xl mx-auto">
       <SEO
-        title="About Us – Popular Kitchenware Bangalore | Shivajinagar"
-        description="Learn about Popular Kitchenware – Bangalore's trusted kitchen equipment supplier in Shivajinagar. Serving homes, hotels and restaurants since day one."
-        url="https://popularkitchen.store/about"
+        title="About Us – Primkart Kitchenware Bangalore | Shivajinagar"
+        description="Learn about Primkart Kitchenware – Bangalore's trusted kitchen equipment supplier in Shivajinagar. Serving homes, hotels and restaurants since day one."
+        url="https://primkart.app/about"
       />
 
       {/* Hero Section */}
@@ -38,7 +38,7 @@ export default function AboutUs() {
           style={{ background: 'var(--color-tertiary)' }} />
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="Popular Kitchenware Logo" className="h-10 w-10 object-contain bg-white rounded-xl p-1" />
+            <img src="/logo.png" alt="Primkart Kitchenware Logo" className="h-10 w-10 object-contain bg-white rounded-xl p-1" />
             <span className="text-white text-sm font-semibold uppercase tracking-widest">Since 2002</span>
           </div>
           <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight text-white">
@@ -46,7 +46,7 @@ export default function AboutUs() {
             <span style={{ color: 'var(--color-tertiary)' }}>Kitchenware</span> Store
           </h1>
           <p className="text-base text-white leading-relaxed max-w-xl">
-            Popular Kitchenware is a premier kitchen equipment supplier based in Shivajinagar, Bangalore — serving homes, restaurants, hotels, and catering businesses across the city with quality products at honest prices.
+            Primkart Kitchenware is a premier kitchen equipment supplier based in Shivajinagar, Bangalore — serving homes, restaurants, hotels, and catering businesses across the city with quality products at honest prices.
           </p>
           <div className="flex flex-wrap gap-3 mt-6">
             <Link to="/" className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all hover:brightness-95"
@@ -76,7 +76,7 @@ export default function AboutUs() {
         </div>
         <div className="space-y-4 text-pk-text-muted leading-relaxed text-sm">
           <p>
-            <strong className="text-pk-text-main">Popular Kitchenware</strong> was founded with a simple mission: to make professional-grade kitchen equipment accessible to every home, restaurant, and business in Bangalore. Located at the heart of Shivajinagar on Jumma Masjid Road, our store has been a go-to destination for quality kitchenware since we opened our doors.
+            <strong className="text-pk-text-main">Primkart Kitchenware</strong> was founded with a simple mission: to make professional-grade kitchen equipment accessible to every home, restaurant, and business in Bangalore. Located at the heart of Shivajinagar on Jumma Masjid Road, our store has been a go-to destination for quality kitchenware since we opened our doors.
           </p>
           <p>
             We stock an extensive catalogue — from everyday essentials like induction stoves, hand blenders, and gas lighters to specialized commercial equipment including shawarma machines, barbecue grills, and restaurant-grade cooking tools. Whether you're equipping a home kitchen or a full-scale restaurant, we have everything you need under one roof.
@@ -108,7 +108,7 @@ export default function AboutUs() {
             description="We deliver across all Bangalore pin codes within 2–3 business days. Track your order in real-time and get instant support via WhatsApp." />
           <ValueCard icon={FiUsers}
             title="Serving 1000+ Customers"
-            description="From home cooks to hotel chains, over 1,000 satisfied customers across Bangalore trust Popular Kitchenware for their kitchen equipment needs." />
+            description="From home cooks to hotel chains, over 1,000 satisfied customers across Bangalore trust Primkart Kitchenware for their kitchen equipment needs." />
         </div>
       </div>
 
@@ -154,8 +154,8 @@ export default function AboutUs() {
                 </div>
                 <div>
                   <p className="font-bold text-pk-text-main text-sm">Email</p>
-                  <a href="mailto:mohammed@popularkitchen.store" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
-                    mohammed@popularkitchen.store
+                  <a href="mailto:mohammed@primkart.app" className="text-sm hover:underline" style={{ color: 'var(--color-secondary)' }}>
+                    mohammed@primkart.app
                   </a>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export default function AboutUs() {
             {/* Embedded Google Map */}
             <div className="rounded-2xl overflow-hidden border border-pk-bg-secondary h-64 md:h-auto bg-pk-bg-secondary">
               <iframe
-                title="Popular Kitchenware Location"
+                title="Primkart Kitchenware Location"
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.9423!2d77.5951!3d12.9815!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTLCsDU4JzUzLjQiTiA3N8KwMzUnNDIuNCJF!5e0!3m2!1sen!2sin!4v1234567890"
                 width="100%" height="100%" style={{ border: 0, minHeight: '200px' }}
                 allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"

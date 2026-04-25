@@ -14,7 +14,7 @@ export default function Terms() {
         <section>
           <h2 className="text-xl font-bold text-pk-text-main mb-4">1. Overview</h2>
           <p>
-            This website is operated by Popular Kitchen. Throughout the site, the terms “we”, “us” and “our” refer to Popular Kitchen. We offer this website, including all information, tools, and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.
+            This website is operated by Primkart Kitchenware. Throughout the site, the terms “we”, “us” and “our” refer to Primkart Kitchenware. We offer this website, including all information, tools, and services available from this site to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.
           </p>
         </section>
 

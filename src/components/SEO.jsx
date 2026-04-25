@@ -11,9 +11,9 @@ export const SEO = ({
   url, 
   type = 'website' 
 }) => {
-  const siteName = 'Popular Kitchen';
-  const fullTitle = title ? `${title} | ${siteName}` : 'Popular Kitchen – Premium Kitchenware Store';
-  const defaultDesc = 'Shop premium kitchenware, cookware and accessories at Popular Kitchen. Leading kitchenware distributor in Bangalore.';
+  const siteName = 'Primkart Kitchenware';
+  const fullTitle = title ? `${title} | ${siteName}` : 'Primkart Kitchenware – Premium Kitchenware Store';
+  const defaultDesc = 'Shop premium kitchenware, cookware and accessories at Primkart Kitchenware. Leading kitchenware distributor in Bangalore.';
 
   useEffect(() => {
     // Update Document Title

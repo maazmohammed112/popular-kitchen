@@ -32,9 +32,9 @@ export const WelcomeModal = () => {
       <div className="w-full max-w-sm bg-pk-surface rounded-2xl p-6 shadow-2xl animate-[slideUp_0.4s_ease-out]">
         <div className="text-center mb-6">
           <div className="mx-auto flex items-center justify-center mb-4 bg-white/5 p-2 rounded-xl w-max">
-             <img src="/logo.png" alt="Popular Kitchen Logo" className="h-16 object-contain" onError={(e) => e.target.style.display='none'} />
+             <img src="/logo.png" alt="Primkart Kitchenware Logo" className="h-16 object-contain" onError={(e) => e.target.style.display='none'} />
           </div>
-          <h2 className="text-xl font-bold text-pk-text-main mb-2">Welcome to Popular Kitchen!</h2>
+          <h2 className="text-xl font-bold text-pk-text-main mb-2">Welcome to Primkart Kitchenware!</h2>
           <p className="text-pk-text-muted text-sm leading-relaxed">
             Discover premium kitchenware to elevate your culinary experience. Join us for exclusive offers.
           </p>

@@ -149,7 +149,7 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
         await updateProfile(cred.user, { displayName: form.name });
         console.log("Migrating guest data...");
         await migrateGuestDataToFirebase(cred.user).catch(e => console.error("Migration failed:", e));
-        showSuccess('Account created! Welcome to Popular Kitchen 🎉');
+        showSuccess('Account created! Welcome to Primkart Kitchenware 🎉');
         window.location.href = '/';
       } else {
         const { role } = await login(form.email, form.password);
@@ -202,9 +202,9 @@ export const AuthModal = ({ onClose, defaultTab = 'signin' }) => {
             {/* Logo */}
         <div className="flex justify-between items-start mb-5">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Popular Kitchen" className="h-8 object-contain" onError={e => e.target.style.display='none'} />
+            <img src="/logo.png" alt="Primkart Kitchenware" className="h-8 object-contain" onError={e => e.target.style.display='none'} />
             <div>
-              <p className="font-bold text-sm text-pk-text-main leading-tight">Popular Kitchen</p>
+              <p className="font-bold text-sm text-pk-text-main leading-tight">Primkart Kitchenware</p>
               <p className="text-[10px] text-pk-text-muted">Official Store</p>
             </div>
           </div>

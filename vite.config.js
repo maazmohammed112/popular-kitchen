@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon.png', 'logo.png', 'offline.html', 'truck.png'],
       manifest: {
-        name: 'Popular Kitchen',
-        short_name: 'PopKitchen',
+        name: 'Primkart Kitchenware',
+        short_name: 'Primkart',
         description: 'Premium kitchenware for your culinary journey.',
         theme_color: '#0A1628',
         background_color: '#0A1628',

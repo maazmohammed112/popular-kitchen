@@ -1,4 +1,4 @@
-# 🍳 Popular Kitchen PWA
+# 🍳 Primkart Kitchenware PWA
 
 A premium, mobile-first e-commerce progressive web app for kitchenware, built with React, Vite, Tailwind CSS, Firebase, and Cloudinary.
 
@@ -20,7 +20,7 @@ A premium, mobile-first e-commerce progressive web app for kitchenware, built wi
 ### 1. Clone & Install
 ```bash
 git clone <your-repo-url>
-cd "popular kitchen"
+cd "Primkart Kitchenware"
 npm install
 ```
 
@@ -54,7 +54,7 @@ npm install
 
 ### 4. Cloudinary Setup
 1. Create an account at Cloudinary.
-2. In Settings > Upload, create an **unsigned upload preset** named `popular_kitchen`.
+2. In Settings > Upload, create an **unsigned upload preset** named `primkart_kitchenware`.
 3. In `src/cloudinary/upload.js`, ensure `CLOUD_NAME` matches your actual cloud name (`dxonu07sc`).
 
 ## Available Commands
@@ -94,7 +94,7 @@ To deploy this project to Netlify, follow these exact steps:
 
 1. Push your code to your GitHub repository.
 2. Log into [Netlify](https://app.netlify.com/) and click **Add new site** > **Import an existing project**.
-3. Connect your GitHub account and select your `popular kitchen` repository.
+3. Connect your GitHub account and select your `Primkart Kitchenware` repository.
 4. **Build settings**:
    - Build command: `npm run build`
    - Publish directory: `dist`

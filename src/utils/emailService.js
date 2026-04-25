@@ -52,7 +52,7 @@ export const getOrderEmailTemplate = (order) => {
       statusColor = "#1A354A";
       break;
     case 'delivered':
-      statusMessage = `Your order <strong>${shortId}</strong> has been delivered. Thank you for choosing Popular Kitchen!`;
+      statusMessage = `Your order <strong>${shortId}</strong> has been delivered. Thank you for choosing Primkart Kitchenware!`;
       statusColor = "#10B981"; // Success remains green but integrated into blue design
       break;
     case 'cancelled':
@@ -87,8 +87,8 @@ export const getOrderEmailTemplate = (order) => {
         <!-- Header Section -->
         <tr>
           <td align="center" style="padding: 40px 40px; background: linear-gradient(135deg, #1A354A 0%, #435E91 100%);">
-            <img src="https://popularkitchen.store/logo.png" alt="Popular Kitchen" style="width: 70px; height: 70px; border-radius: 18px; border: 3px solid rgba(255,255,255,0.2); margin-bottom: 15px; background: white;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">POPULAR KITCHEN</h1>
+            <img src="https://primkart.app/logo.png" alt="Primkart Kitchenware" style="width: 70px; height: 70px; border-radius: 18px; border: 3px solid rgba(255,255,255,0.2); margin-bottom: 15px; background: white;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;">PRIMKART KITCHENWARE</h1>
             <p style="color: rgba(255,255,255,0.8); margin: 5px 0 0 0; font-size: 13px; font-weight: 600; letter-spacing: 0.02em;">PREMIUM KITCHEN SOLUTIONS</p>
           </td>
         </tr>
@@ -142,10 +142,10 @@ export const getOrderEmailTemplate = (order) => {
         <tr>
           <td style="padding: 0 40px 45px 40px; text-align: center;">
             <div style="margin-bottom: 20px; border-top: 1px solid #E2E8F0; padding-top: 25px;">
-              <span style="font-weight: 800; color: #1A354A; font-size: 14px;">POPULAR KITCHEN</span>
+              <span style="font-weight: 800; color: #1A354A; font-size: 14px;">PRIMKART KITCHENWARE</span>
             </div>
             <p style="margin: 0; font-size: 12px; line-height: 1.8; color: #435E91; font-weight: 600;">
-              &copy; ${new Date().getFullYear()} Popular Kitchen. All rights reserved.<br>
+              &copy; ${new Date().getFullYear()} Primkart Kitchenware. All rights reserved.<br>
               Bangalore, Karnataka, India
             </p>
           </td>

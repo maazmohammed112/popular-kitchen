@@ -2,10 +2,10 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const BUSINESS = {
-  name: 'Popular Kitchen',
+  name: 'Primkart Kitchenware',
   address: '363/3, Jumma Masjid Road, Cross, OPH Road,\nopposite Sana Creation, Shivaji Nagar,\nBengaluru, Karnataka 560001',
   phone: '+91 88928 36046',
-  email: 'mohammed@popularkitchen.store',
+  email: 'primkart.app@gmail.com',
   whatsapp: '+91 9108167067',
 };
 
@@ -279,7 +279,7 @@ export const generateAdminInvoice = async (order) => {
   doc.setFontSize(8.5);
   doc.setFont('helvetica', 'italic');
   doc.setTextColor(120);
-  doc.text('Thank you for shopping with Popular Kitchen!', 105, currentY + 12, { align: 'center' });
+  doc.text('Thank you for shopping with Primkart Kitchenware!', 105, currentY + 12, { align: 'center' });
 
   if (order.status === 'pending' || order.status === 'confirmed') {
     doc.setFontSize(8);

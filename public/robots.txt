@@ -11,4 +11,4 @@ Allow: /*.png
 Allow: /*.jpg
 Allow: /*.webp
 
-Sitemap: https://popularkitchen.store/sitemap.xml
+Sitemap: https://primkart.app/sitemap.xml

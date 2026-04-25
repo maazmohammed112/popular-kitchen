@@ -227,7 +227,7 @@ export default function ProductDetail() {
     <div className="animate-[slideUp_0.4s_ease-out]">
       <SEO 
         title={product.title}
-        description={`Buy ${product.title} at Popular Kitchen. ${product.description?.substring(0, 100) || 'Premium kitchenware'}`}
+        description={`Buy ${product.title} at Primkart Kitchenware. ${product.description?.substring(0, 100) || 'Premium kitchenware'}`}
         image={getOptimizedUrl(product.images?.[0])}
         type="product"
       />
@@ -242,7 +242,7 @@ export default function ProductDetail() {
           "description": product.description,
           "brand": {
             "@type": "Brand",
-            "name": "Popular Kitchen"
+            "name": "Primkart Kitchenware"
           },
           "offers": {
             "@type": "Offer",

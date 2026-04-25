@@ -10,7 +10,7 @@ export const ShareButton = ({ product, className = "" }) => {
 
     const shareData = {
       title: product.title,
-      text: `Check out this ${product.title} at Popular Kitchen!`,
+      text: `Check out this ${product.title} at Primkart Kitchenware!`,
       url: `${window.location.origin}/product/${product.id}`,
     };
 
