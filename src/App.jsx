@@ -77,11 +77,11 @@ const AppLayout = ({ children, setIsCartOpen, toggleTheme }) => {
       
       {/* Floating WhatsApp Button */}
       <a 
-        href="https://wa.me/9108167067?text=Hello%20Primkart%20Kitchenware!%20I%20have%20an%20inquiry."
+        href="https://wa.me/918892836046?text=Hello%20Primkart%20Kitchenware!%20I%20have%20an%20inquiry."
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.4)] hover:scale-110 transition-transform flex items-center justify-center cursor-pointer"
-        title="Chat on WhatsApp"
+        title="Chat on WhatsApp with +91 88928 36046"
       >
         <FiMessageCircle size={28} />
       </a>

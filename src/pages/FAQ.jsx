@@ -108,8 +108,8 @@ export default function FAQ() {
 
       <div className="mt-20 p-10 rounded-[40px] bg-pk-accent text-white text-center relative overflow-hidden group shadow-2xl shadow-pk-accent/30">
         <div className="relative z-10">
-          <h2 className="text-2xl font-bold mb-2">Still have questions?</h2>
-          <p className="text-white/80 mb-6 max-w-md mx-auto">We're here to help you build your dream kitchen. Contact our support team directly.</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 text-white">Still have questions?</h2>
+          <p className="text-white/90 mb-6 max-w-md mx-auto">We're here to help you build your dream kitchen. Contact our support team directly.</p>
           <a 
             href="mailto:info@primkart.app" 
             className="inline-flex items-center gap-2 px-8 py-3 bg-white text-pk-accent rounded-full font-bold hover:scale-105 transition-transform"
