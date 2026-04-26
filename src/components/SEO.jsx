@@ -9,43 +9,64 @@ export const SEO = ({
   description, 
   image, 
   url, 
-  type = 'website' 
+  type = 'website',
+  schema // Optional custom schema object
 }) => {
   const siteName = 'Primkart Kitchenware';
   const fullTitle = title ? `${title} | ${siteName}` : 'Primkart Kitchenware – Premium Kitchenware Store';
   const defaultDesc = 'Shop premium kitchenware, cookware and accessories at Primkart Kitchenware. Leading kitchenware distributor in Bangalore.';
+  const defaultImage = 'https://primkart.app/logo.png';
+  const canonicalUrl = url || window.location.href;
 
   useEffect(() => {
-    // Update Document Title
+    // 1. Update Document Title
     document.title = fullTitle;
 
-    // Update Meta Description
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) {
-      metaDesc.setAttribute('content', description || defaultDesc);
-    }
+    // 2. Update Basic Meta Tags
+    const updateMeta = (selector, attr, content) => {
+      let el = document.querySelector(selector);
+      if (el) el.setAttribute(attr, content);
+    };
 
-    // Update OpenGraph Tags
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.setAttribute('content', fullTitle);
+    updateMeta('meta[name="description"]', 'content', description || defaultDesc);
 
-    const ogDesc = document.querySelector('meta[property="og:description"]');
-    if (ogDesc) ogDesc.setAttribute('content', description || defaultDesc);
+    // 3. Update OpenGraph Tags (Facebook/AI)
+    updateMeta('meta[property="og:title"]', 'content', fullTitle);
+    updateMeta('meta[property="og:description"]', 'content', description || defaultDesc);
+    updateMeta('meta[property="og:image"]', 'content', image || defaultImage);
+    updateMeta('meta[property="og:url"]', 'content', canonicalUrl);
+    updateMeta('meta[property="og:type"]', 'content', type);
 
-    if (image) {
-      const ogImg = document.querySelector('meta[property="og:image"]');
-      if (ogImg) ogImg.setAttribute('content', image);
-    }
+    // 4. Update Twitter Card Tags (AI/Twitter)
+    updateMeta('meta[name="twitter:card"]', 'content', 'summary_large_image');
+    updateMeta('meta[name="twitter:title"]', 'content', fullTitle);
+    updateMeta('meta[name="twitter:description"]', 'content', description || defaultDesc);
+    updateMeta('meta[name="twitter:image"]', 'content', image || defaultImage);
 
-    if (url) {
-      const ogUrl = document.querySelector('meta[property="og:url"]');
-      if (ogUrl) ogUrl.setAttribute('content', url);
-    }
+    // 5. Inject JSON-LD Schema (Google Search/Images)
+    const oldSchema = document.getElementById('json-ld-schema');
+    if (oldSchema) oldSchema.remove();
 
-    const ogType = document.querySelector('meta[property="og:type"]');
-    if (ogType) ogType.setAttribute('content', type);
+    const script = document.createElement('script');
+    script.id = 'json-ld-schema';
+    script.type = 'application/ld+json';
 
-  }, [title, description, image, url, type, fullTitle, defaultDesc]);
+    const defaultSchema = {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": siteName,
+      "url": "https://primkart.app",
+      "logo": defaultImage,
+      "sameAs": [
+        "https://www.facebook.com/primkart",
+        "https://www.instagram.com/primkart"
+      ]
+    };
 
-  return null; // Side-effect only component
+    script.text = JSON.stringify(schema || defaultSchema);
+    document.head.appendChild(script);
+
+  }, [title, description, image, url, type, fullTitle, defaultDesc, schema, canonicalUrl]);
+
+  return null;
 };

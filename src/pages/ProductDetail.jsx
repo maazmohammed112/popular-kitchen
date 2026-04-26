@@ -230,11 +230,7 @@ export default function ProductDetail() {
         description={`Buy ${product.title} at Primkart Kitchenware. ${product.description?.substring(0, 100) || 'Premium kitchenware'}`}
         image={getOptimizedUrl(product.images?.[0])}
         type="product"
-      />
-
-      {/* Structured Data (JSON-LD) for Google Rich Results */}
-      <script type="application/ld+json">
-        {JSON.stringify({
+        schema={{
           "@context": "https://schema.org/",
           "@type": "Product",
           "name": product.title,
@@ -251,8 +247,8 @@ export default function ProductDetail() {
             "price": currentPrice,
             "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
           }
-        })}
-      </script>
+        }}
+      />
 
       <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-pk-text-muted hover:text-pk-text-main mb-6 transition-colors">
         <FiArrowLeft /> Back
