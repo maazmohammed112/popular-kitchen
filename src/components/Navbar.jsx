@@ -17,6 +17,7 @@ export const Navbar = ({ onOpenCart }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -73,6 +74,14 @@ export const Navbar = ({ onOpenCart }) => {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isGuest = !currentUser;
+
+  const handleDeleteAccount = () => {
+    const subject = encodeURIComponent(`Account Deletion Request - ${currentUser.uid}`);
+    const body = encodeURIComponent(
+      `Hello Primkart Team,\n\nI would like to request the permanent deletion of my account and all associated data.\n\nAccount Details:\n- User ID: ${currentUser.uid}\n- Email: ${currentUser.email || 'N/A'}\n- Phone: ${currentUser.phoneNumber || 'N/A'}\n\nI understand that my account will be deleted permanently within 2-3 business days.`
+    );
+    window.location.href = `mailto:info@primkart.app?subject=${subject}&body=${body}`;
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -231,7 +240,13 @@ export const Navbar = ({ onOpenCart }) => {
                       <Link to="/my-orders" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-pk-text-main hover:bg-pk-bg-primary transition-colors">
                         <FiPackage size={15} style={{ color: 'var(--color-secondary)' }} /> My Orders
                       </Link>
-                      <button onClick={() => { logout(); setShowUserMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-pk-bg-primary transition-colors" style={{ color: 'var(--color-error)' }}>
+                      <button
+                          onClick={() => { setShowProfileModal(true); setShowUserMenu(false); }}
+                          className="flex items-center w-full px-4 py-2 text-sm text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
+                        >
+                          Account Settings
+                        </button>
+                      <button onClick={() => { logout(); setShowUserMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-pk-bg-primary transition-colors border-t border-pk-bg-secondary" style={{ color: 'var(--color-error)' }}>
                         <FiLogOut size={15} /> Sign Out
                       </button>
                     </div>
@@ -346,6 +361,56 @@ export const Navbar = ({ onOpenCart }) => {
             )}
           </div>
         )}
+
+      {/* Profile Modal */}
+      {showProfileModal && currentUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-pk-surface w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-pk-bg-secondary animate-[slideUp_0.3s_ease-out]">
+            <div className="p-6 border-b border-pk-bg-secondary flex justify-between items-center">
+              <h3 className="text-xl font-bold text-pk-text-main">Account Settings</h3>
+              <button onClick={() => setShowProfileModal(false)} className="text-pk-text-muted hover:text-pk-text-main p-2">
+                <FiX size={24} />
+              </button>
+            </div>
+            
+            <div className="p-8">
+              <div className="space-y-4 mb-8">
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-pk-text-muted font-bold">User Name</label>
+                  <p className="text-pk-text-main font-medium">{currentUser.displayName || 'Customer'}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-pk-text-muted font-bold">Email Address</label>
+                  <p className="text-pk-text-main font-medium">{currentUser.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase tracking-wider text-pk-text-muted font-bold">User ID</label>
+                  <p className="text-[10px] font-mono text-pk-text-muted truncate bg-pk-bg-secondary p-2 rounded-lg mt-1">{currentUser.uid}</p>
+                </div>
+              </div>
+
+              <div className="p-5 bg-pk-error/5 border border-pk-error/20 rounded-2xl">
+                <h4 className="text-pk-error font-bold text-sm mb-2 flex items-center gap-2">
+                  <FiAlertTriangle /> Danger Zone
+                </h4>
+                <p className="text-xs text-pk-text-muted mb-4 leading-relaxed">
+                  Requesting account deletion will remove all your order history and profile data. 
+                  <span className="block mt-1 font-semibold text-pk-error">Account will be deleted permanently in 2-3 business days.</span>
+                </p>
+                <button
+                  onClick={handleDeleteAccount}
+                  className="w-full py-3 bg-pk-error text-white rounded-xl text-sm font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-error/20"
+                >
+                  Delete My Account
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Toast Placeholder */}
+      <div id="toast-root"></div>
       </nav>
     </>
   );
