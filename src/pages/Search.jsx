@@ -73,16 +73,35 @@ export default function Search() {
   }, [query, selectedCategory]);
 
   useEffect(() => {
+    const fuzzyMatch = (text, query) => {
+      if (!text || !query) return false;
+      const t = text.toLowerCase();
+      const q = query.toLowerCase();
+      
+      // 1. Direct match or substring
+      if (t.includes(q)) return true;
+      
+      // 2. Word-level match: check if each word in query exists in text
+      const qWords = q.split(/\s+/).filter(w => w.length > 1);
+      if (qWords.length > 0 && qWords.every(qw => t.includes(qw))) return true;
+
+      // 3. Typo tolerance: remove double letters and check
+      const simplifiedT = t.replace(/(.)\1+/g, '$1');
+      const simplifiedQ = q.replace(/(.)\1+/g, '$1');
+      if (simplifiedT.includes(simplifiedQ)) return true;
+
+      return false;
+    };
+
     const filterProducts = (allProducts) => {
       let filtered = allProducts;
       
       // 1. Text search
       if (query.trim()) {
-        const lowerQuery = query.toLowerCase();
         filtered = filtered.filter(p =>
-          (p.title && p.title.toLowerCase().includes(lowerQuery)) ||
-          (p.category && p.category.toLowerCase().includes(lowerQuery)) ||
-          (p.description && p.description.toLowerCase().includes(lowerQuery))
+          fuzzyMatch(p.title, query) ||
+          fuzzyMatch(p.category, query) ||
+          fuzzyMatch(p.description, query)
         );
       }
 
@@ -95,7 +114,7 @@ export default function Search() {
       if (sortOrder === 'low-to-high') {
         filtered = [...filtered].sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price));
       } else if (sortOrder === 'high-to-low') {
-        filtered = [...filtered].sort((a, b) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
+        filtered = [...filtered].sort((b, a) => (b.discountPrice || b.price) - (a.discountPrice || a.price));
       }
 
       return filtered;
@@ -248,14 +267,28 @@ export default function Search() {
               <FiSearch size={32} className="text-pk-text-muted opacity-50" />
             </div>
             <p className="font-semibold text-pk-text-main mb-2 text-lg">No matching products</p>
-            <p className="text-sm text-pk-text-muted max-w-md mx-auto">
-              We couldn't find anything matching "{query}". Try adjusting your search or browse our categories.
+            <p className="text-sm text-pk-text-muted max-w-md mx-auto px-6">
+              We couldn't find anything matching "{query}". Try checking the spelling or browse our popular categories below.
             </p>
+            
+            {/* Suggested Categories when nothing found */}
+            <div className="mt-8 flex flex-wrap justify-center gap-3 px-6">
+              {['Cookware', 'Storage', 'Knives', 'Appliances'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className="px-5 py-2 bg-pk-bg-secondary hover:bg-pk-accent hover:text-white rounded-full text-xs font-bold transition-all"
+                >
+                  Browse {cat}
+                </button>
+              ))}
+            </div>
+
             <button 
               onClick={() => navigate('/')} 
-              className="mt-6 px-6 py-2.5 bg-pk-accent text-white rounded-full font-medium hover:bg-blue-600 transition-colors shadow-lg shadow-pk-accent/20"
+              className="mt-10 px-8 py-3 bg-pk-accent text-white rounded-full font-bold hover:brightness-110 transition-all shadow-lg shadow-pk-accent/20 flex items-center gap-2"
             >
-              Back to Home
+              <FiArrowLeft /> Back to Home
             </button>
           </div>
         ) : (

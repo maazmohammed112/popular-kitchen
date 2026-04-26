@@ -1,15 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown, FiFilter } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown, FiFilter, FiArrowLeft, FiClock } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
+import { getProducts } from '../firebase/products';
+
+let productsCache = null;
 
 export const Navbar = ({ onOpenCart }) => {
   const { cartItems } = useCart();
   const { currentUser, isAdmin, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -21,8 +27,40 @@ export const Navbar = ({ onOpenCart }) => {
       setShowAuth(e.detail || 'signin');
     };
     window.addEventListener('show-auth-modal', handleAuthEvent);
+    
+    // Fetch products for search suggestions
+    const fetchProducts = async () => {
+      if (productsCache) {
+        setAllProducts(productsCache);
+        return;
+      }
+      try {
+        const data = await getProducts();
+        productsCache = data;
+        setAllProducts(data);
+      } catch (err) { console.error("Search fetch error:", err); }
+    };
+    fetchProducts();
+
     return () => window.removeEventListener('show-auth-modal', handleAuthEvent);
   }, []);
+
+  // Filter suggestions in real-time
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const query = searchTerm.toLowerCase();
+    const filtered = allProducts.filter(p => 
+      p.title?.toLowerCase().includes(query) ||
+      p.category?.toLowerCase().includes(query) ||
+      p.description?.toLowerCase().includes(query)
+    ).slice(0, 6); // Limit to top 6 results
+    
+    setSuggestions(filtered);
+  }, [searchTerm, allProducts]);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isGuest = !currentUser;
@@ -32,7 +70,15 @@ export const Navbar = ({ onOpenCart }) => {
     if (searchTerm.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
       setIsSearchOpen(false);
+      setShowSuggestions(false);
     }
+  };
+
+  const handleSuggestionClick = (product) => {
+    navigate(`/product/${product.id}`);
+    setSearchTerm('');
+    setShowSuggestions(false);
+    setIsSearchOpen(false);
   };
 
   return (
@@ -59,9 +105,52 @@ export const Navbar = ({ onOpenCart }) => {
                   type="text"
                   placeholder="Search products..."
                   value={searchTerm}
+                  onFocus={() => setShowSuggestions(true)}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="w-full bg-white/10 text-white placeholder-white/50 rounded-xl py-2.5 pl-10 pr-12 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/15 text-sm backdrop-blur-sm transition-all focus:bg-white focus:text-pk-text-main focus:placeholder-pk-text-muted"
                 />
+                
+                {/* Autocomplete Dropdown */}
+                {showSuggestions && searchTerm.trim() && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-pk-surface border border-pk-bg-secondary rounded-2xl shadow-2xl overflow-hidden z-50 animate-[scaleIn_0.2s_ease-out]">
+                    {suggestions.length > 0 ? (
+                      <>
+                        <div className="p-3 bg-pk-bg-secondary/30 flex justify-between items-center border-b border-pk-bg-secondary">
+                          <span className="text-[10px] font-bold text-pk-text-muted uppercase tracking-widest">Suggestions</span>
+                          <span className="text-[10px] text-pk-accent font-medium">Press Enter to search all</span>
+                        </div>
+                        {suggestions.map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleSuggestionClick(p)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-pk-bg-primary transition-colors text-left border-b border-pk-bg-secondary/50 last:border-0"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-pk-bg-secondary flex-shrink-0">
+                              <img src={p.images?.[0] || p.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-pk-text-main truncate">{p.title}</p>
+                              <p className="text-[10px] text-pk-text-muted">{p.category}</p>
+                            </div>
+                            <div className="text-xs font-bold text-pk-accent">
+                              ₹{p.discountPrice || p.price}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="p-8 text-center">
+                        <div className="w-12 h-12 bg-pk-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                          <FiSearch className="text-pk-text-muted opacity-40" />
+                        </div>
+                        <p className="text-sm font-medium text-pk-text-main">No exact matches</p>
+                        <p className="text-[11px] text-pk-text-muted mt-1">Try a different keyword or press enter to search</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button 
                   type="button"
                   onClick={() => navigate(`/search?q=${searchTerm}&showFilters=true`)}
@@ -71,6 +160,9 @@ export const Navbar = ({ onOpenCart }) => {
                   <FiFilter size={16} />
                 </button>
               </div>
+
+              {/* Backdrop to close suggestions when clicking outside */}
+              {showSuggestions && <div className="fixed inset-0 z-[-1]" onClick={() => setShowSuggestions(false)} />}
             </form>
 
             {/* Right Actions */}
@@ -156,19 +248,48 @@ export const Navbar = ({ onOpenCart }) => {
 
           {/* Mobile Search */}
           {isSearchOpen && (
-            <form onSubmit={handleSearch} className="md:hidden pb-3 px-0">
-              <div className="relative">
-                <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--color-secondary)' }} />
+            <div className="md:hidden pb-3 px-0 relative">
+              <form onSubmit={handleSearch} className="relative">
+                <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-pk-text-muted" />
                 <input
                   type="text"
                   placeholder="Search products..."
                   value={searchTerm}
+                  onFocus={() => setShowSuggestions(true)}
                   onChange={e => setSearchTerm(e.target.value)}
                   autoFocus
                   className="w-full bg-white text-pk-text-main rounded-xl py-2.5 pl-10 pr-4 focus:outline-none border-none text-sm shadow-sm"
                 />
-              </div>
-            </form>
+              </form>
+
+              {/* Mobile Suggestions Dropdown */}
+              {showSuggestions && searchTerm.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-pk-surface border border-pk-bg-secondary rounded-2xl shadow-2xl overflow-hidden z-50">
+                  {suggestions.length > 0 ? (
+                    suggestions.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => handleSuggestionClick(p)}
+                        className="w-full flex items-center gap-3 p-4 hover:bg-pk-bg-primary transition-colors text-left border-b border-pk-bg-secondary/50 last:border-0"
+                      >
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-pk-bg-secondary flex-shrink-0">
+                          <img src={p.images?.[0] || p.image} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-pk-text-main truncate">{p.title}</p>
+                          <p className="text-[10px] text-pk-text-muted">₹{p.discountPrice || p.price}</p>
+                        </div>
+                        <FiArrowRight size={14} className="text-pk-text-muted" />
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-6 text-center text-xs text-pk-text-muted">
+                      No matches found for "{searchTerm}"
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
 
