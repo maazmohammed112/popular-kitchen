@@ -7,6 +7,9 @@ export function PWAInstallPrompt() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    // 1. Strict check: If seen once, don't even start listeners
+    if (localStorage.getItem('pk_install_prompt_seen')) return;
+
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstalled(true);
