@@ -1,8 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { FiMoon, FiSun, FiMapPin, FiPhone, FiMail, FiArrowUpRight } from 'react-icons/fi';
+import { FiMapPin, FiPhone, FiMail, FiArrowUpRight } from 'react-icons/fi';
 
-export const Footer = ({ toggleTheme }) => {
-  const isDark = document.documentElement.classList.contains('dark');
+export const Footer = () => {
   const navigate = useNavigate();
 
   const handleFooterNav = (to, e) => {
@@ -89,7 +88,7 @@ export const Footer = ({ toggleTheme }) => {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10 text-center sm:text-left">
           <p className="text-xs text-white/40">
             © 2026 Primkart Kitchenware | primkart.app. All rights reserved. Built by{' '}
             <a 
@@ -102,14 +101,6 @@ export const Footer = ({ toggleTheme }) => {
               &lt;mma/&gt;
             </a>
           </p>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center gap-2 text-xs px-4 py-2 rounded-lg font-medium transition-all hover:bg-white/10 border border-white/15"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-          >
-            <span className="dark:hidden flex items-center gap-2"><FiMoon size={13} /> Dark Mode</span>
-            <span className="hidden dark:flex items-center gap-2"><FiSun size={13} /> Light Mode</span>
-          </button>
         </div>
       </div>
     </footer>
