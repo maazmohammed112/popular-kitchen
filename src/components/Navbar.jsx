@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown, FiFilter, FiArrowLeft, FiClock } from 'react-icons/fi';
+import { FiSearch, FiShoppingCart, FiMenu, FiX, FiUser, FiLogOut, FiPackage, FiArrowRight, FiChevronDown, FiFilter, FiArrowLeft, FiClock, FiAlertTriangle } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthModal } from './AuthModal';
