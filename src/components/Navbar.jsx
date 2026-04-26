@@ -219,6 +219,201 @@ export const Navbar = ({ onOpenCart }) => {
                   </button>
                 </div>
               ) : (
+  useEffect(() => {
+    const handleAuthEvent = (e) => {
+      setShowAuth(e.detail || 'signin');
+    };
+    window.addEventListener('show-auth-modal', handleAuthEvent);
+    
+    // Fetch products for search suggestions
+    const fetchProducts = async () => {
+      if (productsCache) {
+        setAllProducts(productsCache);
+        return;
+      }
+      try {
+        const data = await getProducts();
+        productsCache = data;
+        setAllProducts(data);
+      } catch (err) { console.error("Search fetch error:", err); }
+    };
+    fetchProducts();
+
+    return () => window.removeEventListener('show-auth-modal', handleAuthEvent);
+  }, []);
+
+  // Debounce search term for performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Filter suggestions in real-time
+  useEffect(() => {
+    if (!debouncedTerm.trim()) {
+      setSuggestions([]);
+      return;
+    }
+
+    const query = debouncedTerm.toLowerCase();
+    const filtered = allProducts.filter(p => 
+      p.title?.toLowerCase().includes(query) ||
+      p.category?.toLowerCase().includes(query) ||
+      p.description?.toLowerCase().includes(query)
+    ).slice(0, 6); 
+    
+    setSuggestions(filtered);
+  }, [debouncedTerm, allProducts]);
+
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
+  const isGuest = !currentUser;
+
+  const handleDeleteAccount = () => {
+    const subject = encodeURIComponent(`Account Deletion Request - ${currentUser.uid}`);
+    const body = encodeURIComponent(
+      `Hello Primkart Team,\n\nI would like to request the permanent deletion of my account and all associated data.\n\nAccount Details:\n- User ID: ${currentUser.uid}\n- Email: ${currentUser.email || 'N/A'}\n- Phone: ${currentUser.phoneNumber || 'N/A'}\n\nI understand that my account will be deleted permanently within 2-3 business days.`
+    );
+    window.location.href = `mailto:info@primkart.app?subject=${subject}&body=${body}`;
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setIsSearchOpen(false);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (product) => {
+    navigate(`/product/${product.id}`);
+    setSearchTerm('');
+    setShowSuggestions(false);
+    setIsSearchOpen(false);
+  };
+
+  return (
+    <>
+      {showAuth && <AuthModal defaultTab={showAuth} onClose={() => setShowAuth(null)} />}
+
+      <nav className="sticky top-0 z-30 shadow-sm" style={{ background: 'var(--color-primary)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="bg-white p-1.5 rounded-xl shadow-md group-hover:shadow-lg group-hover:scale-105 transition-all">
+                <img src="/logo.png" alt="Primkart Kitchenware Logo" className="h-7 w-7 object-contain" onError={e => e.target.style.display='none'} />
+              </div>
+              <span className="font-bold text-base hidden sm:block text-white tracking-tight">Primkart Kitchenware</span>
+            </Link>
+
+            {/* Desktop Search */}
+            <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-8 relative">
+              <div className="relative w-full group">
+                <FiSearch size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-pk-accent transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchTerm}
+                  onFocus={() => setShowSuggestions(true)}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full bg-white/10 text-white placeholder-white/50 rounded-xl py-2.5 pl-10 pr-12 focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/15 text-sm backdrop-blur-sm transition-all focus:bg-white focus:text-pk-text-main focus:placeholder-pk-text-muted"
+                />
+                
+                {/* Autocomplete Dropdown */}
+                {showSuggestions && searchTerm.trim() && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-pk-surface border border-pk-bg-secondary rounded-2xl shadow-2xl overflow-hidden z-50 animate-[scaleIn_0.2s_ease-out]">
+                    {suggestions.length > 0 ? (
+                      <>
+                        <div className="p-3 bg-pk-bg-secondary/30 flex justify-between items-center border-b border-pk-bg-secondary">
+                          <span className="text-[10px] font-bold text-pk-text-muted uppercase tracking-widest">Suggestions</span>
+                          <span className="text-[10px] text-pk-accent font-medium">Press Enter to search all</span>
+                        </div>
+                        {suggestions.map(p => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleSuggestionClick(p)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-pk-bg-primary transition-colors text-left border-b border-pk-bg-secondary/50 last:border-0"
+                          >
+                            <div className="w-10 h-10 rounded-lg overflow-hidden bg-pk-bg-secondary flex-shrink-0">
+                              <img src={p.images?.[0] || p.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-pk-text-main truncate">{p.title}</p>
+                              <p className="text-[10px] text-pk-text-muted">
+                                {p.category} {p.sizes?.length > 0 && `• ${p.sizes[0].name}`}
+                              </p>
+                            </div>
+                            <div className="text-xs font-bold text-pk-accent">
+                              ₹{p.discountPrice || p.price || (p.sizes?.[0]?.price) || 0}
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="p-8 text-center">
+                        <div className="w-12 h-12 bg-pk-bg-secondary rounded-full flex items-center justify-center mx-auto mb-3">
+                          <FiSearch className="text-pk-text-muted opacity-40" />
+                        </div>
+                        <p className="text-sm font-medium text-pk-text-main">No exact matches</p>
+                        <p className="text-[11px] text-pk-text-muted mt-1">Try a different keyword or press enter to search</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button 
+                  type="button"
+                  onClick={() => navigate(`/search?q=${searchTerm}&showFilters=true`)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-white/40 hover:text-white transition-colors"
+                  title="Advanced Filters"
+                >
+                  <FiFilter size={16} />
+                </button>
+              </div>
+
+              {/* Backdrop to close suggestions when clicking outside */}
+              {showSuggestions && <div className="fixed inset-0 z-[-1]" onClick={() => setShowSuggestions(false)} />}
+            </form>
+
+            {/* Right Actions */}
+            <div className="flex items-center gap-1 sm:gap-2">
+
+              {/* Mobile search icon */}
+              <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="md:hidden pk-icon-circle text-white/80 hover:text-white hover:bg-white/10 p-2">
+                <FiSearch size={20} />
+              </button>
+
+              {/* Admin badge */}
+              {isAdmin && (
+                <Link to="/admin/dashboard" className="hidden sm:flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+                  style={{ background: 'var(--color-tertiary)', color: 'white' }}>
+                  Admin
+                </Link>
+              )}
+
+              {/* Auth buttons for guest */}
+              {isGuest ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    onClick={() => setShowAuth('signin')}
+                    className="text-sm px-4 py-1.5 text-white/90 hover:text-white border border-white/25 rounded-lg transition-all font-medium hover:bg-white/10"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => setShowAuth('signup')}
+                    className="text-sm px-4 py-1.5 bg-white rounded-lg font-bold transition-all hover:brightness-95 shadow-sm"
+                    style={{ color: 'var(--color-primary)' }}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+              ) : (
                 /* User menu */
                 <div className="hidden sm:block relative">
                   <button
@@ -241,12 +436,12 @@ export const Navbar = ({ onOpenCart }) => {
                         <FiPackage size={15} style={{ color: 'var(--color-secondary)' }} /> My Orders
                       </Link>
                       <button
-                          onClick={() => { setShowProfileModal(true); setShowUserMenu(false); }}
-                          className="flex items-center w-full px-4 py-2 text-sm text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
-                        >
-                          Account Settings
-                        </button>
-                      <button onClick={() => { logout(); setShowUserMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-pk-bg-primary transition-colors border-t border-pk-bg-secondary" style={{ color: 'var(--color-error)' }}>
+                        onClick={() => { setShowProfileModal(true); setShowUserMenu(false); }}
+                        className="flex items-center w-full px-4 py-2.5 text-sm text-pk-text-main hover:bg-pk-bg-secondary transition-colors"
+                      >
+                        Account Settings
+                      </button>
+                      <button onClick={() => { logout(); setShowUserMenu(false); }} className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-pk-bg-primary transition-colors border-t border-pk-bg-secondary text-pk-error">
                         <FiLogOut size={15} /> Sign Out
                       </button>
                     </div>
@@ -354,9 +549,15 @@ export const Navbar = ({ onOpenCart }) => {
                   <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: 'var(--color-tertiary)' }}>
                     {(currentUser.displayName || currentUser.email || 'U')[0].toUpperCase()}
                   </div>
-                  <span className="truncate">{currentUser.displayName || currentUser.email?.split('@')[0]}</span>
+                  <span className="truncate font-semibold">{currentUser.displayName || currentUser.email?.split('@')[0]}</span>
                 </div>
-                <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="w-full py-2.5 bg-pk-error/10 border border-pk-error/20 text-center rounded-xl font-bold text-sm transition-all" style={{ color: 'var(--color-error)' }}>Sign Out</button>
+                <button 
+                  onClick={() => { setShowProfileModal(true); setIsMobileMenuOpen(false); }} 
+                  className="w-full py-3.5 px-5 bg-pk-surface border border-pk-bg-secondary rounded-2xl flex items-center justify-between text-sm font-bold text-pk-text-main transition-all mb-3 shadow-sm"
+                >
+                  Account Settings <FiChevronRight size={16} className="text-pk-text-muted" />
+                </button>
+                <button onClick={() => { logout(); setIsMobileMenuOpen(false); }} className="w-full py-4 bg-pk-error/10 border border-pk-error/20 text-center rounded-2xl font-bold text-sm transition-all text-pk-error">Sign Out</button>
               </div>
             )}
           </div>
