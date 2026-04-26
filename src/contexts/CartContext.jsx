@@ -116,7 +116,9 @@ export const CartProvider = ({ children }) => {
         newCart[existingIdx].quantity += product.quantity || 1;
         return newCart;
       } else {
-        return [...prev, { ...product, quantity: product.quantity || 1 }];
+        // Double check for any weird duplicate that might have slipped in
+        const filtered = prev.filter(item => !(item.productId === product.productId && item.size === product.size));
+        return [...filtered, { ...product, quantity: product.quantity || 1 }];
       }
     });
   };
@@ -139,6 +141,7 @@ export const CartProvider = ({ children }) => {
   };
 
   const clearCart = () => {
+    localStorage.removeItem('pk_cart'); // Instant wipe
     setCartItems([]);
   };
 
