@@ -1,14 +1,35 @@
-User-agent: *
+# Targeted instructions for AI Crawlers (ChatGPT, Claude, Gemini, etc.)
+User-agent: GPTBot
 Allow: /
 
-# Block admin pages from indexing
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# General Search Engine Instructions (Google, Bing, Yahoo)
+User-agent: *
+Allow: /
 Disallow: /admin/
 Disallow: /checkout
 Disallow: /order-success/
+Disallow: /my-orders
 
-# Allow image indexing
-Allow: /*.png
-Allow: /*.jpg
-Allow: /*.webp
+# Optimize Image Indexing for Google Images & Bing Images
+Allow: /*.png$
+Allow: /*.jpg$
+Allow: /*.jpeg$
+Allow: /*.webp$
+Allow: /*.gif$
 
 Sitemap: https://primkart.app/sitemap.xml

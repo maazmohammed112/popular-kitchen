@@ -78,6 +78,50 @@ export default function Home() {
         title="Primkart Kitchenware Bangalore | Kitchen Items in Shivajinagar"
         description="Buy premium kitchen tools, restaurant equipment, and cookware in Bangalore. Trusted kitchenware supplier in Shivajinagar. Fast delivery across Bangalore."
         url="https://primkart.app/"
+        schema={{
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "WebSite",
+              "name": "Primkart Kitchenware",
+              "url": "https://primkart.app/",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://primkart.app/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            },
+            {
+              "@type": "FAQPage",
+              "mainEntity": [
+                {
+                  "@type": "Question",
+                  "name": "Where is Primkart Kitchenware located?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Primkart Kitchenware is located in Shivajinagar, Bangalore. Our address is 363/3, Jumma Masjid Road, Shivaji Nagar, Bengaluru, Karnataka 560001."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "Does Primkart Kitchenware offer free delivery?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Yes, we offer free delivery for orders above ₹25,000 within Bangalore and outer Bangalore areas."
+                  }
+                },
+                {
+                  "@type": "Question",
+                  "name": "What kind of products does Primkart sell?",
+                  "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "We sell premium kitchen tools, restaurant equipment, cookware, induction stoves, hand blenders, shawarma machines, and commercial cooking essentials."
+                  }
+                }
+              ]
+            }
+          ]
+        }}
       />
       
       <h1 className="sr-only">Kitchenware Store in Bangalore – Primkart Kitchenware Shivajinagar</h1>

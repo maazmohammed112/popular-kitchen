@@ -232,21 +232,48 @@ export default function ProductDetail() {
         type="product"
         schema={{
           "@context": "https://schema.org/",
-          "@type": "Product",
-          "name": product.title,
-          "image": product.images?.map(img => getOptimizedUrl(img)),
-          "description": product.description,
-          "brand": {
-            "@type": "Brand",
-            "name": "Primkart Kitchenware"
-          },
-          "offers": {
-            "@type": "Offer",
-            "url": window.location.href,
-            "priceCurrency": "INR",
-            "price": currentPrice,
-            "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
-          }
+          "@graph": [
+            {
+              "@type": "Product",
+              "name": product.title,
+              "image": product.images?.map(img => getOptimizedUrl(img)),
+              "description": product.description,
+              "brand": {
+                "@type": "Brand",
+                "name": "Primkart Kitchenware"
+              },
+              "offers": {
+                "@type": "Offer",
+                "url": window.location.href,
+                "priceCurrency": "INR",
+                "price": currentPrice,
+                "availability": isOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock"
+              }
+            },
+            {
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Home",
+                  "item": "https://primkart.app/"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": product.category,
+                  "item": `https://primkart.app/search?category=${encodeURIComponent(product.category)}`
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": product.title,
+                  "item": window.location.href
+                }
+              ]
+            }
+          ]
         }}
       />
 
