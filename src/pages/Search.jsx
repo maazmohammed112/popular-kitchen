@@ -262,6 +262,15 @@ export default function Search() {
         {loading ? (
           Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
         ) : products.length === 0 ? (
+          <div className="col-span-full py-16 text-center bg-pk-surface border border-pk-bg-secondary rounded-3xl flex flex-col items-center justify-center shadow-sm">
+            <div className="w-20 h-20 bg-pk-bg-secondary rounded-full flex items-center justify-center mb-4">
+              <FiSearch size={32} className="text-pk-text-muted opacity-50" />
+            </div>
+            <p className="font-semibold text-pk-text-main mb-2 text-lg">No matching products</p>
+            <p className="text-sm text-pk-text-muted max-w-md mx-auto px-6">
+              We couldn't find anything matching "{query}". Try checking the spelling or browse our popular categories below.
+            </p>
+            
             {/* Suggested Categories when nothing found */}
             <div className="mt-8 flex flex-wrap justify-center gap-3 px-6">
               {categories.slice(0, 5).map(cat => (
