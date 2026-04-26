@@ -39,7 +39,7 @@ export const Navbar = ({ onOpenCart }) => {
         const data = await getProducts();
         productsCache = data;
         setAllProducts(data);
-      } catch (err) { console.error("Search fetch error:", err); }
+      } catch (err) { }
     };
     fetchProducts();
 

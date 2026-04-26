@@ -30,7 +30,6 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     let unsubscribe;
     if (currentUser && isLoaded) {
-      console.log("[Cart] Real-time sync listener started");
       const userRef = doc(db, 'users', currentUser.uid);
       
       unsubscribe = onSnapshot(userRef, (snapshot) => {
@@ -39,7 +38,6 @@ export const CartProvider = ({ children }) => {
           
           // Initial Merge: Combine local and remote data on first sync
           if (!isRemoteSynced) {
-            console.log("[Cart] Initializing remote sync & merge...");
             setCartItems(prevLocal => {
               const merged = [...remoteCart];
               prevLocal.forEach(localItem => {
@@ -55,7 +53,6 @@ export const CartProvider = ({ children }) => {
               // Only update state if data is actually different to avoid render loops
               const isDifferent = JSON.stringify(prev) !== JSON.stringify(remoteCart);
               if (isDifferent) {
-                console.log("[Cart] Remote update received");
                 return remoteCart;
               }
               return prev;
