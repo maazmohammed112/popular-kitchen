@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiLock, FiCheckCircle } from 'react-icons/fi';
+import { FiLock, FiCheckCircle, FiMapPin, FiX, FiTarget } from 'react-icons/fi';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../contexts/ToastContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,7 +21,8 @@ export default function Checkout() {
     name: '',
     phone: '',
     email: '',
-    address: ''
+    address: '',
+    coordinates: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
@@ -95,6 +96,38 @@ export default function Checkout() {
     setShowConfirmModal(true);
   };
 
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      showError("Geolocation is not supported by your browser");
+      return;
+    }
+
+    showSuccess("Capturing precise location...");
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setFormData(prev => ({
+          ...prev,
+          coordinates: { lat: latitude, lng: longitude }
+        }));
+        showSuccess("Precise location captured!");
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        showError("Failed to get location. Please ensure location access is allowed.");
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  };
+
+  const clearLocation = () => {
+    setFormData(prev => ({ ...prev, coordinates: null }));
+    showSuccess("Precise location removed.");
+  };
+
+  const isFreeDelivery = cartTotal >= 25000;
+  const finalTotal = cartTotal; // Logic can be expanded here if there were existing shipping fees
+
   const handleFinalSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -110,10 +143,11 @@ export default function Checkout() {
           quantity: item.quantity,
           price: item.price
         })),
-        totalAmount: cartTotal,
+        totalAmount: finalTotal,
         status: "pending",
         adminNote: "",
-        userId: currentUser ? currentUser.uid : "guest"
+        userId: currentUser ? currentUser.uid : "guest",
+        coordinates: formData.coordinates || null
       };
 
       const orderId = await createOrder(orderData);
@@ -198,7 +232,7 @@ export default function Checkout() {
               <div>
                 <label className="block text-sm font-medium text-pk-text-muted mb-2">Delivery Address</label>
                 <div className="mb-2 text-[10px] font-bold text-pk-error uppercase tracking-wider bg-pk-error/10 p-2 rounded-lg border border-pk-error/20">
-                  * Free delivery upto 15km in Bangalore. If more than 15km, delivery charges applied.
+                  * FREE DELIVERY ABOVE ₹25,000/- (Applicable within Bangalore & Outer Bangalore only).
                 </div>
                 <textarea 
                   value={formData.address}
@@ -207,6 +241,53 @@ export default function Checkout() {
                   placeholder="123 Main St, Appt 4B..."
                   required
                 />
+              </div>
+
+              {/* Precise Location Section */}
+              <div className="bg-pk-bg-primary/50 p-4 rounded-2xl border border-pk-bg-secondary space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <FiMapPin className="text-pk-accent" />
+                    <span>Precise GPS Location</span>
+                    <span className="text-[10px] bg-pk-bg-secondary px-2 py-0.5 rounded-full text-pk-text-muted">Optional</span>
+                  </div>
+                  {formData.coordinates && (
+                    <button 
+                      type="button"
+                      onClick={clearLocation}
+                      className="text-pk-error hover:bg-pk-error/10 p-1 rounded-full transition-colors"
+                      title="Remove Location"
+                    >
+                      <FiX size={16} />
+                    </button>
+                  )}
+                </div>
+
+                {!formData.coordinates ? (
+                  <button
+                    type="button"
+                    onClick={handleGetLocation}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-pk-bg-secondary hover:bg-pk-bg-secondary/80 text-pk-text-main text-sm rounded-xl transition-all border border-pk-bg-secondary/50 group"
+                  >
+                    <FiTarget className="group-hover:rotate-90 transition-transform duration-500 text-pk-accent" />
+                    Use Precise Current Location
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-3 p-3 bg-pk-success/5 border border-pk-success/20 rounded-xl animate-[scaleIn_0.3s_ease-out]">
+                    <div className="w-8 h-8 rounded-full bg-pk-success/10 flex items-center justify-center text-pk-success">
+                      <FiCheckCircle size={16} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-pk-success">Location Captured</p>
+                      <p className="text-[10px] text-pk-text-muted truncate">
+                        Lat: {formData.coordinates.lat.toFixed(6)}, Lng: {formData.coordinates.lng.toFixed(6)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                <p className="text-[10px] text-pk-text-muted leading-relaxed">
+                  Help our delivery partner find you exactly. This is highly recommended for faster delivery.
+                </p>
               </div>
             </div>
 
@@ -242,9 +323,31 @@ export default function Checkout() {
               ))}
             </div>
 
-            <div className="border-t border-pk-bg-secondary pt-4 flex justify-between items-end">
-              <span className="text-pk-text-muted">Total Amount</span>
-              <span className="text-2xl font-bold text-pk-text-main leading-none">₹{cartTotal}</span>
+            <div className="border-t border-pk-bg-secondary pt-4 space-y-3">
+              {!isFreeDelivery && (
+                <div className="bg-pk-accent/5 p-3 rounded-xl border border-pk-accent/20 animate-pulse">
+                  <p className="text-[11px] text-pk-accent font-bold text-center">
+                    🚀 Add ₹{(25000 - cartTotal).toLocaleString('en-IN')} more to avail <span className="underline">FREE DELIVERY</span>!<br/>
+                    <span className="text-[9px] font-normal opacity-80">(Within Bangalore/Outer Bangalore only)</span>
+                  </p>
+                </div>
+              )}
+              
+              <div className="flex justify-between text-xs text-pk-text-muted italic">
+                <span>Shipping Threshold</span>
+                <span className={isFreeDelivery ? 'text-pk-success font-bold' : ''}>
+                  {isFreeDelivery ? 'FREE DELIVERY APPLIED*' : 'Min ₹25,000 for free delivery*'}
+                </span>
+              </div>
+              {!isFreeDelivery && (
+                <p className="text-[9px] text-pk-text-muted text-right italic">
+                  *Valid only within Bangalore city limits
+                </p>
+              )}
+              <div className="flex justify-between items-end">
+                <span className="text-pk-text-muted">Total Amount</span>
+                <span className="text-2xl font-bold text-pk-text-main leading-none">₹{finalTotal}</span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare, FiTag, FiAlertCircle, FiCheckCircle, FiTruck, FiLoader } from 'react-icons/fi';
+import { FiChevronDown, FiChevronUp, FiDownload, FiMessageCircle, FiSend, FiMail, FiMessageSquare, FiTag, FiAlertCircle, FiCheckCircle, FiTruck, FiLoader, FiMapPin, FiExternalLink } from 'react-icons/fi';
 import { SiWhatsapp, SiGmail } from 'react-icons/si';
 import { getOrders, listenToOrders, updateOrderStatus, cancelOrder, updateOrderTotal, updateOrderDeliveryCharge } from '../../firebase/orders';
 import { useToast } from '../../contexts/ToastContext';
@@ -164,6 +164,12 @@ export default function ManageOrders() {
     const msg = encodeURIComponent(getPredefinedMessage(order));
     const phone = order.phone.replace(/\D/g, '');
     window.location.href = `sms:${phone}?body=${msg}`;
+  };
+
+  const handleOpenMap = (coords) => {
+    if (!coords || !coords.lat || !coords.lng) return;
+    const url = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
+    window.open(url, '_blank');
   };
 
   const filteredOrders = orders.filter(o => 
@@ -363,7 +369,29 @@ export default function ManageOrders() {
                             <div className="space-y-4 text-sm">
                               <div>
                                 <span className="block text-pk-text-muted font-medium mb-1">Delivery Address</span>
-                                <p className="text-pk-text-main bg-pk-surface p-3 rounded-lg border border-pk-bg-secondary">{order.address}</p>
+                                <div className="space-y-3">
+                                  <p className="text-pk-text-main bg-pk-surface p-3 rounded-lg border border-pk-bg-secondary">{order.address}</p>
+                                  
+                                  {order.coordinates && (
+                                    <div className="bg-pk-accent/5 p-4 rounded-xl border border-pk-accent/20 flex items-center justify-between group">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-pk-accent/10 flex items-center justify-center text-pk-accent">
+                                          <FiMapPin size={20} />
+                                        </div>
+                                        <div>
+                                          <p className="text-xs font-bold text-pk-text-main">Precise GPS Location</p>
+                                          <p className="text-[10px] text-pk-text-muted">Lat: {order.coordinates.lat.toFixed(6)}, Lng: {order.coordinates.lng.toFixed(6)}</p>
+                                        </div>
+                                      </div>
+                                      <button
+                                        onClick={() => handleOpenMap(order.coordinates)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-pk-accent text-white text-xs font-bold rounded-lg hover:brightness-110 transition-all shadow-md shadow-pk-accent/20"
+                                      >
+                                        Open in Maps <FiExternalLink size={12} />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               <div className="bg-pk-surface p-4 rounded-xl border border-pk-bg-secondary">
                                 <span className="block text-pk-text-muted font-medium mb-3">Order Items</span>
