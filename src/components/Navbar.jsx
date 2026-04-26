@@ -13,6 +13,7 @@ export const Navbar = ({ onOpenCart }) => {
   const { currentUser, isAdmin, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedTerm, setDebouncedTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -45,22 +46,30 @@ export const Navbar = ({ onOpenCart }) => {
     return () => window.removeEventListener('show-auth-modal', handleAuthEvent);
   }, []);
 
+  // Debounce search term for performance
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedTerm(searchTerm);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   // Filter suggestions in real-time
   useEffect(() => {
-    if (!searchTerm.trim()) {
+    if (!debouncedTerm.trim()) {
       setSuggestions([]);
       return;
     }
 
-    const query = searchTerm.toLowerCase();
+    const query = debouncedTerm.toLowerCase();
     const filtered = allProducts.filter(p => 
       p.title?.toLowerCase().includes(query) ||
       p.category?.toLowerCase().includes(query) ||
       p.description?.toLowerCase().includes(query)
-    ).slice(0, 6); // Limit to top 6 results
+    ).slice(0, 6); 
     
     setSuggestions(filtered);
-  }, [searchTerm, allProducts]);
+  }, [debouncedTerm, allProducts]);
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isGuest = !currentUser;
@@ -131,10 +140,12 @@ export const Navbar = ({ onOpenCart }) => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-semibold text-pk-text-main truncate">{p.title}</p>
-                              <p className="text-[10px] text-pk-text-muted">{p.category}</p>
+                              <p className="text-[10px] text-pk-text-muted">
+                                {p.category} {p.sizes?.length > 0 && `• ${p.sizes[0].name}`}
+                              </p>
                             </div>
                             <div className="text-xs font-bold text-pk-accent">
-                              ₹{p.discountPrice || p.price}
+                              ₹{p.discountPrice || p.price || (p.sizes?.[0]?.price) || 0}
                             </div>
                           </button>
                         ))}
@@ -277,7 +288,10 @@ export const Navbar = ({ onOpenCart }) => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-pk-text-main truncate">{p.title}</p>
-                          <p className="text-[10px] text-pk-text-muted">₹{p.discountPrice || p.price}</p>
+                          <p className="text-[10px] text-pk-text-muted">
+                            ₹{p.discountPrice || p.price || (p.sizes?.[0]?.price) || 0}
+                            {p.sizes?.length > 0 && <span className="opacity-60 ml-1">({p.sizes[0].name})</span>}
+                          </p>
                         </div>
                         <FiArrowRight size={14} className="text-pk-text-muted" />
                       </button>
