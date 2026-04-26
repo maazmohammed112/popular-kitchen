@@ -262,22 +262,16 @@ export default function Search() {
         {loading ? (
           Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)
         ) : products.length === 0 ? (
-          <div className="col-span-full py-16 text-center bg-pk-surface border border-pk-bg-secondary rounded-3xl flex flex-col items-center justify-center shadow-sm">
-            <div className="w-20 h-20 bg-pk-bg-secondary rounded-full flex items-center justify-center mb-4">
-              <FiSearch size={32} className="text-pk-text-muted opacity-50" />
-            </div>
-            <p className="font-semibold text-pk-text-main mb-2 text-lg">No matching products</p>
-            <p className="text-sm text-pk-text-muted max-w-md mx-auto px-6">
-              We couldn't find anything matching "{query}". Try checking the spelling or browse our popular categories below.
-            </p>
-            
             {/* Suggested Categories when nothing found */}
             <div className="mt-8 flex flex-wrap justify-center gap-3 px-6">
-              {['Cookware', 'Storage', 'Knives', 'Appliances'].map(cat => (
+              {categories.slice(0, 5).map(cat => (
                 <button
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className="px-5 py-2 bg-pk-bg-secondary hover:bg-pk-accent hover:text-white rounded-full text-xs font-bold transition-all"
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    navigate(`/search?category=${encodeURIComponent(cat)}`); // Clear search query by navigating
+                  }}
+                  className="px-5 py-2 bg-pk-bg-secondary hover:bg-pk-accent hover:text-white rounded-full text-xs font-bold transition-all border border-pk-bg-secondary"
                 >
                   Browse {cat}
                 </button>
@@ -290,6 +284,24 @@ export default function Search() {
             >
               <FiArrowLeft /> Back to Home
             </button>
+          </div>
+
+          {/* Show Popular Products if no results found */}
+          <div className="col-span-full mt-12 animate-[slideUp_0.6s_ease-out]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-pk-text-main">Popular in our store</h2>
+              <button onClick={() => navigate('/')} className="text-sm font-bold text-pk-accent">View all</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {allProductsCache?.slice(0, 4).map(product => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onEdit={isAdmin ? handleAdminEdit : undefined}
+                  onDelete={isAdmin ? handleAdminDelete : undefined}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           products.map(product => (
