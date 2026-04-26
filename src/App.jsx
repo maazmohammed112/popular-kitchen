@@ -32,6 +32,7 @@ const MyOrders = lazy(() => import('./pages/MyOrders'));
 const InvoiceView = lazy(() => import('./pages/admin/InvoiceView'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const AboutUs = lazy(() => import('./pages/AboutUs'));
+const FAQ = lazy(() => import('./pages/FAQ'));
 // SEO Location Landing Pages
 const KitchenItemsBangalore = lazy(() => import('./pages/seo/KitchenItemsBangalore'));
 const KitchenItemsShivajinagar = lazy(() => import('./pages/seo/KitchenItemsShivajinagar'));
@@ -141,6 +142,7 @@ const DefaultViews = () => {
           <Route path="/support" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><Support /></AppLayout>} />
           <Route path="/my-orders" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><MyOrders /></AppLayout>} />
           <Route path="/about" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><AboutUs /></AppLayout>} />
+          <Route path="/faq" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><FAQ /></AppLayout>} />
 
           {/* SEO Location Landing Pages */}
           <Route path="/kitchen-items-bangalore" element={<AppLayout setIsCartOpen={setIsCartOpen} toggleTheme={toggleTheme}><KitchenItemsBangalore /></AppLayout>} />

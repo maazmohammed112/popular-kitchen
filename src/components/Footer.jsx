@@ -67,6 +67,7 @@ export const Footer = () => {
             <div className="flex flex-col gap-2.5">
               {[
               { to: '/about', label: 'About Us' },
+                { to: '/faq', label: 'FAQ' },
                 { to: '/my-orders', label: 'My Orders' },
                 { to: '/support', label: 'Support' },
                 { to: '/terms', label: 'Terms of Service' },
