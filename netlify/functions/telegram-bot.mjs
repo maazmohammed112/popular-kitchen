@@ -41,40 +41,44 @@ export const handler = async (event) => {
     const adminIds = ADMIN_CHAT_ID?.toString().split(',').map(id => id.trim()).filter(Boolean) || [];
     if (!adminIds.includes(chatId)) {
       console.warn(`Unauthorized access attempt from Chat ID: ${chatId}`);
-      return { statusCode: 200, body: 'OK' }; // Don't respond to unauthorized users
+      return { statusCode: 200, body: 'OK' }; 
     }
 
-    // Process commands
-    if (text.startsWith('/')) {
-      const args = text.split(' ');
-      const command = args[0].toLowerCase();
+    // Process commands (Handle both /command and plain text command)
+    const cleanText = text.startsWith('/') ? text.slice(1).toLowerCase() : text.toLowerCase();
+    const args = cleanText.split(/\s+/);
+    const command = args[0];
 
-      switch (command) {
-        case '/today':
-          await handleTodaySummary(chatId);
-          break;
-        case '/yesterday':
-          await handleYesterdaySummary(chatId);
-          break;
-        case '/month':
-          await handleMonthSummary(chatId, args[1], args[2]);
-          break;
-        case '/order':
-          await handleOrderLookup(chatId, args[1]);
-          break;
-        case '/pending':
-          await handlePendingOrders(chatId);
-          break;
-        case '/stats':
-          await handleStats(chatId);
-          break;
-        case '/help':
-        case '/start':
-          await sendHelp(chatId);
-          break;
-        default:
-          await sendMessage(chatId, "❌ Unknown command. Type /help to see available commands.");
-      }
+    switch (command) {
+      case 'today':
+        await handleTodaySummary(chatId);
+        break;
+      case 'yesterday':
+        await handleYesterdaySummary(chatId);
+        break;
+      case 'month':
+        await handleMonthSummary(chatId, args[1], args[2]);
+        break;
+      case 'order':
+        await handleOrderLookup(chatId, args[1]);
+        break;
+      case 'pending':
+        await handlePendingOrders(chatId);
+        break;
+      case 'stats':
+        await handleStats(chatId);
+        break;
+      case 'help':
+      case 'start':
+        await sendHelp(chatId);
+        break;
+      default:
+        // If it looks like an ID, try looking it up
+        if (text.length >= 15) {
+           await handleOrderLookup(chatId, text);
+        } else if (text.startsWith('/')) {
+           await sendMessage(chatId, "❌ Unknown command. Type /help to see available commands.");
+        }
     }
 
     return { statusCode: 200, body: 'OK' };
@@ -85,20 +89,25 @@ export const handler = async (event) => {
 };
 
 async function handleTodaySummary(chatId) {
-  const now = new Date();
-  const start = new Date(now.setHours(0, 0, 0, 0));
-  const end = new Date(now.setHours(23, 59, 59, 999));
+  // Get start and end of today in IST (UTC+5:30)
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const nowIST = new Date(Date.now() + istOffset);
   
-  await sendDateRangeSummary(chatId, "TODAY'S ORDERS 📅", start, end);
+  const start = new Date(nowIST.setUTCHours(0, 0, 0, 0) - istOffset);
+  const end = new Date(nowIST.setUTCHours(23, 59, 59, 999) - istOffset);
+  
+  await sendDateRangeSummary(chatId, "TODAY'S ORDERS (IST) 📅", start, end);
 }
 
 async function handleYesterdaySummary(chatId) {
-  const date = new Date();
-  date.setDate(date.getDate() - 1);
-  const start = new Date(date.setHours(0, 0, 0, 0));
-  const end = new Date(date.setHours(23, 59, 59, 999));
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const dateIST = new Date(Date.now() + istOffset);
+  dateIST.setUTCDate(dateIST.getUTCDate() - 1);
   
-  await sendDateRangeSummary(chatId, "YESTERDAY'S ORDERS 🗓️", start, end);
+  const start = new Date(dateIST.setUTCHours(0, 0, 0, 0) - istOffset);
+  const end = new Date(dateIST.setUTCHours(23, 59, 59, 999) - istOffset);
+  
+  await sendDateRangeSummary(chatId, "YESTERDAY'S ORDERS (IST) 🗓️", start, end);
 }
 
 async function handleMonthSummary(chatId, monthStr, yearStr) {
