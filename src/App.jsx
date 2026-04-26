@@ -11,6 +11,7 @@ import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { CartDrawer } from './components/CartDrawer';
 import { ReloadPrompt } from './components/ReloadPrompt';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { FiMessageCircle } from 'react-icons/fi';
 
 
@@ -128,6 +129,7 @@ const DefaultViews = () => {
       <WelcomeModal />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
       <ReloadPrompt />
+      <PWAInstallPrompt />
       
       <Suspense fallback={<GlobalLoader />}>
         <ScrollToTop />
